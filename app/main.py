@@ -1,10 +1,7 @@
 import pandas as pd
-import sys
-sys.path.append("/work/opc/all/users/chanelir/semrc/app/measure_modules/")
-sys.path.append("/work/opc/all/users/chanelir/semrc/app/parser_modules/")
-from ssfile_parser import ssfileParser
-from excel_parser import excelParser
-from measure import measure
+from measure_modules.measure import measure
+from parser_modules.ssfile_parser import ssfileParser
+# from parser_modules.excel_parser import excelParser
 
 # definition of python path env may vary
 
