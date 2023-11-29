@@ -1,31 +1,30 @@
 import pandas as pd
+import openpyxl
 
-excel_file = "/work/opc/all/users/chanelir/semrc-test/assets/ssfile-genepy-proto_data.xlsx"
+# excel_file = "/work/opc/all/users/chanelir/semrc-test/assets/ssfile-genepy-proto_data.xlsx"
+
 
 class excelParser:
-
     def __init__(self, file_to_parse):
         self.excel = file_to_parse
 
     def excel_to_dataframe(self):
-        # Chemin du fichier Excel
+        # Open the Excel file
+        workbook = openpyxl.load_workbook(self.excel)
+        # Get the sheet names
+        sheet_names = workbook.sheetnames
+        # Check if there is at least one sheet
+        if len(sheet_names) > 1:
+            print('There is at least one sheet in the file.')
+            sheet_name = input("Quel est le nom de la feuille que vous voulez processer ? ")
+            # WARNING : must handle bad user input -> no sheet name after user_input
+            excel_data = pd.read_excel(self.excel, sheet_name=sheet_name)
+        else:
+            excel_data = pd.read_excel(self.excel)
 
-        # Nom de la feuille à parser
-        sheet_name = input("Quel est le nom de la feuille que vous voulez processer ? ")
-        # handle bad user input -> no sheet name after user_input
-
-        # Lecture du fichier Excel
-        excel_data = pd.read_excel(self.excel, sheet_name=sheet_name)
-
-        # Conversion en dataframe pandas
         df = pd.DataFrame(excel_data)
-
-        # check if user has all necessary columns
-        print(df.head())
-
-    # def __repr__():
-    #     print(excelParser.excel_to_dataframe())
+        return df.head()
 
 
-parser_instance = excelParser(excel_file)
-parser_instance.excel_to_dataframe()
+# parser_instance = excelParser(excel_file)
+# print(parser_instance.excel_to_dataframe())
