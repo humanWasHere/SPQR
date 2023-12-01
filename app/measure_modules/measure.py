@@ -58,8 +58,8 @@ class measure:
             "setenv PATH $MGC_HOME/bin:$PATH; " \
             "setenv MGLS_LICENSE_FILE 1717@cr2sx03400:1717@cr2sx03401:1717@cr2sx03402; " \
             "calibredrv -64 {} | tee {}".format(script, debug)  # 2.2 s ± 48.9 ms
-        process = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                bufsize=1, universal_newlines=True)
+        process = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
         if verbose:
             for line in process.stdout:  # .readlines()  # todo: tqdm
                 print(line.strip())
@@ -75,11 +75,11 @@ class measure:
     # })
     def set_config(self):
         CONFIG = {'coords': self.INPUT_DF,
-            # 'layout': "/work/opc/all/users/banger/I3SL/ACTI/FR_clips2.oas",
-            # 'layout': "/work/opc/all/users/banger/I3SL/ACTI/banger_I300A_ACTI_OPCField_merge2.gds",
-            'layout': "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
-            'layers': ["1.0"],
-            'output': "/work/opc/all/users/chanelir/semrc-test"}
+                  # 'layout': "/work/opc/all/users/banger/I3SL/ACTI/FR_clips2.oas",
+                  # 'layout': "/work/opc/all/users/banger/I3SL/ACTI/banger_I300A_ACTI_OPCField_merge2.gds",
+                  'layout': "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+                  'layers': ["1.0"],
+                  'output': "/work/opc/all/users/chanelir/semrc-test"}
         return CONFIG
 
     def sequence_auto(coords, layout, layers):
