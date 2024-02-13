@@ -188,7 +188,7 @@ set TIME_start [clock clicks -milliseconds]
 set Compteur 0
 
 set Mon_fichier [open "$Ma_sortie" w+]
-puts $Mon_fichier [concat Gauge , Layer , Polarity (polygon) , X_dimension(nm) , Y_dimension(nm) , min_dimension(nm), complementary(nm), pitch_of_min_dim(nm)]
+puts $Mon_fichier "Gauge , Layer , Polarity (polygon) , X_dimension(nm) , Y_dimension(nm) ,pitch_x(nm),pitch_y(nm), min_dimension(nm), complementary(nm), pitch_of_min_dim(nm)"
 
 
 foreach layer_de_travail $layer_de_travail_base {
@@ -292,70 +292,48 @@ foreach layer_de_travail $layer_de_travail_base {
 			#Inversion de la polarite pour la recherche de pitch
 			if {$polarite == "CD"}    {set polarite_for_pitch "SPACE"}
 			if {$polarite == "SPACE"} {set polarite_for_pitch "CD"}
-
+			
 			#Determination du plus petit pour recherche le pitch seulement sur cette dimension et fonctionne seulement si le pitch est le même des deux côtés
-			if {$le_plus_petit == $taille_en_X} {
+			proc measure_pitch {measurement_direction pitch_left_coord pitch_right_coord pitch_down_coord pitch_up_coord} {
+				global polarite_for_pitch my_handle top precision Zone_decoupe layer_de_travail Passe_Grossiere iso le_plus_petit pitch_error
+				# Measure pitch in the specified direction
+				# left/down
+				set pitch_left_down_moins [Va_toucher $polarite_for_pitch $measurement_direction- $my_handle $top $pitch_left_coord $pitch_down_coord $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
+				set pitch_left_down_plus  [Va_toucher $polarite_for_pitch $measurement_direction+ $my_handle $top $pitch_left_coord $pitch_down_coord $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
+				set dimension_complementaire_left_down [dim_micron $pitch_left_down_plus $pitch_left_down_moins $precision]
 
-				#left
-				set pitch_left_moins [Va_toucher $polarite_for_pitch X+ $my_handle $top $x_for_pitch_left $Y0_dbu $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set pitch_left_plus  [Va_toucher $polarite_for_pitch X- $my_handle $top $x_for_pitch_left $Y0_dbu $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set dimension_complementaire_left [dim_micron $pitch_left_moins $pitch_left_plus $precision]
+				# right/up
+				set pitch_right_up_moins [Va_toucher $polarite_for_pitch $measurement_direction- $my_handle $top $pitch_right_coord $pitch_up_coord $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
+				set pitch_right_up_plus  [Va_toucher $polarite_for_pitch $measurement_direction+ $my_handle $top $pitch_right_coord $pitch_up_coord $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
+				set dimension_complementaire_right_up [dim_micron $pitch_right_up_plus $pitch_right_up_moins $precision]
 
-				# puts "polarite $polarite_for_pitch"
-				# puts "pitchforleft $x_for_pitch_left"
-				# puts $pitch_left_moins
-				# puts $pitch_left_plus
-				# puts "coucou $dimension_complementaire_left"
-				if {$dimension_complementaire_left == 0 || $dimension_complementaire_left > $limite_iso_micron} {set dimension_complementaire_left $iso}
-
-				#right
-				set pitch_right_moins [Va_toucher $polarite_for_pitch X- $my_handle $top $x_for_pitch_right $Y0_dbu $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set pitch_right_plus  [Va_toucher $polarite_for_pitch X+ $my_handle $top $x_for_pitch_right $Y0_dbu $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set dimension_complementaire_right [dim_micron $pitch_right_plus $pitch_right_moins $precision]
-				#puts $dimension_complementaire_right
-				if {$dimension_complementaire_right == 0 || $dimension_complementaire_right > $limite_iso_micron} {set dimension_complementaire_right $iso}
-
-				if {$dimension_complementaire_left == $dimension_complementaire_right} {
-					if {$dimension_complementaire_left == $iso} {
+				# Determine pitch in the specified direction
+				if {$dimension_complementaire_left_down == $dimension_complementaire_right_up} {
+					if {$dimension_complementaire_left_down == $iso} {
 						set pitch $iso
 					} else {
-						set pitch [expr $le_plus_petit + $dimension_complementaire_left]
+						set pitch [expr $le_plus_petit + $dimension_complementaire_left_down]
 					}
 				} else {
 					set pitch $pitch_error
-					set dimension_complementaire_left $pitch_error
+					set dimension_complementaire_left_down $pitch_error
 				}
 
-			} elseif { $le_plus_petit == $taille_en_Y} {
-
-				#down
-				set pitch_down_moins [Va_toucher $polarite_for_pitch Y- $my_handle $top $X0_dbu $y_for_pitch_down $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set pitch_down_plus  [Va_toucher $polarite_for_pitch Y+ $my_handle $top $X0_dbu $y_for_pitch_down $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set dimension_complementaire_down [dim_micron $pitch_down_plus $pitch_down_moins $precision]
-				#puts $dimension_complementaire_down
-				if {$dimension_complementaire_down == 0 || $dimension_complementaire_down > $limite_iso_micron} {set dimension_complementaire_down $iso}
-
-				#up
-				set pitch_up_moins [Va_toucher $polarite_for_pitch Y- $my_handle $top $X0_dbu $y_for_pitch_up $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set pitch_up_plus  [Va_toucher $polarite_for_pitch Y+ $my_handle $top $X0_dbu $y_for_pitch_up $precision [expr $Zone_decoupe*1000] $layer_de_travail $Passe_Grossiere]
-				set dimension_complementaire_up [dim_micron $pitch_up_plus $pitch_up_moins $precision]
-				#puts $dimension_complementaire_up
-				if {$dimension_complementaire_up == 0 || $dimension_complementaire_up > $limite_iso_micron } {set dimension_complementaire_up $iso}
-
-				if {$dimension_complementaire_down == $dimension_complementaire_up} {
-					if {$dimension_complementaire_up == $iso} {
-						set pitch $iso
-					} else {
-						set pitch [expr $le_plus_petit + $dimension_complementaire_down]
-					}
-				} else {
-					set pitch $pitch_error
-					set dimension_complementaire_left $pitch_error
-				}
+				# Return pitch in the specified direction
+				return $pitch
 			}
 
+			# Call measure_pitch procedure for both X and Y directions
+			set pitch_x [measure_pitch X $x_for_pitch_left $x_for_pitch_right $Y0_dbu $Y0_dbu]
+			set pitch_y [measure_pitch Y $X0_dbu $X0_dbu $y_for_pitch_down $y_for_pitch_up]
+
+			# Output pitch in both X and Y directions
+			# puts "Pitch in X direction: $pitch_x"
+			# puts "Pitch in Y direction: $pitch_y"
+			if {$le_plus_petit == $taille_en_X} {set pitch $pitch_x} else {set pitch $pitch_y}
+
 			#puts [concat ($Compteur/$nb_total:$avancement%): [lindex $gauge 0] | Polarite: $polarite | $layer_de_travail | X_dimension: $taille_en_Xµm | Y_dimension: $taille_en_Yµm | min_dimension: $le_plus_petitµm | Complementary: $dimension_complementaire_plusµm | Pitch: $pitchµm]
-			puts [concat ($Compteur/$nb_total:$avancement%): [lindex $gauge 0] | Polarite: $polarite | min_dimension: $le_plus_petit | Pitch: $pitch]
+			puts [concat ($Compteur/$nb_total:$avancement%): [lindex $gauge 0] | Polarite: $polarite | min_dimension: $le_plus_petit | Pitch: $pitch | pitch_x_y $pitch_x $pitch_y ]
 
 			###########################################################################
 			# Ecriture dans le fichier
@@ -364,8 +342,20 @@ foreach layer_de_travail $layer_de_travail_base {
 			set taille_en_Y_nm [expr $taille_en_Y*1000]
 			set le_plus_petit_nm [expr $le_plus_petit*1000]
 
+			if {$pitch_x != $pitch_error && $pitch_x != $iso} {
+				set pitchx_nm [expr $pitch_x *1000]
+			} else {
+				set pitchx_nm $pitch_x
+			}
+			if {$pitch_y != $pitch_error && $pitch_y != $iso} {
+				set pitchy_nm [expr $pitch_y *1000]
+			} else {
+				set pitchy_nm $pitch_y
+			}
 			if {$pitch != $pitch_error && $pitch != $iso} {
 				set pitch_nm [expr $pitch *1000]
+				#set pitchx_nm [expr $pitch_x *1000]
+				#set pitchy_nm [expr $pitch_y *1000]
 				set dimension_complementaire_nm [expr $pitch_nm-$le_plus_petit_nm]
 			} elseif { $pitch == $pitch_error } {
 				set dimension_complementaire_nm $pitch_error
@@ -375,7 +365,7 @@ foreach layer_de_travail $layer_de_travail_base {
 				set dimension_complementaire_nm $iso
 			}
 
-			puts $Mon_fichier [concat [lindex $gauge 0],$layer_de_travail,$polarite,$taille_en_X_nm,$taille_en_Y_nm,$le_plus_petit_nm,$dimension_complementaire_nm,$pitch_nm]
+			puts $Mon_fichier [concat [lindex $gauge 0],$layer_de_travail,$polarite,$taille_en_X_nm,$taille_en_Y_nm,$pitchx_nm,$pitchy_nm,$le_plus_petit_nm,$dimension_complementaire_nm,$pitch_nm]
 			update
 			layout delete $my_handle
 		} else {

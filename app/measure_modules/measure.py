@@ -47,8 +47,8 @@ class measure:
         # assert set(options).issubset({"-precision", "-topcell", "-layers", "-bbox"})
         host = measure.find_host()
         peek_cmd = f"setcalibre rec >/dev/null; calibredrv -a puts [layout peek {layout} {' '.join(options)}]"
-        peek = subprocess.run(["ssh", host, peek_cmd], stdout=subprocess.PIPE)
-        return peek.stdout.decode().strip()
+        peek = subprocess.run(["ssh", host, peek_cmd], stdout=subprocess.PIPE, text=True)
+        return peek.stdout.splitlines()[-1].strip()
 
     def lance_script(script, debug="/dev/null", verbose=True):
         # cmd = f"setcalibre rec >/dev/null; calibredrv -64 {script} | tee {debug}"  # 2.71 s ± 43.6 ms
@@ -68,27 +68,19 @@ class measure:
             raise ChildProcessError(errs)
         return host
 
-    # INPUT_DF = pd.DataFrame({
-    #     'name': ["IL_90", "IL_100", "IL_120", "IL_200", "IL_300"],
-    #     'x': [10313500.0, 10313500.0, 10313500.0, 10313500.0, 10313500.0],
-    #     'y': [29266760.0, 29271760.0, 29276760.0, 29286760.0, 29291760.0]
-    # })
-    def set_config(self):
-        CONFIG = {'coords': self.INPUT_DF,
-                  # 'layout': "/work/opc/all/users/banger/I3SL/ACTI/FR_clips2.oas",
-                  # 'layout': "/work/opc/all/users/banger/I3SL/ACTI/banger_I300A_ACTI_OPCField_merge2.gds",
-                  'layout': "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
-                  'layers': ["1.0"],
-                  'output': "/work/opc/all/users/chanelir/semrc-test"}
-        return CONFIG
+    # def set_config(self):
+    #     CONFIG = {'coords': self.INPUT_DF,
+    #               'layout': "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+    #               'layers': ["1.0"],
+    #               'output': "/work/opc/all/users/chanelir/semrc-test"}
+    #     return CONFIG
 
-    def sequence_auto(coords, layout, layers):
-        # results = tempfile.NamedTemporaryFile(dir=Path.home()/"tmp")
-        results = "/work/opc/all/users/chanelir/semrc-test/temp-not-temp"
+    def sequence_auto(coords, layout, layers):  # username=user_name
+        # results = tempfile.NamedTemporaryFile(dir=Path("/")/f"work/opc/all/users/{username}/semrc/.temp/")
+        results = "/work/opc/all/users/chanelir/semrc-outputs/measure.temp"
         tmp = measure.creation_script_tmp(coords, layout, layers, results, unit="dbu")
         measure.lance_script(tmp, verbose=True)
         meas_df = pd.read_csv(results, index_col=False)
-        # cd = meas_df[" min_dimension(nm)"]
         # results.close()  # remove temporary script
         return meas_df
 
