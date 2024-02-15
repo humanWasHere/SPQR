@@ -61,19 +61,12 @@ class measure:
         process = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
         if verbose:
-            for line in process.stdout:  # .readlines()  # todo: tqdm
+            for line in process.stdout:  # .readlines()  # TODO: tqdm
                 print(line.strip())
         outs, errs = process.communicate()
         if errs:
             raise ChildProcessError(errs)
         return host
-
-    # def set_config(self):
-    #     CONFIG = {'coords': self.INPUT_DF,
-    #               'layout': "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
-    #               'layers': ["1.0"],
-    #               'output': "/work/opc/all/users/chanelir/semrc-test"}
-    #     return CONFIG
 
     def sequence_auto(coords, layout, layers):  # username=user_name
         # results = tempfile.NamedTemporaryFile(dir=Path("/")/f"work/opc/all/users/{username}/semrc/.temp/")

@@ -16,10 +16,10 @@
     "<GP_Data>": {
         "GP_ID": 1,
         "Type": 1,
-        "GP_X": -300000000,
-        "GP_Y": -300000000,
+        "GP_X": 20,
+        "GP_Y": 20,
         "GP_Template": "",
-        "GP_MAG": "invalid",
+        "GP_MAG": 210,
         "GP_ROT": 90
     },
     "<EPS_Data>": {
@@ -75,36 +75,36 @@
         "EP_ABCC_X": -10000,
         "EP_ABCC_Y": -10000,
         "Type11": 2,
-        "MP_X": -300000000,
-        "MP_Y": -300000000,
-        "MP_Template": "chaine",
-        "MP_PNo": 1,
-        "MP_DNo1": 0,
-        "MP_DNo2": 0,
-        "MP_Name": "chaine",
-        "MP_TargetCD": -200000,
-        "MP_PosOffset": -200000,
-        "MP_SA_In": 0,
-        "MP_Cursor_Size_X": 0,
-        "MP_SA_Out": 0,
-        "MP_Cursor_Size_Y": 0,
-        "MP_MeaLeng": 1,
-        "MP_Direction": 1
+        "MP1_X": -300000000,
+        "MP1_Y": -300000000,
+        "MP1_Template": "chaine",
+        "MP1_PNo": 1,
+        "MP1_DNo1": 0,
+        "MP1_DNo2": 0,
+        "MP1_Name": "chaine",
+        "MP1_TargetCD": -200000,
+        "MP1_PosOffset": -200000,
+        "MP1_SA_In": 0,
+        "MP1_Cursor_Size_X": 0,
+        "MP1_SA_Out": 0,
+        "MP1_Cursor_Size_Y": 0,
+        "MP1_MeaLeng": 1,
+        "MP1_Direction": 1
     },
-    "<GP_List>": {
+    "<GPA_List>": {
         "GPA_No": [1, 2, 3],
-        "Chip_X": [-499, -499, -499],
-        "Chip_Y": [-499, -499, -499],
+        "Chip_X": [2, 6, 3],
+        "Chip_Y": [4, 4, 7],
         "GP_ID": [1, 1, 1]
     },
     "<GP_Offset>": {
-        "Offset_X": -300000000,
-        "Offset_Y": -300000000
+        "Offset_X": 0,
+        "Offset_Y": 0
     },
     "<EPA_List>": {
         "EPA_No": 1,
-        "Chip_X": -499,
-        "Chip_Y": -499,
+        "Chip_X": 1,
+        "Chip_Y": 1,
         "EPS_ID": 1,
         "Move_Mode": 1
     }

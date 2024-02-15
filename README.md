@@ -1,5 +1,5 @@
 # SEMRC project
-SEM Professional Quick Recipe - software for OPC applciations
+SEM Professional Quick Recipe - software for OPC applications
 
 ## Table of matters
 1. [General informations](#semrc's-purpose-)
@@ -12,17 +12,17 @@ SEM Professional Quick Recipe - software for OPC applciations
 8. [Legal](#legal-)
 
 ## SEMRC's purpose :
-The SEMRC project finds its root in a high demanding team which is the RET team.
-This project is lead by Romain Bange and developed by Romain Chaneliere.
+The SEMRC project finds its root in a highly qualified team which is the RET team.
+This project is led by Romain Bange and developed by Romain Chaneliere.
 
-It is meant to automatically make SEM recipes with the less amount of human interaction possible.
+It is meant to automatically make SEM recipes in order to ease user interactions with Recipe Director.
 
 ### Features :
-This tool processes the following actions :  
+At the moment, this tool processes the following actions :  
 * parses a ssfile
 * runs measure
-* merges the informations
-* calculates the last values
+* merges the informations between the first two
+* calculates the last values to enter in the <EPS_Data> of the recipe
 * generates a .hss file
 
 ### inputs&outputs :
@@ -33,12 +33,12 @@ To use this software, you will need to enter the following informations :
 * Input&output folders (storing)
 
 This software will return :
-* a SEM recipe in .hss format (matching the Hitachi requirements)
+* a SEM recipe in .hss or .csv format (matching the Hitachi requirements)
 * some documentation
-* some template in .json format (that should be stored in a DB in order to use the created recipe afterwards)
+* some template in .json format (that should be stored in a DB in order to reuse the created recipe afterwards)
 
 ## Installation :
-Make sure you have the correct environnement first
+Make sure you have the correct environnement first  
 Create a folder on your local machine (Unix) : 
 ```bash
 cd <your_folder_name>
@@ -65,27 +65,24 @@ Enjoy your time ! SEMRC is cooking a recipe for you !
 ```
 semrc - project root
 ├── app
-│   ├── documentation
-│   │   ├── hitachi_doc.html
-│   │   ├── min_th_template_SEM.json
-│   │   └── support_template.py
 │   ├── hss_modules
 │   │   ├── hss_creator_draft.py
 │   │   ├── hss_creator.py
-│   │   ├── recette.hss
-│   │   └── template_SEM_recipe.json
+│   │   ├── hss_modificator.py
 │   ├── main.py
 │   ├── measure_modules
 │   │   ├── measure.py
 │   │   ├── measure.tcl
-│   ├── parser_modules
-│   │   ├── clipboard_parser.py
-│   │   ├── excel_parser.py
-│   │   └── ssfile_parser.py
-│   └── README.md
+│   └── parser_modules
+│       ├── clipboard_parser.py
+│       ├── excel_parser.py
+│       └── ssfile_parser.py
 ├── assets
+│   └── template_SEM_recipe.json
 ├── .git
 ├── .gitignore
+├── README.md
+├── requirements.txt
 ├── tests
 ```
 
@@ -94,9 +91,9 @@ Here is a list of all the modules used in this app :
 * python - Version 3.10.4  
 * numpy - Version 1.23.0
 * pandas - Version 1.4.3
-* re - Version ? 2022.4.24
-* pathlib - Version ?
-* subprocess - Version ?
+<!-- * re - Version ? 2022.4.24 -->
+<!-- * pathlib - Version ? -->
+<!-- * subprocess - Version ? -->
 
 #### Developers :
 * Romain Chaneliere - DevOps apprentice @STMicroelectronics

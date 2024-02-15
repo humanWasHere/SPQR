@@ -17,209 +17,9 @@ import re
 # faire un checker pour csv ET hss -> intégrer le tool d'alex / voir si l'ordre des colonnes importe vraiment
 
 
-class DataFrameToEPSData:
-    # DEFAULTS = {
-    #     'Mode': 1,
-    #     'EPS_Template': "EPS_Default",
-    #     'AP2_Template': "OPC_AP2_Off",
-    #     'AP1_Mag': 45000,
-    #     'AP1_AF_Mag': 45000,
-    #     'AP1_Rot': 0,
-    #     'MP1_X': 0,
-    #     'MP1_Y': 0
-    # }
-    # MAP = {
-    #     'Move_X': "x",
-    #     'Move_Y': "y",
-    #     'EPS_Name': "name",
-    #     'AP1_X': "x_ap_rel",
-    #     'AP1_Y': "y_ap_rel",
-    #     'AP1_AF_X': "x_ap_rel",
-    #     'AP1_AF_Y': "y_ap_rel",
-    #     'EP_Mag_X': "mag",
-    #     'EP_AF_X': "x_af_rel",
-    #     'EP_AF_Y': "y_af_rel",
-    #     'EP_AF_Mag': "mag",
-    #     'MP1_Name': "name",
-    #     'MP1_TargetCD': "target_cd",
-    #     'MP1_Direction': "orient"
-    # }
-    MAPPING_Genepy = {
-        'EPS_Name': "Gauge name",
-        'Move_X': "X_coord_Pat",
-        'Move_Y': "Y_coord_Pat",
-        "MP_TargetCD": " min_dimension(nm)"
-    }
-    # correspondance entre min template (à ne pas toucher) et valeurs réalistes
-    # inspired from banger-283UA-ZACT-PH-SRAM-FEM hss
-    test_MAPPING_EPS_Data_from_template = {
-        "Mode": 1,
-        "AP1_X": -1000,
-        "AP1_Y": 0,
-        'AP1_Mag': 45000,
-        'AP1_AF_Mag': 45000,
-        'AP1_Rot': 0,
-        "AP1_AF_X": -300000000,
-        "AP1_AF_Y": -300000000,
-        "AP1_AST_X": -300000000,
-        "AP1_AST_Y": -300000000,
-        "AP1_AST_Mag": 0,
-        "AP2_X": -300000000,
-        "AP2_Y": -300000000,
-        "AP2_Mag": 1000,
-        "AP2_Rot": 90,
-        "AP2_AF_X": -300000000,
-        "AP2_AF_Y": -300000000,
-        "AP2_AF_Mag": 0,
-        "AP2_AST_X": -300000000,
-        "AP2_AST_Y": -300000000,
-        "AP2_AST_Mag": 0,
-        "EP_Mag_Scan_X": 1000,
-        "EP_Mag_Scan_Y": 1000,
-        "EP_Rot": "0,0",
-        "EP_AF_X": -10000,
-        "EP_AF_Y": -10000,
-        "EP_AF_Mag": 0,
-        "EP_AST_X": -10000,
-        "EP_AST_Y": -10000,
-        "EP_AST_Mag": 0,
-        "EP_ABCC_X": -10000,
-        "EP_ABCC_Y": -10000,
-        "MP_X": -300000000,
-        "MP_Y": -300000000,
-        "MP_Template": "chaine",
-        "MP_PNo": 1,
-        "MP_DNo1": 0,
-        "MP_DNo2": 0,
-        "MP_Name": "chaine",
-        "MP_TargetCD": -200000,
-        "MP_PosOffset": -200000,
-        "MP_SA_In": 0,
-        "MP_Cursor_Size_X": 0,
-        "MP_SA_Out": 0,
-        "MP_Cursor_Size_Y": 0,
-        "MP_MeaLeng": 1,
-        "MP_Direction": 1
-    }
-
-    def __init__(self, gauges: pd.DataFrame, step: str = "PH"):
-        # TODO:  validate data (columns, dtype, nan...)
-        self.gauges = gauges  # .astype({'x': int, 'y': int})
-        self.eps_data = pd.DataFrame()
-        assert step in {"PH", "ET"}
-        self.step = step
-
-        self.global_eps_data_filling()
-        # self.map_columns()
-        # self.autofill_columns()
-
-    # def set_rotation(self):
-    #     self.eps_data.loc[self.eps_data['MP1_Direction'] == "X", 'EP_Rot'] = 0
-    #     self.eps_data.loc[self.eps_data['MP1_Direction'] == "Y", 'EP_Rot'] = 90
-
-    #     rot = np.where(self.eps_data['MP1_Direction'] == "X", 0, 90)
-    #     # elif Y
-    #     return rot
-
-    # def test(self):
-    #     TEST_MAPPING = {
-    #         'Mode': 1,
-    #         'EPS_Template': "EPS_Default",
-    #         'AP2_Template': "OPC_AP2_Off",
-    #         'AP1_Mag': 45000,
-    #         'AP1_AF_Mag': 45000,
-    #         'AP1_Rot': 0,
-    #         'MP1_X': 0,
-    #         'MP1_Y': 0,
-    #         'Move_X': self.gauges["x"],
-    #         'Move_Y': self.gauges["y"],
-    #         'EP_Template': dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step],
-    #         'EP_Rot': self.set_rotation()
-    #     }
-
-    def global_eps_data_filling(self):
-        """Generate unique IDs and fill columns with default values"""
-        # TODO placer ici (?) une logique sélectionnant le type de recette. Ici, depuis un ssfile genepy
-        # applying mapping and so merged_df values to eps_data_df
-        for csv_col, value in self.MAPPING_Genepy.items():
-            self.eps_data[csv_col] = self.gauges[value]
-
-        # applying test mapping to eps_data_df
-        for csv_col, value in self.test_MAPPING_EPS_Data_from_template.items():
-            self.eps_data[csv_col] = value
-
-        # __________EPS_ID section__________
-        self.eps_data['EPS_ID'] = range(1, min(self.gauges.shape[0] + 1, 9999))
-        # preventing data to be out of range -> match doc
-        if any(id > 9999 for id in self.eps_data['EPS_ID']):
-            raise ValueError("EPS_ID values cannot exceed 9999")
-
-        # __________Type section__________
-        # self.eps_data['Type1'] = 1  # meaning absolute
-        for col in self.eps_data.columns:
-            if col == "Type1":
-                self.eps_data[col] = 1
-            # warning maintenabilité
-            elif col.startswith("Type"):
-                self.eps_data[col] = 2
-
-        # __________Mode section__________
-        # should be 1 normal or 2 differential
-
-        # self.eps_data['MP1_PNo'] = self.eps_data['#EPS_ID']
-        # for csv_col, value in self.DEFAULTS.items():
-        #     self.eps_data[csv_col] = value
-
-    # def map_columns(self):
-    #     """Map gauge dataframe columns with corresponding recipe columns without further processing"""
-    #     for csv_col, gauge_col in self.MAP.items():
-    #         self.eps_data[csv_col] = self.gauges[gauge_col]
-
-    # # TODO intégrer l'autofill à la création du df eps_data
-    # def autofill_columns(self):
-    #     """Fill more columns using logic"""
-    #     self.eps_data['EP_Template'] = dict(
-    #         PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
-
-    #     # Set rotation
-    #     self.eps_data.loc[self.eps_data['MP1_Direction'] == "X", 'EP_Rot'] = 0
-    #     self.eps_data.loc[self.eps_data['MP1_Direction'] == "Y", 'EP_Rot'] = 90
-    #     # Compute measure point width/length (from SEM procedure)
-    #     # TODO: MP_Cursor_Size_X/Y etc. for Ellipse. cf doc HSS p. 67
-    #     search_area = self.eps_data.MP1_TargetCD * \
-    #         self.eps_data.EP_Mag_X * 512 / 1000 / 135000 / 3
-    #     # cursor_size = self.eps_data.MP1_TargetCD * self.eps_data.EP_Mag_X * 512 / 1000 / 135000
-    #     # Limit search area to 30 pixels / todo: handle NaN
-    #     self.eps_data['MP1_SA_In'] = self.eps_data['MP1_SA_Out'] = search_area.fillna(
-    #         500).astype(int).clip(upper=30)
-    #     self.eps_data['MP1_MeaLeng'] = self.measleng  # TODO: compute
-    #     # Fill Type columns. First one is 1, all others are 2 (?)
-    #     # list of column indices  #TODO 65 for 1 MP, 66 for 2 MP...
-    #     # type_cols = [i for i, label in enumerate(
-    #     #     EPS_COLUMNS[:65]) if label == "Type"]
-    #     # self.eps_data.iloc[:, type_cols] = 2
-    #     self.eps_data.iloc[:, 1] = 1
-
-    def get_eps_data(self):
-        '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
-        return self.eps_data
-
-
 class adaptativeRecipeFilling:
     def __init__(self) -> None:
         pass
-
-    def set_type(self, section_name) -> None:
-        if section_name == "<EPS_Data>":
-            for col in self.eps_data.columns:
-                if col == "Type1":
-                    self.eps_data[col] = 1
-                # warning maintenabilité
-                elif col.startswith("Type"):
-                    self.eps_data[col] = 2
-        elif section_name == "something else to implement":
-            # TODO implement other stuff
-            print("implement it")
 
     def set_id(self, dataframe, key_name=None) -> None:
         if dataframe == "<EPS_Data>":
@@ -279,10 +79,49 @@ class HssCreator:
         # conversion of the 3 first lines of the template into a one level dataframe (normalize)
         self.first_level_df = pd.json_normalize(first_lines_first_level)
 
-    def drop_unused_columns(self) -> pd.DataFrame:
+    # TODO avoir template['<EPS_Data>'] pour get columns in class eps creator
+    # then hssCreator.template['<EPS_Data>'] = EPSCreator.template['<EPS_Data>'] in HssCreator
+    # pour l'instant, modify the columns before eps assignation in template header
+    def add_MP(self, nb_of_mp_to_add) -> None:
+        if nb_of_mp_to_add < 1:
+            return None
+        template_header_df = pd.DataFrame(
+            self.dict_of_second_level_df["<EPS_Data>"])
+        # FIXME implement code in order to iterate in mp creation
+        for mp in range(nb_of_mp_to_add):
+            # type counting in order to add Type column before all the MPn columns
+            i = 1
+            while True:
+                if f"Type{i}" in template_header_df.keys():
+                    i += 1
+                    pass
+                else:
+                    # TODO or change to empty
+                    template_header_df[f"Type{i}"] = ''
+                    break
+            # count MP number by "MPn_X" key
+            mp_count = 1
+            i = 1
+            while i:  # FIXME logic ?
+                if f"MP{i}_X" in template_header_df.keys():
+                    mp_count = i
+                    i += 1
+                else:
+                    # TODO écrire en dur avec un mapping ou faire le code suivant ?
+                    for col, val in template_header_df.items():
+                        # TODO dans l'idéal : détecter le nombre de MP déjà présent pour créer un MP+1
+                        # FIXME put col in str and it should work
+                        if str(col).startswith(f"MP{mp_count}"):
+                            new_col_name = str(col).replace(
+                                f"MP{mp_count}", f"MP{mp_count + 1}")
+                            template_header_df[f"{new_col_name}"] = val
+                    break
+        template_header_df = template_header_df.drop(
+            template_header_df.index, axis=0)
+        self.dict_of_second_level_df["<EPS_Data>"] = template_header_df
+
+    def drop_unused_columns(self) -> None:
         '''method that **should** drop all columns of the df_template that the title is not in the df_data ONLY IF the columns title is already matching'''
-        # import may be temp
-        self.json_to_dataframe()
         # get EPS_Data section from template
         # check de correspondance -> ajout des donnée finales ou drop des données du template -> création de EPS_Data final
         # itération dans les noms de colonnes du template pour ajouter les colonnes manquantes à EPS_Data
@@ -298,6 +137,34 @@ class HssCreator:
                 # ajout des valeurs du dataframe eps_data aux header du dataframe de template
                 template_header[column_name] = value_name
         self.dict_of_second_level_df["<EPS_Data>"] = template_header
+
+    # TODO séparer la logique de calcul des valeurs du flow (qui fait simplement du printing)  
+    def set_type_in_eps_data(self, number_of_mp) -> None:
+        '''define what it does'''  # TODO
+        # sanitize value
+        if number_of_mp < 1:
+            number_of_mp = 1
+        for col in self.dict_of_second_level_df["<EPS_Data>"]:
+            if col == "Type1":
+                self.dict_of_second_level_df["<EPS_Data>"][col] = 1
+            # WARNING maintenabilité : 11 dépends du nommage et de la place de la colonne Type11
+            elif str(col).startswith("Type") and int(str(col)[4:6]) < 11:
+                self.dict_of_second_level_df["<EPS_Data>"][col] = 2
+        # defines if writing data is necessary or not - for MP
+        # if data empty in MPn section is empty, corresponding (relative value) type is set to "" else fill with 2s
+        # WARNING maintenabilité
+        for mp_nb in range(1, number_of_mp + 1):
+            mp_n_is_empty = False
+            for col, val in self.dict_of_second_level_df["<EPS_Data>"].items():
+                if str(col).startswith(f"MP{mp_nb}"):
+                    if pd.isnull(val).all():
+                        mp_n_is_empty = True
+                    else:
+                        mp_n_is_empty = False
+            if mp_n_is_empty is True:
+                self.dict_of_second_level_df["<EPS_Data>"][f"Type{mp_nb + 10}"] = ""
+            else:
+                self.dict_of_second_level_df["<EPS_Data>"][f"Type{mp_nb + 10}"] = 2
 
     def dataframe_to_hss(self) -> str:
         '''method that converts a dataframe into a HSS format (writes it as a file)'''
@@ -344,12 +211,17 @@ class HssCreator:
             modified_string += line + "," * num_commas + "\n"
         return str(modified_string)
 
-    def write_in_file(self) -> None:
+    def write_in_file(self, mp_to_add) -> None:
+        # get template
+        self.json_to_dataframe()
+        # add mp if told to
+        self.add_MP(mp_to_add)
         # gets data from otherClass.eps_data_df
         self.drop_unused_columns()
+        self.set_type_in_eps_data(mp_to_add + 1)
         whole_recipe_template = self.dataframe_to_hss()
         # whole_recipe_EPS_Data
-        # renaming of "TypeN" into "Type"
+        # renaming of "TypeN" into "Type" - doesn't apply on df so we do to recipe output string
         whole_recipe_good_types = self.rename_eps_data_header(
             whole_recipe_template)
         # cleans, calculates and writes the correct number of commas in the output file
@@ -357,3 +229,7 @@ class HssCreator:
             whole_recipe_good_types)
         with open(self.output_file, 'w') as f:
             f.write(whole_recipe_to_output)
+
+
+# runCsv = HssCreator(pd.read_csv("/work/opc/all/users/chanelir/semrc-test/measure_result.temp"))
+# runCsv.set_type_in_eps_data(3)

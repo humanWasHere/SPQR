@@ -1,8 +1,10 @@
 import pandas as pd
 from parser_modules.ssfile_parser import ssfileParser
-from measure_modules.measure import measure
-from hss_modules.hss_creator import HssCreator, DataFrameToEPSData
 # from parser_modules.excel_parser import excelParser
+from measure_modules.measure import measure
+from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
+from hss_modules.hss_creator import HssCreator
+# from hss_modules.hss_modificator import RecipeModificator
 
 # ressource definition
 genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"  # genepy files
@@ -21,7 +23,8 @@ if __name__ == "__main__":
     print('1. ssfile parsing')
     # function call with corresponding file as entry
     parser_instance = ssfileParser(genepy_ssfile, is_genepy=True)
-    ssfile_genepy_df = parser_instance.ssfile_to_dataframe()
+    # ssfile_genepy_df = parser_instance.ssfile_to_dataframe()
+    ssfile_genepy_df = parser_instance.ssfile_to_dataframe().iloc[:50]
     print('\t ssfile parsing done')
     # selection des colonnes d'interet
     data = ssfile_genepy_df[['Name', 'X_coord_Pat', 'Y_coord_Pat']]
@@ -50,13 +53,13 @@ if __name__ == "__main__":
     print('4. .hss file creation')
     # hss_creation
     runHssCreation = HssCreator(eps_dataframe=EPS_Data)
-    runHssCreation.write_in_file()
+    runHssCreation.write_in_file(0)
     print('\t recipe created !')
 
-    # # hss_creation
+    # hss_creation
     # EPS_DataFrame = DataFrameToEPSData(pd.read_csv(
     #     "/work/opc/all/users/chanelir/semrc-test/measure_result.temp"))
     # # run mapping method call
     # EPS_Data = EPS_DataFrame.get_eps_data()
     # runHssCreation = HssCreator(eps_dataframe=EPS_Data)
-    # runHssCreation.write_in_file()
+    # runHssCreation.write_in_file(3)

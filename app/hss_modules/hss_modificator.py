@@ -1,7 +1,10 @@
 from hss_creator import HssCreator
 
+# TODO check if HssCreator instance is needed to modify the recipe
+# -> get file recipe that already has been output
 
-class HssModification(HssCreator):
+
+class RecipeModificator(HssCreator):
     # header = [label + str(i) if label == "Type" else label for i, label in enumerate(EPS_COLUMNS)]  # uniquify Type cols
     # then -> df.to_json() -> pandas.to_json() -> pour récupération de sauvegardes et modifications
 
