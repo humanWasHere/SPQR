@@ -11,6 +11,7 @@ class measure:
         self.INPUT_DF = df_file
 
     def creation_script_tmp(coords: pd.DataFrame, layout, layers, output, search_area=5, unit="nm"):
+        '''explain what this fonction does here'''
         tcl_template = Path(__file__).parent / "measure.tcl"
         # Place temporary script in user's home because /tmp is not shared across farm
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
@@ -35,6 +36,7 @@ class measure:
         return tmp_script
 
     def find_host():
+        '''explain what this fonction does here'''
         # From /work/ratsoft/bin/fastlinux7
         cmd = 'use lib "/work/ratsoft/lib/perlmod"; use Rat::choose_host; use strict;' \
             'print &choose_host::best_machine( "lx24-amd64", "rh70", 100, 1, 0, "all.q" );'
@@ -43,6 +45,7 @@ class measure:
         return host
 
     def layout_peek(layout, *options):
+        '''explain what this fonction does here'''
         options = ['-'+opt if not opt.startswith('-') else opt for opt in options]  # add dash if needed
         # assert set(options).issubset({"-precision", "-topcell", "-layers", "-bbox"})
         host = measure.find_host()
@@ -51,6 +54,7 @@ class measure:
         return peek.stdout.splitlines()[-1].strip()
 
     def lance_script(script, debug="/dev/null", verbose=True):
+        '''explain what this fonction does here'''
         # cmd = f"setcalibre rec >/dev/null; calibredrv -64 {script} | tee {debug}"  # 2.71 s ± 43.6 ms
         host = measure.find_host()
         # todo: pexpect?
@@ -69,6 +73,7 @@ class measure:
         return host
 
     def sequence_auto(coords, layout, layers):  # username=user_name
+        '''explain what this fonction does here'''
         # results = tempfile.NamedTemporaryFile(dir=Path("/")/f"work/opc/all/users/{username}/semrc/.temp/")
         results = "/work/opc/all/users/chanelir/semrc-outputs/measure.temp"
         tmp = measure.creation_script_tmp(coords, layout, layers, results, unit="dbu")
@@ -78,6 +83,7 @@ class measure:
         return meas_df
 
     def clean_unknown(dataframe):
+        '''explain what this fonction does here'''
         if dataframe.isin(['unknown']).any().any():
             new_dataframe = dataframe.copy()
             new_dataframe = new_dataframe[new_dataframe != 'unknown'].dropna()

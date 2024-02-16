@@ -16,29 +16,30 @@ excel_file = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy-proto_data
 layout = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
 layers = ["1.0"]
 
-if __name__ == "__main__":
+
+def run_recipe_creation_w_measure():
+    '''this is the real main function which runs the flow with the measure - "prod" function'''
     # # ask user his name
     # user_name = input('What is your unix username ? \n')
 
     print('1. ssfile parsing')
     # function call with corresponding file as entry
     parser_instance = ssfileParser(genepy_ssfile, is_genepy=True)
-    # ssfile_genepy_df = parser_instance.ssfile_to_dataframe()
-    ssfile_genepy_df = parser_instance.ssfile_to_dataframe().iloc[:50]
-    print('\t ssfile parsing done')
+    ssfile_genepy_df = parser_instance.ssfile_to_dataframe()
+    # ssfile_genepy_df = parser_instance.ssfile_to_dataframe().iloc[:50]
+    print('\tssfile parsing done')
     # selection des colonnes d'interet
-    data = ssfile_genepy_df[['Name', 'X_coord_Pat', 'Y_coord_Pat']]
-
-    INPUT_DF = data
+    INPUT_DF = ssfile_genepy_df[['Name', 'X_coord_Pat', 'Y_coord_Pat']]
 
     print('2. measurement')
     measure_df = measure.sequence_auto(INPUT_DF, layout, layers)  # username=user_name
     # Index(['Gauge ', ' Layer ', ' Polarity (polygon) ', ' X_dimension(nm) ', ' Y_dimension(nm) ', ' min_dimension(nm)', ' complementary(nm)', ' pitch_of_min_dim(nm)'], dtype='object')
     # cropped_df = measure.clean_unknown(last_df.loc[:, ['Gauge ', ' X_dimension(nm) ', ' Y_dimension(nm) ']])
+    print("\tmerging dfs")
     merged_dfs = pd.merge(ssfile_genepy_df, measure.clean_unknown(measure_df), left_on='Name', right_on='Gauge ')
     merged_dfs = merged_dfs.drop('Gauge ', axis=1)
     merged_dfs = merged_dfs.rename(columns={'Name': 'Gauge name'})  # if needed
-    print('\t measurement done')
+    print('\tmeasurement done')
 
     # # in order to ease the time running the app we store the merged df in a file
     # output_measure = "/work/opc/all/users/chanelir/semrc/app/measure_result.temp"
@@ -48,18 +49,25 @@ if __name__ == "__main__":
     # création <EPS_Data> section
     EPS_DataFrame = DataFrameToEPSData(merged_dfs)
     EPS_Data = EPS_DataFrame.get_eps_data()
-    print('\t <EPS_Data> created')
+    print('\t<EPS_Data> created')
     # run mapping method call
     print('4. .hss file creation')
     # hss_creation
     runHssCreation = HssCreator(eps_dataframe=EPS_Data)
     runHssCreation.write_in_file(0)
-    print('\t recipe created !')
+    print('\trecipe created !')
 
+
+def run_recipe_creation():
+    '''this function bypasses the measure for the speed of testing - testing function'''
     # hss_creation
-    # EPS_DataFrame = DataFrameToEPSData(pd.read_csv(
-    #     "/work/opc/all/users/chanelir/semrc-test/measure_result.temp"))
-    # # run mapping method call
-    # EPS_Data = EPS_DataFrame.get_eps_data()
-    # runHssCreation = HssCreator(eps_dataframe=EPS_Data)
-    # runHssCreation.write_in_file(3)
+    EPS_DataFrame = DataFrameToEPSData(pd.read_csv(
+        "/work/opc/all/users/chanelir/semrc-test/measure_result.temp"))
+    # run mapping method call
+    EPS_Data = EPS_DataFrame.get_eps_data()
+    runHssCreation = HssCreator(eps_dataframe=EPS_Data)
+    runHssCreation.write_in_file(3)
+
+
+if __name__ == "__main__":
+    run_recipe_creation_w_measure()

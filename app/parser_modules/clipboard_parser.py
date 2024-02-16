@@ -1,8 +1,10 @@
 import pandas as pd
 
+
 class clipboardParser:
 
     def clipboard_to_dataframe(self):
+        '''explain what this fonction does here'''
         # user_input = input("Coller le contenu de votre clipboard ici (Ctrl + V -> Enter): ")
 
         # Lecture des données du presse-papiers

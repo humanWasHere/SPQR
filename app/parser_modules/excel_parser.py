@@ -9,6 +9,7 @@ class excelParser:
         self.excel = file_to_parse
 
     def excel_to_dataframe(self):
+        '''explain what this fonction does here'''
         # Open the Excel file
         workbook = openpyxl.load_workbook(self.excel)
         # Get the sheet names

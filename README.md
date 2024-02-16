@@ -23,7 +23,7 @@ At the moment, this tool processes the following actions :
 * runs measure
 * merges the informations between the first two
 * calculates the last values to enter in the <EPS_Data> of the recipe
-* generates a .hss file
+* generates a .csv or .hss file
 
 ### inputs&outputs :
 To use this software, you will need to enter the following informations :

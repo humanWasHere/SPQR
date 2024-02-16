@@ -2,6 +2,7 @@ import pandas as pd
 # import numpy as np
 import json
 import re
+from .template_to_all_sections import sectionMaker
 
 # TODO
 # faire un checker de nom (EPS_Name) -> match requirements de Hitachi -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
@@ -15,24 +16,6 @@ import re
 # autofill pour recette fonctionnelle et exhaustive -> concertation des points à apporter -> faire en fonction de la doc et de l'xp de Romain
 # dans le mapping -> faire correspondre les "TypeN" au template pour le merge des infos de eps_data au noms de colonne du template
 # faire un checker pour csv ET hss -> intégrer le tool d'alex / voir si l'ordre des colonnes importe vraiment
-
-
-class adaptativeRecipeFilling:
-    def __init__(self) -> None:
-        pass
-
-    def set_id(self, dataframe, key_name=None) -> None:
-        if dataframe == "<EPS_Data>":
-            self.eps_data['EPS_ID'] = range(
-                1, min(self.gauges.shape[0] + 1, 9999))
-            # preventing data to be out of range -> match doc
-            if any(id > 9999 for id in self.eps_data['EPS_ID']):
-                raise ValueError("EPS_ID values cannot exceed 9999")
-        # else:
-        #     HssCreator. ['EPS_ID'] = range(1, min(self.gauges.shape[0] + 1, 9999))
-        #     # preventing data to be out of range -> match doc
-        #     if any(id > 9999 for id in self.eps_data['EPS_ID']):
-        #         raise ValueError("EPS_ID values cannot exceed 9999")
 
 
 class HssCreator:
@@ -79,15 +62,33 @@ class HssCreator:
         # conversion of the 3 first lines of the template into a one level dataframe (normalize)
         self.first_level_df = pd.json_normalize(first_lines_first_level)
 
+    def get_set_section(self) -> None:
+        '''this method gets the logic of sectionMaker which fills the different sections of the recipe'''
+        # note that if no logic is implemented, the default template key/value will be directly returned
+        for df in self.dict_of_second_level_df:
+            if df != "<EPS_Data>":
+                # making an instance of sectionMaker which will set all the sections except <EPS_Data>
+                instance_sectionMaker = sectionMaker(self.dict_of_second_level_df)
+                # save <Gp_Data> section in df dictionnary
+                self.dict_of_second_level_df["<CoordinateSystem>"] = instance_sectionMaker.make_coordinate_system_section()
+                self.dict_of_second_level_df["<GPCoordinateSystem>"] = instance_sectionMaker.make_gp_coordinate_system_section()
+                self.dict_of_second_level_df["<Unit>"] = instance_sectionMaker.make_unit_section()
+                self.dict_of_second_level_df["<GP_Data>"] = instance_sectionMaker.make_gp_data_section()
+                # in the template recipe there is <EPS_Data> in here
+                self.dict_of_second_level_df["<GPA_List>"] = instance_sectionMaker.make_gpa_list_section()
+                self.dict_of_second_level_df["<GP_Offset>"] = instance_sectionMaker.make_gp_offset_section()
+                self.dict_of_second_level_df["<EPA_List>"] = instance_sectionMaker.make_epa_list_section()
+
     # TODO avoir template['<EPS_Data>'] pour get columns in class eps creator
     # then hssCreator.template['<EPS_Data>'] = EPSCreator.template['<EPS_Data>'] in HssCreator
     # pour l'instant, modify the columns before eps assignation in template header
     def add_MP(self, nb_of_mp_to_add) -> None:
+        '''this method adds the number of MP in attribute of the method'''
+        # if 1 -> add 1 MP -> so there is 2 MP
         if nb_of_mp_to_add < 1:
             return None
         template_header_df = pd.DataFrame(
             self.dict_of_second_level_df["<EPS_Data>"])
-        # FIXME implement code in order to iterate in mp creation
         for mp in range(nb_of_mp_to_add):
             # type counting in order to add Type column before all the MPn columns
             i = 1
@@ -99,10 +100,10 @@ class HssCreator:
                     # TODO or change to empty
                     template_header_df[f"Type{i}"] = ''
                     break
-            # count MP number by "MPn_X" key
+            # count MP number by "MPn_X" key access
             mp_count = 1
             i = 1
-            while i:  # FIXME logic ?
+            while i:
                 if f"MP{i}_X" in template_header_df.keys():
                     mp_count = i
                     i += 1
@@ -110,17 +111,18 @@ class HssCreator:
                     # TODO écrire en dur avec un mapping ou faire le code suivant ?
                     for col, val in template_header_df.items():
                         # TODO dans l'idéal : détecter le nombre de MP déjà présent pour créer un MP+1
-                        # FIXME put col in str and it should work
                         if str(col).startswith(f"MP{mp_count}"):
                             new_col_name = str(col).replace(
                                 f"MP{mp_count}", f"MP{mp_count + 1}")
                             template_header_df[f"{new_col_name}"] = val
                     break
+        # clean columns a bit and rewrite in df dict
         template_header_df = template_header_df.drop(
             template_header_df.index, axis=0)
         self.dict_of_second_level_df["<EPS_Data>"] = template_header_df
 
-    def drop_unused_columns(self) -> None:
+    def fill_with_eps_data(self) -> None:
+        # previous name : drop_unused_columns
         '''method that **should** drop all columns of the df_template that the title is not in the df_data ONLY IF the columns title is already matching'''
         # get EPS_Data section from template
         # check de correspondance -> ajout des donnée finales ou drop des données du template -> création de EPS_Data final
@@ -138,12 +140,13 @@ class HssCreator:
                 template_header[column_name] = value_name
         self.dict_of_second_level_df["<EPS_Data>"] = template_header
 
-    # TODO séparer la logique de calcul des valeurs du flow (qui fait simplement du printing)  
+    # TODO séparer la logique de calcul des valeurs du flow (qui fait simplement du printing)
     def set_type_in_eps_data(self, number_of_mp) -> None:
-        '''define what it does'''  # TODO
+        '''Defines if the Type column needs to be filled by 1s, 2s or empty values'''
         # sanitize value
         if number_of_mp < 1:
             number_of_mp = 1
+        # logic for columns before MP columns
         for col in self.dict_of_second_level_df["<EPS_Data>"]:
             if col == "Type1":
                 self.dict_of_second_level_df["<EPS_Data>"][col] = 1
@@ -212,12 +215,16 @@ class HssCreator:
         return str(modified_string)
 
     def write_in_file(self, mp_to_add) -> None:
+        '''this method executes the flow of writing the whole recipe'''
+        # beware to not modify order
         # get template
         self.json_to_dataframe()
-        # add mp if told to
+        # create sections except <EPS_Data>
+        self.get_set_section()
+        # add mp if told to (0 does nothing)
         self.add_MP(mp_to_add)
         # gets data from otherClass.eps_data_df
-        self.drop_unused_columns()
+        self.fill_with_eps_data()
         self.set_type_in_eps_data(mp_to_add + 1)
         whole_recipe_template = self.dataframe_to_hss()
         # whole_recipe_EPS_Data
