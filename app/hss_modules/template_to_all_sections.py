@@ -2,6 +2,7 @@
 
 
 class sectionMaker:
+    '''this class is used to create, fill or modify the values of all second level sections except <EPS_Data> section. If not modified, value is set default as in template.json'''
     def __init__(self, dictionnary):
         self.df_dict = dictionnary
         self.coordinate_system = self.df_dict["<CoordinateSystem>"]
@@ -42,6 +43,10 @@ class sectionMaker:
         #     # gp_mag_SEM_default = 500000
         #     # if self.gp_data["GP_MAG"] >= 1000 and self.gp_data["GP_MAG"] <= 500000:
         # print(pd.Series(self.gp_data).to_string())
+
+        # __________GP_Mag section__________
+        # TODO if GP_Template == "chef_OM_default":
+        # GP_MAG = 210
         return self.gp_data
 
     def make_gpa_list_section(self):

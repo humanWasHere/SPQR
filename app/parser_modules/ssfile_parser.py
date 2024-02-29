@@ -11,25 +11,22 @@ import pandas as pd
 #     result = chardet.detect(f.read())
 # encoding = result['encoding']
 # TODO
-# check encoding of the ssfile to better treatment
-# détecter combien de colonne à le header -> si différent du max retourner une erreur
-# ask user to change the NaN title or ask user to set the column names
-# est ce que les colonnes du fichier ssfile_romain ne sont pas des paires de valeur pour une colonne ?
-# est ce qu'on fill les NaN values avec des 0 ? -> génant pour RCPD ? Post treatment for us in recipe creation ? -> for me
-# -> if NaN value: pass
-# est ce que genepy set ses unités pour la ligne entière à chaque fois ?
+# input and print should be at user's destination
+# traitement des NaN value
+# est ce que genepy set ses unités pour la colonnes/ligne entière à chaque fois ?
 # checker de présence des colonnes 'name', 'coord x' et 'coord y' ?
+# changer les dataframe comme attribut de fonction en self - si fonction à imbriquer dans ssfile_to_dataframe, laisser dataframe en attribut
+# key point is to make a diff between genepy and non-genepy ssfile
 
 
 class ssfileParser:
-
+    '''this method is used to parse ssfiles which can be genepy ssfile or other (formatted to convention ?) ssfiles'''
     def __init__(self, file_to_parse, is_genepy=False):
         self.ssfile = file_to_parse
-        self.in_genepy = is_genepy
+        self.is_genepy = is_genepy
 
     def rename_title(dataframe):
-        # TODO
-        '''explain what this fonction does here'''
+        '''this method allows user to rename the column imported if it is not already in valid format (NaN value)'''
         set_title_names = []  # store column name temp
         for col in dataframe.columns:  # for each dataframe's columns
             # if value is NaN for column title
@@ -47,20 +44,19 @@ class ssfileParser:
         return dataframe
 
     def drop_empty_column(dataframe):
-        '''explain what this fonction does here'''
-        # check for all columns if whole column has empty values (NaN values). If so, drops itv (means bad dataframe interpretation)
+        '''this method checks all columns for empty values (NaN values in whole column). If empty, drops it (means bad dataframe interpretation - while parsing ssfile ?)'''
         for col in dataframe.columns:
             if dataframe[col].isnull().all():
                 dataframe.drop(columns=[col], inplace=True)
         return dataframe
 
     def ssfile_to_dataframe(self):
-        '''explain what this fonction does here'''
-        # first check : is ssfile from genepy ?
-        if self.in_genepy:  # à check autrement -> data in ssfile or external -> True/False is genepy file
+        '''this method converts the informations of a ssfile into a dataframe for genepy ssfile and other'''
+        if self.is_genepy:  # à check autrement -> data in ssfile or external -> True/False is genepy file
             # if not 7 columns for genepy file : not genepy or pb with genepy. warning returned anyways (on_bad_lines)
             df = pd.read_csv(self.ssfile, sep='\t', header=0,
                              on_bad_lines='warn', encoding='utf-8')
+            # FIXME self takes 2 arguments in method ? keep ssfileParser ?
             df = ssfileParser.drop_empty_column(df)  # dataframe cleaning
             return pd.DataFrame(df)
         else:
@@ -81,8 +77,8 @@ class ssfileParser:
                 print("There is undefined columns name in your dataframe. Have a look :")
                 print(df.to_string())
                 # rename NaN columns and do some cleaning
-                df = ssfileParser.drop_empty_column(
-                    ssfileParser.rename_title(df))
+                df = self.drop_empty_column(
+                    self.rename_title(df))
             if header_column_number != max_column_number:  # random check
                 print(
                     "Reminder that the dataframe does not match expectations :( make it better !")
@@ -93,6 +89,8 @@ class ssfileParser:
             # return df
 
     def change_coord_to_relative(self, dataframe):
+        '''this method changes the coordinates to relative (since it is not in the correct format in the ssfile)'''
+        # TODO call this function only if ssfile is genepy dataframe
         # if dataframe["UNIT_COORD"] == "DBU": -> indent
         # dataframe["X_coord_Pat"]
         # if function is x_measure - x_addressing = relative_val is correct

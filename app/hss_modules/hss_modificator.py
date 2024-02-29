@@ -7,7 +7,7 @@ from ..parser_modules.csv_parser import CsvParser
 
 class RecipeModificator(HssCreator):
     '''this class is meant to modify current instance of a class or imported recipe'''
-    # TODO import recipe parser -> / csv parser 
+    # TODO import recipe parser -> / csv parser
     # should it take a class instance in entry as RecipeModificator(instance) or RecipeModificator(HssCreator.__init__.attributes)
 
     # TODO penser à sortir des json

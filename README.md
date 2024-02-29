@@ -66,15 +66,17 @@ Enjoy your time ! SEMRC is cooking a recipe for you !
 semrc - project root
 ├── app
 │   ├── hss_modules
-│   │   ├── hss_creator_draft.py
+│   │   ├── dataframe_to_eps_data.py
 │   │   ├── hss_creator.py
 │   │   ├── hss_modificator.py
+|   |   ├── template_to_all_sections.py
 │   ├── main.py
 │   ├── measure_modules
 │   │   ├── measure.py
 │   │   ├── measure.tcl
 │   └── parser_modules
 │       ├── clipboard_parser.py
+|       ├── csv_parser.py
 │       ├── excel_parser.py
 │       └── ssfile_parser.py
 ├── assets
@@ -84,6 +86,7 @@ semrc - project root
 ├── README.md
 ├── requirements.txt
 ├── tests
+│   └── unit_tests.py
 ```
 
 ### Modules :
