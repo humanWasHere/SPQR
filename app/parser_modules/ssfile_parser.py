@@ -19,45 +19,19 @@ import pandas as pd
 # key point is to make a diff between genepy and non-genepy ssfile
 
 
-class ssfileParser:
-    '''this method is used to parse ssfiles which can be genepy ssfile or other (formatted to convention ?) ssfiles'''
+class SsfileParser:
+    '''this class is used to parse ssfiles which can be genepy ssfile or other (formatted to convention ?) ssfiles'''
     def __init__(self, file_to_parse, is_genepy=False):
         self.ssfile = file_to_parse
         self.is_genepy = is_genepy
 
-    def rename_title(dataframe):
-        '''this method allows user to rename the column imported if it is not already in valid format (NaN value)'''
-        set_title_names = []  # store column name temp
-        for col in dataframe.columns:  # for each dataframe's columns
-            # if value is NaN for column title
-            if pd.isna(dataframe.loc[0, col]):
-                while True:  # we loop for security user_input -> if user enters a column title unused, we break the loop else we ask again
-                    user_input = input(
-                        f"Enter a value to replace NaN in column {col}: ")
-                    if user_input not in set_title_names:
-                        set_title_names.append(user_input)
-                        break
-                    else:
-                        print("Value already set !")
-                # we modify the value of the columns for user entries
-                dataframe.loc[0, col] = user_input
-        return dataframe
-
-    def drop_empty_column(dataframe):
-        '''this method checks all columns for empty values (NaN values in whole column). If empty, drops it (means bad dataframe interpretation - while parsing ssfile ?)'''
-        for col in dataframe.columns:
-            if dataframe[col].isnull().all():
-                dataframe.drop(columns=[col], inplace=True)
-        return dataframe
-
-    def ssfile_to_dataframe(self):
+    def ssfile_to_dataframe(self) -> pd.DataFrame:  # Union[pd.DataFrame, str] with from typing import Union
         '''this method converts the informations of a ssfile into a dataframe for genepy ssfile and other'''
         if self.is_genepy:  # à check autrement -> data in ssfile or external -> True/False is genepy file
             # if not 7 columns for genepy file : not genepy or pb with genepy. warning returned anyways (on_bad_lines)
             df = pd.read_csv(self.ssfile, sep='\t', header=0,
                              on_bad_lines='warn', encoding='utf-8')
-            # FIXME self takes 2 arguments in method ? keep ssfileParser ?
-            df = ssfileParser.drop_empty_column(df)  # dataframe cleaning
+            df = self.drop_empty_column(df)  # dataframe cleaning
             return pd.DataFrame(df)
         else:
             with open(self.ssfile, 'r') as f:
@@ -88,7 +62,32 @@ class ssfileParser:
             # FIXME return if parser is other than genepy
             # return df
 
-    def change_coord_to_relative(self, dataframe):
+    def rename_title(dataframe) -> pd.DataFrame:
+        '''this method allows user to rename the column imported if it is not already in valid format (NaN value)'''
+        set_title_names = []  # store column name temp
+        for col in dataframe.columns:  # for each dataframe's columns
+            # if value is NaN for column title
+            if pd.isna(dataframe.loc[0, col]):
+                while True:  # we loop for security user_input -> if user enters a column title unused, we break the loop else we ask again
+                    user_input = input(
+                        f"Enter a value to replace NaN in column {col}: ")
+                    if user_input not in set_title_names:
+                        set_title_names.append(user_input)
+                        break
+                    else:
+                        print("Value already set !")
+                # we modify the value of the columns for user entries
+                dataframe.loc[0, col] = user_input
+        return dataframe
+
+    def drop_empty_column(self, dataframe) -> pd.DataFrame:
+        '''this method checks all columns for empty values (NaN values in whole column). If empty, drops it (means bad dataframe interpretation - while parsing ssfile ?)'''
+        for col in dataframe.columns:
+            if dataframe[col].isnull().all():
+                dataframe.drop(columns=[col], inplace=True)
+        return dataframe
+
+    def change_coord_to_relative(self, dataframe) -> any:
         '''this method changes the coordinates to relative (since it is not in the correct format in the ssfile)'''
         # TODO call this function only if ssfile is genepy dataframe
         # if dataframe["UNIT_COORD"] == "DBU": -> indent
@@ -98,9 +97,3 @@ class ssfileParser:
         relative_coord_y = dataframe["Y_coord_Pat"] - dataframe["Y_coord_Addr"]
         # TODO add relative_coord_x/y columns in dataframe ?
         return relative_coord_x, relative_coord_y
-
-
-# genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"  # genepy files
-# parser_instance = ssfileParser(genepy_ssfile, is_genepy=True)
-# ssfile_genepy_df = parser_instance.ssfile_to_dataframe()
-# parser_instance.change_coord_to_relative(ssfile_genepy_df)

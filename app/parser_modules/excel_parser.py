@@ -4,7 +4,7 @@ import openpyxl
 # excel_file = "/work/opc/all/users/chanelir/semrc-test/assets/ssfile-genepy-proto_data.xlsx"
 
 
-class excelParser:
+class ExcelParser:
     def __init__(self, file_to_parse):
         self.excel = file_to_parse
 

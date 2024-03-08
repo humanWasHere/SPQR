@@ -59,7 +59,7 @@ or
 ```bash
 python3 main.py
 ```
-Enjoy your time ! SEMRC is cooking a recipe for you !
+Enjoy your free time ! SEMRC is cooking a recipe for you !
 
 ### Tree structure :
 ```
@@ -69,14 +69,16 @@ semrc - project root
 │   │   ├── dataframe_to_eps_data.py
 │   │   ├── hss_creator.py
 │   │   ├── hss_modificator.py
-|   |   ├── template_to_all_sections.py
+│   │   ├── __init__.py
+│   │   └── template_to_all_sections.py
+│   ├── __init__.py
 │   ├── main.py
 │   ├── measure_modules
 │   │   ├── measure.py
-│   │   ├── measure.tcl
+│   │   └── measure.tcl
 │   └── parser_modules
 │       ├── clipboard_parser.py
-|       ├── csv_parser.py
+│       ├── csv_parser.py
 │       ├── excel_parser.py
 │       └── ssfile_parser.py
 ├── assets
@@ -85,8 +87,20 @@ semrc - project root
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
-├── tests
-│   └── unit_tests.py
+└── tests
+│   ├── __init__.py
+│   ├── test_hss_modules
+│   │   ├── __init__.py
+│   │   ├── test_df_to_eps_data.py
+│   │   ├── test_hss_creator.py
+│   │   ├── test_hss_modificator.py
+│   │   └── test_template_to_all_sections.py
+│   ├── test_measure_module.py
+│   └── test_parser_modules
+│       ├── test_clipboard_parser.py
+│       ├── test_csv_parser.py
+│       ├── test_excel_parser.py
+└── └── └── test_ssfile_parser.py
 ```
 
 ### Modules :

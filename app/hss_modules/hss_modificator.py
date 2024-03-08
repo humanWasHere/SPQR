@@ -1,4 +1,4 @@
-from hss_creator import HssCreator
+from .hss_creator import HssCreator
 from ..parser_modules.csv_parser import CsvParser
 
 # TODO check if HssCreator instance is needed to modify the recipe
@@ -18,7 +18,8 @@ class RecipeModificator(HssCreator):
     def __init__(self, json_recipe=None, csv_recipe=None):
         hss_creator_instance = HssCreator
         # this or HssCreator.import_json(json_recipe) ?
-        self.imported_json_recipe = hss_creator_instance.import_json(json_recipe)  # This can be none
+        self.imported_json_recipe = hss_creator_instance.import_json(
+            json_recipe)  # This can be none
         # TODO make a logic that asks at least one recipe format to modify
         self.imported_csv_recipe = CsvParser.parse_csv(csv_recipe)
         self.imported_recipe = ""

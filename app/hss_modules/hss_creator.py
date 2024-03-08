@@ -1,7 +1,8 @@
 import pandas as pd
+from pathlib import Path
 import json
 import re
-from .template_to_all_sections import sectionMaker
+from .template_to_all_sections import SectionMaker
 
 # This is main hss_modules' file
 
@@ -15,9 +16,12 @@ class HssCreator:
     def __init__(self, eps_dataframe: pd.DataFrame, template=None, output_file=None):
         # "imports"
         if template is None:
-            template = "/work/opc/all/users/chanelir/semrc/assets/template_SEM_recipe.json"
+            template = Path(__file__).resolve(
+            ).parent.parent.parent / "assets" / "template_SEM_recipe.json"
         if output_file is None:
-            output_file = "/work/opc/all/users/chanelir/semrc-outputs/recette.hss"
+            # TODO this is temp, I don't want a recipe_output folder in my project
+            output_file = Path(__file__).resolve(
+            ).parent.parent.parent / "recipe_output" / "recette.hss"
         self.json_template = self.import_json(template)
         # initialization
         self.num_columns = 0
@@ -61,8 +65,8 @@ class HssCreator:
         for df in self.dict_of_second_level_df:
             if df != "<EPS_Data>":
                 # making an instance of sectionMaker which will set all the sections except <EPS_Data> since it has its own class to fill it
-                instance_sectionMaker = sectionMaker(
-                    self.dict_of_second_level_df)
+                instance_sectionMaker = SectionMaker(
+                    self.dict_of_second_level_df, "OM")
                 self.dict_of_second_level_df["<CoordinateSystem>"] = instance_sectionMaker.make_coordinate_system_section(
                 )
                 self.dict_of_second_level_df["<GPCoordinateSystem>"] = instance_sectionMaker.make_gp_coordinate_system_section(
@@ -126,9 +130,9 @@ class HssCreator:
         # TODO drop les données du template si pas besoin -> permets d'avoir un template exhaustif
         # TODO voir s'il faut pas set NAN ou une value vide ''
         # safety check to add default data if there is no data in self.eps_data (helps for unit tests)
-        # FIXME manage empty dataframe as entry
-        if self.eps_data.empty:
-            self.eps_data = pd.DataFrame(self.dict_of_second_level_df["<EPS_Data>"])
+        # if self.eps_data.empty:
+        #     # self.eps_data = pd.DataFrame(self.dict_of_second_level_df["<EPS_Data>"])  # FIXME manage empty dataframe as entry
+        #     raise ValueError("You must enter measure points ! Dataframe is empty...")
         # actual logic of the method
         template_header = pd.DataFrame(
             self.dict_of_second_level_df["<EPS_Data>"])
@@ -139,11 +143,11 @@ class HssCreator:
                 template_header[column_name] = value_name
         self.dict_of_second_level_df["<EPS_Data>"] = template_header
 
-    def fill_type_in_eps_data(self, number_of_mp) -> None:
+    def fill_type_in_eps_data(self, number_of_existing_mp) -> None:
         '''Defines if the Type column needs to be filled by 1s, 2s or empty values'''
         # sanitize value
-        if number_of_mp < 1:
-            number_of_mp = 1
+        if number_of_existing_mp < 1:
+            number_of_existing_mp = 1
         # logic for columns before MP columns
         for col in self.dict_of_second_level_df["<EPS_Data>"]:
             if col == "Type1":
@@ -154,7 +158,7 @@ class HssCreator:
         # defines if writing data is necessary or not - for MP section
         # if data empty in MPn section is empty, corresponding value type is set to "" else fill with 2s
         # WARNING maintenabilité ?
-        for mp_nb in range(1, number_of_mp + 1):
+        for mp_nb in range(1, number_of_existing_mp + 1):
             mp_n_is_empty = False
             for col, val in self.dict_of_second_level_df["<EPS_Data>"].items():
                 if str(col).startswith(f"MP{mp_nb}"):

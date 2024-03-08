@@ -1,10 +1,14 @@
-# import pandas as pd
+import pandas as pd
+
+# TODO faire valider par Romain la sortie en dataframe (doc -> pd.DataFrame)
 
 
-class sectionMaker:
+class SectionMaker:
     '''this class is used to create, fill or modify the values of all second level sections except <EPS_Data> section. If not modified, value is set default as in template.json'''
-    def __init__(self, dictionnary):
+
+    def __init__(self, dictionnary, om_or_sem_recipe):
         self.df_dict = dictionnary
+        self.recipe_type = om_or_sem_recipe
         self.coordinate_system = self.df_dict["<CoordinateSystem>"]
         self.gp_coordinate_system = self.df_dict["<GPCoordinateSystem>"]
         self.unit = self.df_dict["<Unit>"]
@@ -13,50 +17,74 @@ class sectionMaker:
         self.gp_offset = self.df_dict["<GP_Offset>"]
         self.epa_list = self.df_dict["<EPA_List>"]
 
-    def make_coordinate_system_section(self):
-        '''this meathod set corresponding values to contest by calculation or definition'''
+    # by default, if there is no modification, each section returns the default value in assets/template_SEM_recipe.json
+    # should template return default values of the CDSEM procedure page 13 ?
+    def make_coordinate_system_section(self) -> pd.DataFrame:
+        '''this meathod set corresponding values to coordinate system section by calculation or definition'''
         return self.coordinate_system
 
-    def make_gp_coordinate_system_section(self):
-        '''this meathod set corresponding values to contest by calculation or definition'''
+    def make_gp_coordinate_system_section(self) -> pd.DataFrame:
+        '''this meathod set corresponding values to gp coordinate system section by calculation or definition'''
         return self.gp_coordinate_system
 
-    def make_unit_section(self):
-        '''this meathod set corresponding values to contest by calculation or definition'''
+    def make_unit_section(self) -> pd.DataFrame:
+        '''this meathod set corresponding values to unit section by calculation or definition'''
         return self.unit
 
-    def make_gp_data_section(self):
-        '''this meathod set corresponding values to contest by calculation or definition'''
-        # TODO implement the right logic -> get the correct info
+    def make_gp_data_section(self) -> pd.DataFrame:
+        '''this meathod set corresponding values to gp data section by calculation or definition'''
+        # __________GP_ID section__________
+        # self.gp_data['GP_ID'] = range(1, min(self.corresponding_data.shape[0] + 1, 10))
+        # # preventing data to be out of range -> match doc
+        # if any(id > 10 for id in self.gp_data['GP_ID']):
+        #     raise ValueError("GP_ID values cannot exceed 10")
+        # __________Type section__________
+        # no need for this section, Type should and can only be one (set in template as equal to one)
+        # TODO test if type here is always one -> test template
+        # __________GP_X section__________
+        # __________GP_Y section__________
         # __________GP_Template section__________
-        self.gp_data["GP_Template"] = "chef_OM_default"
-        # # __________Mode section__________
-        # if self.gp_data["GP_Template"] == "chef_OM_default":
-        #     # attribute default value
-        #     gp_mag_OM_default = 210
-        #     if self.gp_data["GP_MAG"] >= 104 and self.gp_data["GP_MAG"] <= 210:
-        #         self.gp_data["GP_MAG"] = gp_mag_OM_default
-        #     else:
-        #         raise ValueError("Value for OM should be between 104 and 210 - change GP_Template or this value")
-        # # Même chose pour les SEM
-        # # elif self.gp_data["GP_Template"] == "chef_SEM_default":
-        #     # gp_mag_SEM_default = 500000
-        #     # if self.gp_data["GP_MAG"] >= 1000 and self.gp_data["GP_MAG"] <= 500000:
-        # print(pd.Series(self.gp_data).to_string())
-
-        # __________GP_Mag section__________
-        # TODO if GP_Template == "chef_OM_default":
-        # GP_MAG = 210
+        # FIXME change logic since it is hard coded / get information if recipe is OM or SEM
+        if self.recipe_type == "OM":
+            # est ce que le template est parfait ? doit être général ?
+            self.gp_data["GP_Template"] = "chef_OM_default"
+            # pertinent de l'écrire ici (doit être testé / safe checké) ?
+            if (self.gp_data["GP_Template"] != "chef_OM_default").any():
+                raise ValueError(
+                    "GP_Template must be 'chef_OM_default' for OM")
+        elif self.recipe_type == "SEM":
+            self.gp_data["GP_Template"] = "chef_SEM_default"
+            # pertinent de l'écrire ici (doit être testé / safe checké) ?
+            if (self.gp_data["GP_Template"] != "chef_SEM_default").any():
+                raise ValueError(
+                    "GP_Template must be 'chef_SEM_default' for SEM")
+        # __________GP_MAG section__________
+        if (self.gp_data["GP_Template"] == "chef_OM_default").any():
+            # value should be 104 or 210
+            # TODO comment savoir lequel de 104 ou 210 choisir ?
+            self.gp_data["GP_MAG"] = 104
+            # pertinent de l'écrire ici (doit être testé / safe checké) ?
+            if not self.gp_data["GP_MAG"].isin([104, 210]).all():
+                raise ValueError("GP_MAG for OM should be either 104 or 210")
+        elif (self.gp_data["GP_Template"] == "chef_SEM_default").any():
+            # TODO comment savoir quelle valeur entre 1000 et 500000 ?
+            self.gp_data["GP_MAG"] = 500000
+            # pertinent de l'écrire ici (doit être testé / safe checké) ?
+            if (self.gp_data["GP_MAG"] < 1000).any() or (self.gp_data["GP_MAG"] > 500000).any():
+                raise ValueError(
+                    "GP_MAG for SEM should be between 1000 and 500000")
+        # __________GP_ROT section__________
+        # set GP_ROT's section logic
         return self.gp_data
 
-    def make_gpa_list_section(self):
-        '''this meathod set corresponding values to contest by calculation or definition'''
+    def make_gpa_list_section(self) -> pd.DataFrame:
+        '''this meathod set corresponding values to gpa list section by calculation or definition'''
         return self.gpa_list
 
-    def make_gp_offset_section(self):
-        '''this meathod set corresponding values to contest by calculation or definition'''
+    def make_gp_offset_section(self) -> pd.DataFrame:
+        '''this meathod set corresponding values to gp offset section by calculation or definition'''
         return self.gp_offset
 
-    def make_epa_list_section(self):
-        '''this meathod set corresponding values to contest by calculation or definition'''
+    def make_epa_list_section(self) -> pd.DataFrame:
+        '''this meathod set corresponding values to epa list section by calculation or definition'''
         return self.epa_list

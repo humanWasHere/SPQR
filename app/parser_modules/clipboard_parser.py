@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-class clipboardParser:
+class ClipboardParser:
 
     def clipboard_to_dataframe(self):
         '''explain what this fonction does here'''
