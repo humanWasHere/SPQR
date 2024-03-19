@@ -45,6 +45,7 @@ class SectionMaker:
         # __________GP_Y section__________
         # __________GP_Template section__________
         # FIXME change logic since it is hard coded / get information if recipe is OM or SEM
+        # FIXME should not exist ?????
         if self.recipe_type == "OM":
             # est ce que le template est parfait ? doit être général ?
             self.gp_data["GP_Template"] = "chef_OM_default"

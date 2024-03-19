@@ -86,7 +86,8 @@ class Measure:
         '''runs Calibre script by using "calibredrv"'''
         # cmd = f"setcalibre rec >/dev/null; calibredrv -64 {script} | tee {debug}"  # 2.71 s ± 43.6 ms
         host = self.find_host()
-        # todo: pexpect?
+        # TODO : pexpect?
+        # TODO maintenabilité + portée grenoble
         cmd = "setenv MGC_HOME /sw/mentor/calibre/2018.4_34.26/aoi_cal_2018.4_34.26; " \
             "setenv PATH $MGC_HOME/bin:$PATH; " \
             "setenv MGLS_LICENSE_FILE 1717@cr2sx03400:1717@cr2sx03401:1717@cr2sx03402; " \
@@ -115,6 +116,7 @@ class Measure:
         try:
             meas_df = pd.read_csv(measure_tempfile_path, index_col=False)
         except FileNotFoundError:
+            # TODO raise instead of print ?
             print("Error: Results file not found.")
         measure_tempfile.close()  # remove temporary script
         return meas_df

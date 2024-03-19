@@ -1,4 +1,7 @@
 **/**/__pycache__/
 .vscode/
 .pytest_cache/
+recipe_output/
+htmlcov/
 requirements.txt
+.coverage
