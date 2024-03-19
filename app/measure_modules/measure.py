@@ -11,16 +11,14 @@ from pathlib import Path
 
 
 class Measure:
-    def __init__(self, parser_input: pd.Series, coords: pd.Series, layout, layers: list, tcl_measure_file=None):
+    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, tcl_measure_file=None):
         # self.INPUT_DF = df_file
         if tcl_measure_file is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
                 raise FileNotFoundError(f"Could not find {self.tcl_script}")
         self.parser_df = parser_input
-        # if parser_input is None:
-        #     self.parser_df =
-        self.x_y_points = coords
+        self.x_y_points = parser_input[['name', 'x', 'y']]
         self.layout = layout
         self.layers = layers
         # if isinstance(layers, list):
@@ -103,43 +101,29 @@ class Measure:
             raise ChildProcessError(errs)
         return host
 
-    def sequence_auto(self) -> pd.DataFrame:
-        '''runs Calibre script to automatically measure a layout'''
-        measure_tempfile = tempfile.NamedTemporaryFile(
-            dir=str(Path(__file__).resolve().parent.parent.parent / ".temp"))
-        measure_tempfile_path = measure_tempfile.name
-        # TODO remove this line ?
-        # results = str(Path(__file__).resolve().parent.parent.parent / ".temp" / "measure.temp")
-        tmp = self.creation_script_tmp(
-            measure_tempfile_path, unit="dbu")
-        self.lance_script(tmp, verbose=True)
-        try:
-            meas_df = pd.read_csv(measure_tempfile_path, index_col=False)
-        except FileNotFoundError:
-            # TODO raise instead of print ?
-            print("Error: Results file not found.")
-        measure_tempfile.close()  # remove temporary script
+    def process_results(self, output_path) -> pd.DataFrame:
+        meas_df = pd.read_csv(output_path, index_col=False, na_values="unknown")
+        # TODO : traiter les "Pitch non symetrical" -> minimum?
+        meas_df.dropna(subset=[" X_dimension(nm) ", " Y_dimension(nm) "], inplace=True)  # invalid rows
+        # TODO : rename in tcl file?
+        meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
+                                'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
+                       inplace=True)
+        # TODO orientation, min_dimension...
         return meas_df
 
-    def clean_unknown(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        '''cleans a pandas dataframe by deleting all lines containing "unknown" values'''
-        # TODO look at tests -> type pb ?
-        # TODO why is there unknown ?
-        if dataframe.isin(['unknown']).any().any():
-            new_dataframe = dataframe.copy()
-            new_dataframe = new_dataframe[new_dataframe != 'unknown'].dropna()
-            # TODO def dataframe ?
-            return new_dataframe
-        else:
-            return dataframe
-
     def run_measure(self) -> pd.DataFrame:
-        '''method that runs the measure and outputs a merged dataframe with column name changed'''
-        # TODO remove following line - measuring
-        measure_df = self.sequence_auto()
-        # merging dataframes and renaming column
-        merged_dfs = pd.merge(self.parser_df, self.clean_unknown(
-            measure_df), left_on='Name', right_on='Gauge ')
-        merged_dfs = merged_dfs.drop('Gauge ', axis=1)
-        merged_dfs = merged_dfs.rename(columns={'Name': 'Gauge name'})
+        '''runs Calibre script to automatically measure a layout'''
+        measure_tempfile = tempfile.NamedTemporaryFile(dir=Path(__file__).resolve().parents[2] / ".temp")
+        # TODO where to store tmp files (script + results)
+        # results = Path(__file__).resolve().parents[2] / ".temp" / "measure.temp"
+        measure_tempfile_path = measure_tempfile.name
+        tmp = self.creation_script_tmp(measure_tempfile_path, unit="dbu")
+        self.lance_script(tmp, verbose=True)
+        meas_df = self.process_results(measure_tempfile_path)
+
+        merged_dfs = pd.merge(self.parser_df, meas_df, on="name")
+
+        measure_tempfile.close()  # remove temporary script
+
         return merged_dfs

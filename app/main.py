@@ -18,17 +18,13 @@ def run_recipe_creation_w_measure():
     '''this is the real main function which runs the flow with the measure - "prod" function'''
     print('1. ssfile parsing')
     parser_instance = SsfileParser(genepy_ssfile, is_genepy=True)
+    
     # ssfile_genepy_df = parser_instance.ssfile_to_dataframe()
-    ssfile_genepy_df = parser_instance.ssfile_to_dataframe().iloc[:30]
+    ssfile_genepy_df = parser_instance.parse_data().iloc[:30]
     print('\tssfile parsing done')
-    # selection des colonnes d'interet
-    INPUT_DF = ssfile_genepy_df[['Name', 'X_coord_Pat', 'Y_coord_Pat']]
-
-    # this line represents the centralization of parsing to a namming convention
-    formated_df = ssfile_genepy_df
 
     print('2. measurement')
-    measure_instance = Measure(formated_df, INPUT_DF, layout, layers)
+    measure_instance = Measure(ssfile_genepy_df, layout, layers)
     output_measure = measure_instance.run_measure()
     print('\tmeasurement done\n3. <EPS_Data> section creation')
     EPS_DataFrame = DataFrameToEPSData(output_measure)

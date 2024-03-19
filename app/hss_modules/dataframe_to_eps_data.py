@@ -21,9 +21,9 @@ class DataFrameToEPSData:
 
     # mapping should not be used to assign data ! just make a link between 2 dfs
     MAPPING_Genepy = {
-        'EPS_Name': "Gauge name",
-        'Move_X': "X_coord_Pat",
-        'Move_Y': "Y_coord_Pat",
+        'EPS_Name': "name",
+        'Move_X': "x",
+        'Move_Y': "y",
         "MP_TargetCD": " min_dimension(nm)"
     }
 
