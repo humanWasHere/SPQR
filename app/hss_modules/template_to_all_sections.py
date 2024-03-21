@@ -1,7 +1,5 @@
 import pandas as pd
 
-# TODO faire valider par Romain la sortie en dataframe (doc -> pd.DataFrame)
-
 
 class SectionMaker:
     '''this class is used to create, fill or modify the values of all second level sections except <EPS_Data> section. If not modified, value is set default as in template.json'''
@@ -18,7 +16,6 @@ class SectionMaker:
         self.epa_list = self.df_dict["<EPA_List>"]
 
     # by default, if there is no modification, each section returns the default value in assets/template_SEM_recipe.json
-    # should template return default values of the CDSEM procedure page 13 ?
     def make_coordinate_system_section(self) -> pd.DataFrame:
         '''this meathod set corresponding values to coordinate system section by calculation or definition'''
         return self.coordinate_system
@@ -39,23 +36,19 @@ class SectionMaker:
         # if any(id > 10 for id in self.gp_data['GP_ID']):
         #     raise ValueError("GP_ID values cannot exceed 10")
         # __________Type section__________
-        # no need for this section, Type should and can only be one (set in template as equal to one)
+        # should be one
         # TODO test if type here is always one -> test template
         # __________GP_X section__________
         # __________GP_Y section__________
         # __________GP_Template section__________
-        # FIXME change logic since it is hard coded / get information if recipe is OM or SEM
-        # FIXME should not exist ?????
         if self.recipe_type == "OM":
             # est ce que le template est parfait ? doit être général ?
             self.gp_data["GP_Template"] = "chef_OM_default"
-            # pertinent de l'écrire ici (doit être testé / safe checké) ?
             if (self.gp_data["GP_Template"] != "chef_OM_default").any():
                 raise ValueError(
                     "GP_Template must be 'chef_OM_default' for OM")
         elif self.recipe_type == "SEM":
             self.gp_data["GP_Template"] = "chef_SEM_default"
-            # pertinent de l'écrire ici (doit être testé / safe checké) ?
             if (self.gp_data["GP_Template"] != "chef_SEM_default").any():
                 raise ValueError(
                     "GP_Template must be 'chef_SEM_default' for SEM")
@@ -64,18 +57,15 @@ class SectionMaker:
             # value should be 104 or 210
             # TODO comment savoir lequel de 104 ou 210 choisir ?
             self.gp_data["GP_MAG"] = 104
-            # pertinent de l'écrire ici (doit être testé / safe checké) ?
             if not self.gp_data["GP_MAG"].isin([104, 210]).all():
                 raise ValueError("GP_MAG for OM should be either 104 or 210")
         elif (self.gp_data["GP_Template"] == "chef_SEM_default").any():
             # TODO comment savoir quelle valeur entre 1000 et 500000 ?
             self.gp_data["GP_MAG"] = 500000
-            # pertinent de l'écrire ici (doit être testé / safe checké) ?
             if (self.gp_data["GP_MAG"] < 1000).any() or (self.gp_data["GP_MAG"] > 500000).any():
                 raise ValueError(
                     "GP_MAG for SEM should be between 1000 and 500000")
         # __________GP_ROT section__________
-        # set GP_ROT's section logic
         return self.gp_data
 
     def make_gpa_list_section(self) -> pd.DataFrame:

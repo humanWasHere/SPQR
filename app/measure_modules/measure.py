@@ -12,7 +12,6 @@ from pathlib import Path
 
 class Measure:
     def __init__(self, parser_input: pd.DataFrame, layout, layers: list, tcl_measure_file=None):
-        # self.INPUT_DF = df_file
         if tcl_measure_file is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
@@ -56,6 +55,7 @@ class Measure:
     def creation_script_tmp(self, output, search_area=5, unit="nm") -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
         # TODO this method should close temp file ?
+        # TODO rationnaliser l'emplacement des fichiers temporaires
         # Place temporary script in user's home because /tmp is not shared across farm
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
         # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")  # gets deleted out of scope?
@@ -116,7 +116,6 @@ class Measure:
         '''runs Calibre script to automatically measure a layout'''
         measure_tempfile = tempfile.NamedTemporaryFile(dir=Path(__file__).resolve().parents[2] / ".temp")
         # TODO where to store tmp files (script + results)
-        # results = Path(__file__).resolve().parents[2] / ".temp" / "measure.temp"
         measure_tempfile_path = measure_tempfile.name
         tmp = self.creation_script_tmp(measure_tempfile_path, unit="dbu")
         self.lance_script(tmp, verbose=True)
@@ -124,6 +123,6 @@ class Measure:
 
         merged_dfs = pd.merge(self.parser_df, meas_df, on="name")
 
-        measure_tempfile.close()  # remove temporary script
+        measure_tempfile.close()
 
         return merged_dfs

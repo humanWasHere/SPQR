@@ -1,8 +1,6 @@
 import pandas as pd
 import openpyxl
 
-# excel_file = "/work/opc/all/users/chanelir/semrc-test/assets/ssfile-genepy-proto_data.xlsx"
-
 
 class ExcelParser:
     def __init__(self, file_to_parse):
@@ -10,11 +8,8 @@ class ExcelParser:
 
     def excel_to_dataframe(self):
         '''explain what this fonction does here'''
-        # Open the Excel file
         workbook = openpyxl.load_workbook(self.excel)
-        # Get the sheet names
         sheet_names = workbook.sheetnames
-        # Check if there is at least one sheet
         if len(sheet_names) > 1:
             print('There is at least one sheet in the file.')
             sheet_name = input("Quel est le nom de la feuille que vous voulez processer ? ")
@@ -26,6 +21,11 @@ class ExcelParser:
         df = pd.DataFrame(excel_data)
         return df.head()
 
+    def unit(self):
+        pass
 
-# parser_instance = excelParser(excel_file)
-# print(parser_instance.excel_to_dataframe())
+    def unit_converter(self, unit):
+        pass
+
+    def parse_data(self) -> pd.DataFrame:
+        pass

@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 
-# FIXME changer l'éclatement du code en suivant les méthodes en commentaire
-
 
 # TODO if info is from genepy, get genepy mapping / genepy type of recipe
 # TODO recloisonner le code pour simplifier les sorties de test -> <EPS_Data> section trop longue pour test
@@ -19,7 +17,6 @@ class DataFrameToEPSData:
         'MP1_Y': 0
     }
 
-    # mapping should not be used to assign data ! just make a link between 2 dfs
     MAPPING_Genepy = {
         'EPS_Name': "name",
         'Move_X': "x",
@@ -33,14 +30,9 @@ class DataFrameToEPSData:
         self.eps_data = pd.DataFrame()
         assert step in {"PH", "ET"}
         self.step = step
-        # following __init__ lines should not be called like that (testing and separation purpose)
-        # self.eps_data_mapping()
-        # self.global_eps_data_filling()
 
     def eps_data_mapping(self) -> None:
         '''makes a link between gauge df and actual column name of recipe header'''
-        # TODO placer ici (?) une logique sélectionnant le type de recette. Ici, depuis un ssfile genepy
-        # applying mapping and so merged_df values to eps_data_df
         for csv_col, gauge_col in self.MAPPING_Genepy.items():
             self.eps_data[csv_col] = self.gauges[gauge_col]
 
@@ -81,7 +73,6 @@ class DataFrameToEPSData:
         '''Generate unique IDs and fill columns with default values'''
         # __________EPS_ID section__________
         self.eps_data['EPS_ID'] = range(1, min(self.gauges.shape[0] + 1, 9999))
-        # preventing data to be out of range -> match doc
         if any(id > 9999 for id in self.eps_data['EPS_ID']):
             raise ValueError("EPS_ID values cannot exceed 9999")
 
@@ -92,14 +83,11 @@ class DataFrameToEPSData:
 
         # __________MP_Direction__________
         # FIXME it is hard coded
-        # written since it is mandatory for EP_Rot
         self.eps_data["MP1_Direction"] = 1
 
         # __________EP_Rot section__________
         # TODO est ce que c'est à calculer en fonction de plusieurs MP ?
-        # FIXME est ce que la ligne est validée par Romain ?
-        # ligne suivante bien pour du test ?
-        # .get() instead of [], method to handle cases where a key is missing
+        # pb for tests ? .get() instead of [], method to handle cases where a key is missing
         x = 1
         self.eps_data["EP_Rot"] = np.where(self.eps_data["MP1_Direction"] == x, 0, 90)
 

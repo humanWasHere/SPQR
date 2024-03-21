@@ -1,4 +1,3 @@
-import pandas as pd
 from parser_modules.ssfile_parser import SsfileParser
 from measure_modules.measure import Measure
 from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
@@ -12,22 +11,22 @@ layers = ["1.0"]
 # TODO
 # overlap input data with GUI selection
 # get_eps_data() + write_in_file() to call in hss_creator ?
+# output json format recipe if modification needs to be done afterwards -> in hss creator output json from df or from str ?
+# -> reprendre import_json() and json_to_dataframe() from hss_creator.py -> make a function to import
 
 
 def run_recipe_creation_w_measure():
     '''this is the real main function which runs the flow with the measure - "prod" function'''
     print('1. ssfile parsing')
     parser_instance = SsfileParser(genepy_ssfile, is_genepy=True)
-    
-    # ssfile_genepy_df = parser_instance.ssfile_to_dataframe()
+    # ssfile_genepy_df = parser_instance.parse_data()
     ssfile_genepy_df = parser_instance.parse_data().iloc[:30]
     print('\tssfile parsing done')
-
     print('2. measurement')
     measure_instance = Measure(ssfile_genepy_df, layout, layers)
     output_measure = measure_instance.run_measure()
     print('\tmeasurement done\n3. <EPS_Data> section creation')
-    EPS_DataFrame = DataFrameToEPSData(output_measure)
+    EPS_DataFrame = DataFrameToEPSData(output_measure, "genepy")
     EPS_Data = EPS_DataFrame.get_eps_data()
     print('\t<EPS_Data> created\n4. .hss file creation')
     runHssCreation = HssCreator(eps_dataframe=EPS_Data)

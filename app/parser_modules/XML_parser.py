@@ -1,16 +1,12 @@
-from typing import Union, TextIO
 import re
-from pathlib import Path
 import pandas as pd
 import xml.etree.ElementTree as ET
-
-# FIXME all :)
-
-unit = None
+from .parse import FileParser
 
 
-class XMLParser:
-    '''this class is used to parse XML files (which can be ?)'''
+class CalibreXMLParser(FileParser):
+    unit = None
+
     def __init__(self, tree):
         if isinstance(tree, str):
             tree = ET.parse(tree)
@@ -52,18 +48,5 @@ class XMLParser:
         # Fix name
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r' ', '_', s))
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r'\W+', '', s))  # keep alphanumeric only
+        # TODO add generic name if empty
         return parsed_data
-
-    def get_parser(file: Union[Path, str, TextIO]) -> TSVParser:
-        """Factory providing the appropriate parser depending on gauge data type, takes path or buffer"""
-        try:
-            # Check if file is XML type
-            xml_tree = ET.parse(file)
-            return XMLParser(xml_tree)
-        except ET.ParseError:
-            # Else assume TSV type
-            if hasattr(file, 'seek'):
-                file.seek(0)  # to support file-handles, need to read again
-            return TSVParser(file)
-        # except FileNotFoundError:
-        #     return get_parser(StringIO(file))  # works for plain text content but weird

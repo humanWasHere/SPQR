@@ -1,5 +1,7 @@
 import pandas as pd
 
+# FIXME highly connected to GUI ? 
+
 
 class ClipboardParser:
 
