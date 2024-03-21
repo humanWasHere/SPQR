@@ -26,7 +26,7 @@ def run_recipe_creation_w_measure():
     measure_instance = Measure(ssfile_genepy_df, layout, layers)
     output_measure = measure_instance.run_measure()
     print('\tmeasurement done\n3. <EPS_Data> section creation')
-    EPS_DataFrame = DataFrameToEPSData(output_measure, "genepy")
+    EPS_DataFrame = DataFrameToEPSData(output_measure)
     EPS_Data = EPS_DataFrame.get_eps_data()
     print('\t<EPS_Data> created\n4. .hss file creation')
     runHssCreation = HssCreator(eps_dataframe=EPS_Data)

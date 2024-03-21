@@ -109,7 +109,10 @@ class Measure:
         meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
                                 'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
-        # TODO orientation, min_dimension...
+        # TODO move to MP creation
+        meas_df['target_cd'] = meas_df[['x_dim', 'y_dim']].min(axis=1)
+        meas_df.loc[meas_df.target_cd == meas_df.y_dim, 'orient'] = 'Y'
+        meas_df.loc[meas_df.target_cd == meas_df.x_dim, 'orient'] = 'X'
         return meas_df
 
     def run_measure(self) -> pd.DataFrame:
@@ -120,9 +123,7 @@ class Measure:
         tmp = self.creation_script_tmp(measure_tempfile_path, unit="dbu")
         self.lance_script(tmp, verbose=True)
         meas_df = self.process_results(measure_tempfile_path)
-
         merged_dfs = pd.merge(self.parser_df, meas_df, on="name")
-
-        measure_tempfile.close()
-
+        # TODO: cleanup columns in merged df
+        measure_tempfile.close()  # remove temporary script
         return merged_dfs
