@@ -20,16 +20,16 @@ class DataFrameToEPSData:
     }
 
     # mapping should not be used to assign data ! just make a link between 2 dfs
-    MAPPING_Genepy = {
+    MAPPING = {
         'EPS_Name': "name",
         'Move_X': "x",
         'Move_Y': "y",
-        "MP_TargetCD": " min_dimension(nm)"
+        "MP_TargetCD": "target_cd"
     }
 
-    def __init__(self, gauges: pd.DataFrame, step: str = "PH"):
+    def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
         # TODO:  validate data (columns, type, nan...)
-        self.gauges = gauges  # .astype({'x': int, 'y': int})
+        self.core_data = core_data  # .astype({'x': int, 'y': int})
         self.eps_data = pd.DataFrame()
         assert step in {"PH", "ET"}
         self.step = step
@@ -41,9 +41,13 @@ class DataFrameToEPSData:
         '''makes a link between gauge df and actual column name of recipe header'''
         # TODO placer ici (?) une logique sélectionnant le type de recette. Ici, depuis un ssfile genepy
         # applying mapping and so merged_df values to eps_data_df
-        for csv_col, gauge_col in self.MAPPING_Genepy.items():
-            self.eps_data[csv_col] = self.gauges[gauge_col]
-
+        for eps_col, core_col in self.MAPPING.items():
+            self.eps_data[eps_col] = self.gauges[core_col]
+        self.eps_data['#EPS_ID'] = range(1, self.gauges.shape[0] + 1)
+        self.eps_data['MP1_PNo'] = self.eps_data['#EPS_ID']  # TODO: move to MP
+        for csv_col, value in self.DEFAULTS.items():
+            self.eps_data[csv_col] = value
+    """
     # # method naming based on Hitachi doc
     # def set_eps_data_id():
     #     # first eps line
@@ -76,6 +80,7 @@ class DataFrameToEPSData:
     # def set_eps_data_mp1():
     #     # from EP_Mag_X to EP_ABCC_X
     #     pass
+    """
 
     def global_eps_data_filling(self) -> None:
         '''Generate unique IDs and fill columns with default values'''
@@ -86,14 +91,11 @@ class DataFrameToEPSData:
             raise ValueError("EPS_ID values cannot exceed 9999")
 
         # __________EP_Template section__________
-        # FIXME is it correct setting ?
-        self.eps_data['EP_Template'] = dict(
-            PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
+        self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
 
         # __________MP_Direction__________
-        # FIXME it is hard coded
         # written since it is mandatory for EP_Rot
-        self.eps_data["MP1_Direction"] = 1
+        self.eps_data["MP1_Direction"] = self.core_data.orient
 
         # __________EP_Rot section__________
         # TODO est ce que c'est à calculer en fonction de plusieurs MP ?

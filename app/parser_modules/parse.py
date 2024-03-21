@@ -5,23 +5,51 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 
 
+class DataframeValidator:
+    SCHEMA = {
+        'name': str,
+        'x': int,
+        'y': int,
+        'x_ap': int,
+        'y_ap': int,
+        'orient': str,
+        'target_cd': int
+    }
+
+    @classmethod
+    def validate(cls, func):
+        def wrapper(*args, **kwargs):
+            data = func(*args, **kwargs)
+            cls.validate_schema(data)
+        return wrapper
+
+    @classmethod
+    def validate_schema(cls, dataframe) -> None:
+        for col_name, series in dataframe.items():
+            # TODO try conversion
+            assert series.dtype == cls.SCHEMA[col_name], f"wrong dtype for {col_name}: expected {cls.SCHEMA[col_name]} got {series.dtype}"
+
+
 class FileParser(ABC):
     @property
     @abstractmethod
     def unit(self) -> str:
         """Return coordinate units for conversion"""
 
+    # @DataframeValidator.validate
     @abstractmethod
     def parse_data(self) -> pd.DataFrame:
         """Return a dataframe of gauge name and coordinates in original units
         Column labels MUST BE: name, x, y. Name must be alphanumeric or underscore."""
 
+    # def validate_data(self):
+        
 
 class CalibreXMLParser(FileParser):
     unit = None
 
-    def __init__(self, tree):
-        if isinstance(tree, str):
+    def __init__(self, tree: str | Path | ET.ElementTree):
+        if not isinstance(tree, ET.ElementTree):
             tree = ET.parse(tree)
         self.tree = tree
         self.type = tree.getroot().tag
@@ -48,6 +76,10 @@ class CalibreXMLParser(FileParser):
             x = box['x'] + box['width'] / 2
             y = box['y'] + box['height'] / 2
             yield name, x, y
+
+    @DataframeValidator.validate
+    def parse_data_decorated(self):
+        return self.parse_data()
 
     def parse_data(self):
         """Dispatch content type to row generators and return dataframe of coordinates"""

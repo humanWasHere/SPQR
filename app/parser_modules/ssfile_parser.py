@@ -15,10 +15,10 @@ class SsfileParser(FileParser):
     unit = None
 
     '''this class is used to parse ssfiles which can be genepy ssfile or other (formatted to convention ?) ssfiles'''
-    def __init__(self, file_to_parse : str | Path, is_genepy=False):
+    def __init__(self, file_to_parse: str | Path, is_genepy=False):
         self.ssfile = file_to_parse
         self.is_genepy = is_genepy
-        self.data = pd.DataFrame()
+        self.data: pd.DataFrame
 
     def ssfile_to_dataframe(self) -> pd.DataFrame:
         with open(self.ssfile, 'r') as f:
@@ -52,7 +52,7 @@ class SsfileParser(FileParser):
             return self.ssfile_to_dataframe()
 
     def rename_title(dataframe) -> pd.DataFrame:
-        '''this method allows user to rename the column imported if it is not already in valid format (NaN value)'''
+        """this method allows user to rename the column imported if it is not already in valid format (NaN value)"""
         set_title_names = []
         for col in dataframe.columns:
             if pd.isna(dataframe.loc[0, col]):
@@ -71,7 +71,14 @@ class SsfileParser(FileParser):
     def post_parse(self) -> None:
         '''checks all columns for empty values and format names'''
         self.data.dropna(axis=1, how='all', inplace=True)
-        self.data.rename(columns={'Name': "name", 'X_coord_Pat': "x", 'Y_coord_Pat': "y", 'X_coord_Addr': "x_ap", 'Y_coord_Addr': "y_ap"}, inplace=True)
+        self.data.rename(
+            columns={'Name': "name",
+                     'X_coord_Pat': "x",
+                     'Y_coord_Pat': "y",
+                     'X_coord_Addr': "x_ap",
+                     'Y_coord_Addr': "y_ap"},
+            inplace=True
+        )
         self.data = self.change_coord_to_relative(self.data)
         # TODO renaming logic?
 
