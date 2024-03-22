@@ -14,11 +14,11 @@ class HssCreator:
     def __init__(self, eps_dataframe: pd.DataFrame, template=None, output_file=None):
         if template is None:
             template = Path(__file__).resolve(
-            ).parent.parent.parent / "assets" / "template_SEM_recipe.json"
+            ).parents[2] / "assets" / "template_SEM_recipe.json"
         if output_file is None:
             # TODO this is temp, I don't want a recipe_output folder in my project
-            output_file = Path(__file__).resolve(
-            ).parent.parent.parent / "recipe_output" / "recette.hss"
+            # TODO ask user how he wants to name his recipe
+            output_file = Path(__file__).resolve().parents[2] / "recipe_output" / "recipe.csv"
         self.json_template = self.import_json(template)
         self.num_columns = 0
         self.output_file = output_file
@@ -61,23 +61,15 @@ class HssCreator:
         for df in self.dict_of_second_level_df:
             if df != "<EPS_Data>":
                 # making an instance of sectionMaker which will set all the sections except <EPS_Data> since it has its own class to fill it
-                instance_sectionMaker = SectionMaker(
-                    self.dict_of_second_level_df, "OM")
-                self.dict_of_second_level_df["<CoordinateSystem>"] = instance_sectionMaker.make_coordinate_system_section(
-                )
-                self.dict_of_second_level_df["<GPCoordinateSystem>"] = instance_sectionMaker.make_gp_coordinate_system_section(
-                )
-                self.dict_of_second_level_df["<Unit>"] = instance_sectionMaker.make_unit_section(
-                )
-                self.dict_of_second_level_df["<GP_Data>"] = instance_sectionMaker.make_gp_data_section(
-                )
+                instance_sectionMaker = SectionMaker(self.dict_of_second_level_df, "OM")
+                self.dict_of_second_level_df["<CoordinateSystem>"] = instance_sectionMaker.make_coordinate_system_section()
+                self.dict_of_second_level_df["<GPCoordinateSystem>"] = instance_sectionMaker.make_gp_coordinate_system_section()
+                self.dict_of_second_level_df["<Unit>"] = instance_sectionMaker.make_unit_section()
+                self.dict_of_second_level_df["<GP_Data>"] = instance_sectionMaker.make_gp_data_section()
                 # in the template recipe there is <EPS_Data> in here
-                self.dict_of_second_level_df["<GPA_List>"] = instance_sectionMaker.make_gpa_list_section(
-                )
-                self.dict_of_second_level_df["<GP_Offset>"] = instance_sectionMaker.make_gp_offset_section(
-                )
-                self.dict_of_second_level_df["<EPA_List>"] = instance_sectionMaker.make_epa_list_section(
-                )
+                self.dict_of_second_level_df["<GPA_List>"] = instance_sectionMaker.make_gpa_list_section()
+                self.dict_of_second_level_df["<GP_Offset>"] = instance_sectionMaker.make_gp_offset_section()
+                self.dict_of_second_level_df["<EPA_List>"] = instance_sectionMaker.make_epa_list_section()
 
     def add_MP(self, nb_of_mp_to_add) -> None:
         '''this method adds the number of MP in attribute of the method'''
@@ -199,6 +191,20 @@ class HssCreator:
             modified_string += line + "," * num_commas + "\n"
         return str(modified_string)
 
+    # def output_dataframe_to_json(self):
+    #     '''method that writes a json of the recipe in a template to output and reuse (in opposition of json_to_dataframe method'''
+    #     # TODO rework / invert import json
+    #     first_lines = self.first_level_df.to_json(orient='records', lines=True)
+    #     json_content = first_lines
+    #     for section_keys, section_df in self.dict_of_second_level_df.items():
+    #         json_content += pd.DataFrame(section_df).to_json('temp.json', orient='records', lines=True)
+    #     print(json_content)
+
+        # Write the combined JSON content to a file
+        # output_path = Path(__file__).resolve().parents[2] / "recipe_output" / "recipe.json"
+        # with open(output_path, 'w') as json_file:
+        #     json_file.write(json_content)
+
     def write_in_file(self, mp_to_add) -> None:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
@@ -207,6 +213,9 @@ class HssCreator:
         self.add_MP(mp_to_add)
         self.fill_with_eps_data()
         self.fill_type_in_eps_data(mp_to_add + 1)
+        # output json here
+        # self.output_dataframe_to_json()
+        # __________
         whole_recipe_template = self.dataframe_to_hss()
         whole_recipe_good_types = self.rename_eps_data_header(
             whole_recipe_template)

@@ -25,7 +25,7 @@ except ModuleNotFoundError:
 
 RETDB = {
     'user': "retadm",
-    'password': "[RetAdmin?1961]",
+    'password': "",
     'dsn': "c2x3028.cr2.st.com:1529/ret"
 }
 ENGINE = create_engine(f"oracle+cx_oracle://{RETDB['user']}:{RETDB['password']}@{RETDB['dsn']}")

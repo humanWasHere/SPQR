@@ -2,6 +2,9 @@ from parser_modules.ssfile_parser import SsfileParser
 from measure_modules.measure import Measure
 from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
 from hss_modules.hss_creator import HssCreator
+# from connection_modules.shell_commands import ShellCommands
+
+# renamed __main__.py for coverage lib
 
 genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"
 excel_file = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy-proto_data.xlsx"
@@ -32,6 +35,10 @@ def run_recipe_creation_w_measure():
     runHssCreation = HssCreator(eps_dataframe=EPS_Data)
     runHssCreation.write_in_file(0)
     print('\trecipe created !')
+
+    # TODO output JSON recipes
+    # TODO send recipe to SEM using shell_commands.py
+    # TODO get recipe name if we dynamically ask user to name his recipe -> get info in creation -> from hss_creator module
 
 
 if __name__ == "__main__":
