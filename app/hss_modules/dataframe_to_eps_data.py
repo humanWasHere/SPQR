@@ -7,6 +7,9 @@ import numpy as np
 class DataFrameToEPSData:
     '''this class manages the creation of the <EPS_Data> section only'''
     FIXED_VALUES = {
+        'Mode': 1,
+        'EPS_Template': "EPS_Default",
+        'AP2_Template': "OPC_AP2_Off",
         'Type1': 1,
         'Type2': 2,
         'Type3': 2,
@@ -22,7 +25,6 @@ class DataFrameToEPSData:
         'EPS_Name': "name",
         'Move_X': "x",
         'Move_Y': "y",
-        "MP_TargetCD": "target_cd"
     }
 
     def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
@@ -31,6 +33,28 @@ class DataFrameToEPSData:
         self.eps_data = pd.DataFrame()
         assert step in {"PH", "ET"}
         self.step = step
+
+    def add_mp_width(self, mp_no=1, direction: str = None, measleng: int = 100):
+        """Add a width measurement point (line/space depending on MP template) at image center"""
+        self.eps_data[[f"MP{mp_no}_X", f"MP{mp_no}_Y"]] = (0, 0)  # image center
+        if direction is None:
+            target_cd = self.core_data[['x_dim', 'y_dim']].min(axis=1)
+            orientation = np.where(target_cd == self.core_data.y_dim, "Y", "X")
+            self.eps_data[f'MP{mp_no}_TargetCD'] = target_cd
+            self.eps_data[f'MP{mp_no}_Direction'] = orientation
+            self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name
+        else:
+            assert direction.upper() in {'X', 'Y'}
+            self.eps_data[f'MP{mp_no}_TargetCD'] = self.core_data[f'cd_{direction.lower()}']
+            self.eps_data[f'MP{mp_no}_Direction'] = direction
+            self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name + "_" + self.eps_data[f'MP{mp_no}_Direction']
+        
+        # Compute MP width/length (from SEM procedure)
+        search_area = self.eps_data[f'MP{mp_no}_TargetCD'] * self.eps_data.EP_Mag_X * 512 / 1000 / 135000 / 3
+        # Limit search area to 30 pixels  #TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
+        self.eps_data[f'MP{mp_no}_SA_In'] = self.eps_data[f'MP{mp_no}_SA_Out'] = search_area.fillna(500).astype(int).clip(upper=30)
+        self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.measleng  # TODO: compute vs height
+        self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']
 
     def mapping_from_df(self) -> None:
         '''makes a link between gauge df and actual column name of recipe header'''
@@ -48,14 +72,6 @@ class DataFrameToEPSData:
         if any(id > 9999 for id in self.eps_data['EPS_ID']):
             raise ValueError("EPS_ID values cannot exceed 9999")
 
-    def set_eps_data_move_modification(self):
-        # Type1, Move_X and Move_Y are mapped
-        # __________Mode section__________
-        # should be 1 normal or 2 differential
-        # FIXME input logic since value is hard coded
-        mode = 1
-        self.eps_data["Mode"] = np.where(mode == 1, 1, 2)
-
     def set_eps_data_eps_modification(self):
         # from eps_name to fer_eps_id
         # EPS_Name is mapped
@@ -65,9 +81,7 @@ class DataFrameToEPSData:
     def set_eps_data_template(self):
         # from eps_template to ep_template
         # __________EPS_Template section__________
-        # FIXME is it fix ? 'EPS_Template': "EPS_Default"
-        self.eps_data['EPS_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
-        pass
+        self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
 
     def set_eps_data_ap1_modification(self):
         # from type to AP1_AST_Mag
@@ -79,31 +93,12 @@ class DataFrameToEPSData:
         pass
 
     def set_eps_data_ep_modification(self):
-        # from EP_Mag_X to EP_ABCC_X
-        # FIXME should be after MP_Direction ?
+        """Columns from EP_Mag_X to EP_ABCC_X"""
         # __________EP_Rot section__________
-        # TODO est ce que c'est à calculer en fonction de plusieurs MP ?
-        # pb for tests ? .get() instead of [], method to handle cases where a key is missing
+        # TODO auto-rotation en fonction de plusieurs MP ? # FIXME demander a Julien + Mode
         self.eps_data["EP_Rot"] = np.where(self.core_data.orient == "x", 0, 90)  # self.core_data.orient is equal to MP1_Direction value
         pass
 
-    def set_eps_data_mp1(self):
-        # from EP_Mag_X to EP_ABCC_X
-        # MP1_X/Y are mapped
-        # __________MP1_SA_In section__________
-        #     search_area = self.eps_data.MP1_TargetCD * \
-        #         self.eps_data.EP_Mag_X * 512 / 1000 / 135000 / 3
-        #     # cursor_size = self.eps_data.MP1_TargetCD * self.eps_data.EP_Mag_X * 512 / 1000 / 135000
-        #     # Limit search area to 30 pixels / todo: handle NaN
-        #     self.eps_data['MP1_SA_In'] = self.eps_data['MP1_SA_Out'] = search_area.fillna(
-        #         500).astype(int).clip(upper=30)
-
-        # __________MP1_MeaLeng section__________
-        #     self.eps_data['MP1_MeaLeng'] = self.measleng  # TODO: compute
-        # __________MP1_PNo section__________
-        self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO: move to MP
-        # __________MP_Direction__________
-        self.eps_data["MP1_Direction"] = self.core_data.orient
 
     def get_eps_data(self) -> pd.DataFrame:
         '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
@@ -111,11 +106,10 @@ class DataFrameToEPSData:
         self.mapping_from_df()
         self.mapping_from_fix_values()
         self.set_eps_data_id()
-        self.set_eps_data_move_modification()
         self.set_eps_data_eps_modification()
         self.set_eps_data_template()
         self.set_eps_data_ap1_modification()
         self.set_eps_data_ap2_modification()
         self.set_eps_data_ep_modification()
-        self.set_eps_data_mp1()
+        self.add_mp_width(1)
         return self.eps_data
