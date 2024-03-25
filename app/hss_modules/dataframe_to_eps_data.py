@@ -13,7 +13,6 @@ class DataFrameToEPSData:
         'AP1_Mag': 45000,
         'AP1_AF_Mag': 45000,
         'AP1_Rot': 0,
-        # 'AP2_Template': "OPC_AP2_Off",
         'MP1_X': 0,
         'MP1_Y': 0
     }
