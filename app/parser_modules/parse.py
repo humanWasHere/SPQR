@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 
 
 class DataframeValidator:
+    # TODO: implement or rework
     SCHEMA = {
         'name': str,
         'x': int,
@@ -15,7 +16,8 @@ class DataframeValidator:
         'x_ap': int,
         'y_ap': int,
         'orient': str,
-        'target_cd': int
+        'target_cd': int,
+        'magnification': int
     }
 
     @classmethod
@@ -40,7 +42,7 @@ class FileParser(ABC):
         """Return coordinate units for conversion"""
         pass
 
-    @abstractmethod
+    # @abstractmethod
     def unit_converter(self, unit):
         '''method that converts different unit into dbu'''
         # if unit == "nm":

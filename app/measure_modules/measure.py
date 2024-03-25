@@ -109,7 +109,7 @@ class Measure:
         meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
                                 'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
-        # TODO move to MP creation
+        # TODO doublon avec dataframe_to_eps.add_mp  / a decoupler ?
         meas_df['target_cd'] = meas_df[['x_dim', 'y_dim']].min(axis=1)
         meas_df.loc[meas_df.target_cd == meas_df.y_dim, 'orient'] = 'Y'
         meas_df.loc[meas_df.target_cd == meas_df.x_dim, 'orient'] = 'X'

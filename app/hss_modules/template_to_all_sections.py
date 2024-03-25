@@ -4,9 +4,8 @@ import pandas as pd
 class SectionMaker:
     '''this class is used to create, fill or modify the values of all second level sections except <EPS_Data> section. If not modified, value is set default as in template.json'''
 
-    def __init__(self, dictionnary, om_or_sem_recipe):
+    def __init__(self, dictionnary):
         self.df_dict = dictionnary
-        self.recipe_type = om_or_sem_recipe
         self.coordinate_system = self.df_dict["<CoordinateSystem>"]
         self.gp_coordinate_system = self.df_dict["<GPCoordinateSystem>"]
         self.unit = self.df_dict["<Unit>"]
@@ -41,30 +40,23 @@ class SectionMaker:
         # __________GP_X section__________
         # __________GP_Y section__________
         # __________GP_Template section__________
-        if self.recipe_type == "OM":
-            # est ce que le template est parfait ? doit être général ?
-            self.gp_data["GP_Template"] = "chef_OM_default"
-            if (self.gp_data["GP_Template"] != "chef_OM_default").any():
-                raise ValueError(
-                    "GP_Template must be 'chef_OM_default' for OM")
-        elif self.recipe_type == "SEM":
-            self.gp_data["GP_Template"] = "chef_SEM_default"
-            if (self.gp_data["GP_Template"] != "chef_SEM_default").any():
-                raise ValueError(
-                    "GP_Template must be 'chef_SEM_default' for SEM")
+        
+        if self.gp_data["GP_Template"].isna().any():
+            raise ValueError("GP_Template is mandatory")
+
         # __________GP_MAG section__________
-        if (self.gp_data["GP_Template"] == "chef_OM_default").any():
+        if self.gp_data["GP_Template"].str.contains("OM").any():  # TODO: check in template file
             # value should be 104 or 210
-            # TODO comment savoir lequel de 104 ou 210 choisir ?
-            self.gp_data["GP_MAG"] = 104
+            self.gp_data["GP_MAG"] = 210
             if not self.gp_data["GP_MAG"].isin([104, 210]).all():
                 raise ValueError("GP_MAG for OM should be either 104 or 210")
-        elif (self.gp_data["GP_Template"] == "chef_SEM_default").any():
+        elif self.gp_data["GP_Template"].str.contains("SEM").any():
             # TODO comment savoir quelle valeur entre 1000 et 500000 ?
             self.gp_data["GP_MAG"] = 500000
-            if (self.gp_data["GP_MAG"] < 1000).any() or (self.gp_data["GP_MAG"] > 500000).any():
+            if not self.gp_data["GP_MAG"].between(1000, 500_000).any():
                 raise ValueError(
                     "GP_MAG for SEM should be between 1000 and 500000")
+
         # __________GP_ROT section__________
         return self.gp_data
 

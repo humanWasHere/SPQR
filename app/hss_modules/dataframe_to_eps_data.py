@@ -25,6 +25,14 @@ class DataFrameToEPSData:
         'EPS_Name': "name",
         'Move_X': "x",
         'Move_Y': "y",
+        'EP_Mag_X': "magnification",
+        # 'EP_AF_X': "x_af",
+        # 'EP_AF_Y': "y_af",
+        'EP_AF_Mag': "magnification",
+        'AP1_X': "x_ap",
+        'AP1_Y': "y_ap",
+        'AP1_AF_X': "x_ap",
+        'AP1_AF_Y': "y_ap"
     }
 
     def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
@@ -50,9 +58,9 @@ class DataFrameToEPSData:
             self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name + "_" + self.eps_data[f'MP{mp_no}_Direction']
         
         # Compute MP width/length (from SEM procedure)
-        search_area = self.eps_data[f'MP{mp_no}_TargetCD'] * self.eps_data.EP_Mag_X * 512 / 1000 / 135000 / 3
+        target_cd_pixel = self.eps_data[f'MP{mp_no}_TargetCD'] * self.eps_data.EP_Mag_X * 512 / 1000 / 135000
         # Limit search area to 30 pixels  #TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
-        self.eps_data[f'MP{mp_no}_SA_In'] = self.eps_data[f'MP{mp_no}_SA_Out'] = search_area.fillna(500).astype(int).clip(upper=30)
+        self.eps_data[f'MP{mp_no}_SA_In'] = self.eps_data[f'MP{mp_no}_SA_Out'] = (target_cd_pixel / 3).fillna(500).astype(int).clip(upper=30)
         self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.measleng  # TODO: compute vs height
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']
 
@@ -97,8 +105,8 @@ class DataFrameToEPSData:
         # __________EP_Rot section__________
         # TODO auto-rotation en fonction de plusieurs MP ? # FIXME demander a Julien + Mode
         self.eps_data["EP_Rot"] = np.where(self.core_data.orient == "x", 0, 90)  # self.core_data.orient is equal to MP1_Direction value
+        # EP_AF_X, EP_AF_Y
         pass
-
 
     def get_eps_data(self) -> pd.DataFrame:
         '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
@@ -111,5 +119,6 @@ class DataFrameToEPSData:
         self.set_eps_data_ap1_modification()
         self.set_eps_data_ap2_modification()
         self.set_eps_data_ep_modification()
+
         self.add_mp_width(1)
         return self.eps_data

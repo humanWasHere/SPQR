@@ -154,22 +154,22 @@ class TestHssCreator:
             "<Version>": [6],
             "<Revision>": [0]
         })
-        assert hss_creator.first_level_df.equals(expected_first_level_df)
+        assert hss_creator.constant_sections.equals(expected_first_level_df)
 
         # Assert <CoordinateSystem>
         expected_coordinate_system = pd.DataFrame(
             {"Type": [1], "ACD_Type": [1]})
-        assert hss_creator.dict_of_second_level_df["<CoordinateSystem>"].equals(
+        assert hss_creator.table_sections["<CoordinateSystem>"].equals(
             expected_coordinate_system)
 
         # Assert <GPCoordinateSystem>
         expected_gp_coordinate_system = pd.DataFrame({"Type": [1]})
-        assert hss_creator.dict_of_second_level_df["<GPCoordinateSystem>"].equals(
+        assert hss_creator.table_sections["<GPCoordinateSystem>"].equals(
             expected_gp_coordinate_system)
 
         # Assert <Unit>
         expected_unit = pd.DataFrame({"Coordinate": [1], "MP_Box": [1]})
-        assert hss_creator.dict_of_second_level_df["<Unit>"].equals(
+        assert hss_creator.table_sections["<Unit>"].equals(
             expected_unit)
 
         # Assert <GP_Data>
@@ -182,7 +182,7 @@ class TestHssCreator:
             "GP_MAG": [210],
             "GP_ROT": [90]
         })
-        assert hss_creator.dict_of_second_level_df["<GP_Data>"].equals(
+        assert hss_creator.table_sections["<GP_Data>"].equals(
             expected_gp_data)
 
         # Assert <EPS_Data>
@@ -255,7 +255,7 @@ class TestHssCreator:
             "MP1_MeaLeng": [1],
             "MP1_Direction": [1]
         })
-        assert hss_creator.dict_of_second_level_df["<EPS_Data>"].equals(
+        assert hss_creator.table_sections["<EPS_Data>"].equals(
             expected_eps_data)
 
         # Assert <GPA_List>
@@ -265,12 +265,12 @@ class TestHssCreator:
             "Chip_Y": [4, 4, 7],
             "GP_ID": [1, 1, 1]
         })
-        assert hss_creator.dict_of_second_level_df["<GPA_List>"].equals(
+        assert hss_creator.table_sections["<GPA_List>"].equals(
             expected_gpa_list)
 
         # Assert <GP_Offset>
         expected_gp_offset = pd.DataFrame({"Offset_X": [0], "Offset_Y": [0]})
-        assert hss_creator.dict_of_second_level_df["<GP_Offset>"].equals(
+        assert hss_creator.table_sections["<GP_Offset>"].equals(
             expected_gp_offset)
 
         # Assert <EPA_List>
@@ -281,7 +281,7 @@ class TestHssCreator:
             "EPS_ID": [1],
             "Move_Mode": [1]
         })
-        assert hss_creator.dict_of_second_level_df["<EPA_List>"].equals(
+        assert hss_creator.table_sections["<EPA_List>"].equals(
             expected_epa_list)
 
     def test_get_set_section(self):
@@ -296,7 +296,7 @@ class TestHssCreator:
 
         # Assert
         # We test that it still returns a dataframe
-        for key, value in hss_creator.dict_of_second_level_df.items():
+        for key, value in hss_creator.table_sections.items():
             assert isinstance(value, pd.DataFrame)
 
     def test_add_MP(self):
@@ -412,7 +412,7 @@ class TestHssCreator:
 
         # Assert
         # FIXME maybe we would like to check all the data
-        assert hss_creator.dict_of_second_level_df["<EPS_Data>"].columns.equals(
+        assert hss_creator.table_sections["<EPS_Data>"].columns.equals(
             expected_eps_data.columns)
 
     def test_fill_with_eps_data(self):
@@ -428,7 +428,7 @@ class TestHssCreator:
         # Assert
         # We test that it still returns a dataframe
         assert isinstance(
-            hss_creator.dict_of_second_level_df["<EPS_Data>"], pd.DataFrame)
+            hss_creator.table_sections["<EPS_Data>"], pd.DataFrame)
 
     def test_fill_type_in_eps_data(self):
         '''checks for types sections (correct number)'''
@@ -513,7 +513,7 @@ class TestHssCreator:
 
         # Assert
         pd.testing.assert_frame_equal(
-            hss_creator.dict_of_second_level_df["<EPS_Data>"], expected_eps_data_df)
+            hss_creator.table_sections["<EPS_Data>"], expected_eps_data_df)
 
     def test_dataframe_to_hss(self):
         '''tests that the function of hss creation works and that the function of hss creation works'''
@@ -561,7 +561,7 @@ class TestHssCreator:
         hss_creator = HssCreator(pd.DataFrame())
         hss_creator.json_to_dataframe()
         string_to_modify_1 = "<GP_Data>\n" + \
-            hss_creator.dict_of_second_level_df["<GP_Data>"].to_csv(
+            hss_creator.table_sections["<GP_Data>"].to_csv(
                 index=False)
         expected_modified_string_1 = "<GP_Data>,,,,,,\nGP_ID,Type,GP_X,GP_Y,GP_Template,GP_MAG,GP_ROT\n1,1,20,20,,210,90\n,,,,,,\n"
 
