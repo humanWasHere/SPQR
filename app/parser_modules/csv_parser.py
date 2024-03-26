@@ -13,7 +13,7 @@ class CsvParser:
         '''this function actually parses csv'''
         pass
 
-
+# TODO make it fit the flow
 class TACRulerParser(FileParser):
     '''this class is used to parse TAC rulers'''
     unit = "nm"

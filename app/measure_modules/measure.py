@@ -109,10 +109,10 @@ class Measure:
         meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
                                 'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
-        # TODO doublon avec dataframe_to_eps.add_mp  / a decoupler ?
-        meas_df['target_cd'] = meas_df[['x_dim', 'y_dim']].min(axis=1)
-        meas_df.loc[meas_df.target_cd == meas_df.y_dim, 'orient'] = 'Y'
-        meas_df.loc[meas_df.target_cd == meas_df.x_dim, 'orient'] = 'X'
+        # # TODO doublon avec dataframe_to_eps.add_mp  / a decoupler ?
+        # meas_df['target_cd'] = meas_df[['x_dim', 'y_dim']].min(axis=1)
+        # meas_df.loc[meas_df.target_cd == meas_df.y_dim, 'orient'] = 'Y'
+        # meas_df.loc[meas_df.target_cd == meas_df.x_dim, 'orient'] = 'X'
         return meas_df
 
     def run_measure(self) -> pd.DataFrame:
@@ -121,9 +121,12 @@ class Measure:
         # TODO where to store tmp files (script + results)
         measure_tempfile_path = measure_tempfile.name
         tmp = self.creation_script_tmp(measure_tempfile_path, unit="dbu")
+        print('2. measurement')  # TODO log
         self.lance_script(tmp, verbose=True)
         meas_df = self.process_results(measure_tempfile_path)
         merged_dfs = pd.merge(self.parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
         measure_tempfile.close()  # remove temporary script
+        if not merged_dfs.empty:  # more checks + log
+            print('\tmeasurement done')
         return merged_dfs

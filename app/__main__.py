@@ -5,13 +5,14 @@ from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
 from hss_modules.hss_creator import HssCreator
 # from connection_modules.shell_commands import ShellCommands
 
-# renamed __main__.py for coverage lib
-
-genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"
-excel_file = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy-proto_data.xlsx"
-calibre_rulers = "/work/opc/all/users/banger/dev/semchef/examples/calibre_rulers.xml"
-layout = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
-layers = ["1.0"]
+test_genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"
+# excel_file = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy-proto_data.xlsx"
+test_calibre_rulers = "/work/opc/all/users/banger/dev/semchef/examples/calibre_rulers.xml"
+test_layout = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
+test_layers = ["1.0"]
+genepy_ssfile = ''
+layout = ''
+layers = ''
 MAG = 200_000
 
 # TODO
@@ -19,33 +20,61 @@ MAG = 200_000
 # get_eps_data() + write_in_file() to call in hss_creator ?
 # output json format recipe if modification needs to be done afterwards -> in hss creator output json from df or from str ?
 # -> reprendre import_json() and json_to_dataframe() from hss_creator.py -> make a function to import
+# toggle -> send on sem ? yes or no
+# changer parsing and printing en fonction du type d'entrée
+
+
+def get_user_inputs():
+    # FIXME selection between parsing
+    # TODO take different parsing entries
+    # __________ruler calibre__________
+    # global calibre_ruler, layout, layers
+    # calibre_ruler = input("Enter a (valid) path to your calibre ruler file :\n") or test_calibre_rulers
+    # if calibre_ruler == test_calibre_rulers:
+    #     print("calibre ruler is set by default")
+    # __________genepy ssfile__________
+    global genepy_ssfile, layout, layers
+    genepy_ssfile = input("Enter a (valid) path to your genepy ssfile :\n") or test_genepy_ssfile
+    if genepy_ssfile == test_genepy_ssfile:
+        print("ssfile is set by default")
+    # __________layout/layers__________
+    layout = input("Enter a (valid) path to your layout :\n") or test_layout
+    if layout == test_layout:
+        print("layout is set by default")
+    layers_input = input("Enter a (valid) layer number list (separated with comma + space ', ' each time) :\n") or ', '.join(test_layers)
+    layers = [layer.strip() for layer in layers_input.split(',')]
+    if layers == test_layers:
+        print("layers are set by default")
 
 
 def run_recipe_creation_w_measure():
     '''this is the real main function which runs the flow with the measure - "prod" function'''
-    print('1. ssfile parsing')
-    parser_instance = SsfileParser(genepy_ssfile, is_genepy=True)
-    # parser_instance = CalibreXMLParser(calibre_rulers)
-    
-    # ssfile_genepy_df = parser_instance.parse_data()
-    ssfile_genepy_df = parser_instance.parse_data().iloc[:30]
-    print('\tssfile parsing done')
-    print('2. measurement')
-    measure_instance = Measure(ssfile_genepy_df, layout, layers)
+    print('\n______________________RUNNING RECIPE CREATION______________________\n')
+    # __________ruler calibre__________
+    # TODO recipe returns no eps_data ???
+    # calibre_ruler_parser_instance = CalibreXMLParser(test_calibre_rulers)
+    # data_parsed = calibre_ruler_parser_instance.parse_data()
+    # parser_input = 'calibre_ruler'
+    # __________genepy ssfile__________
+    # FIXME tester recette avant présentation jeudi 28
+    ssfile_parser_instance = SsfileParser(genepy_ssfile, is_genepy=True)
+    # data_parsed = ssfile_parser_instance.parse_data()
+    data_parsed = ssfile_parser_instance.parse_data().iloc[:30]
+    parser_input = 'genepy_ssfile'
+    # __________following recipe__________
+    measure_instance = Measure(data_parsed, layout, layers)
     output_measure = measure_instance.run_measure()
     output_measure['magnification'] = MAG
-    print('\tmeasurement done\n3. <EPS_Data> section creation')
     EPS_DataFrame = DataFrameToEPSData(output_measure)
-    EPS_Data = EPS_DataFrame.get_eps_data()
-    print('\t<EPS_Data> created\n4. .hss file creation')
+    # EPS_Data = EPS_DataFrame.get_eps_data(parser_input)  # can be 'calibre_ruler' or 'genepy_ssfile'
+    EPS_Data = EPS_DataFrame.get_eps_data(parser_input)
     runHssCreation = HssCreator(eps_dataframe=EPS_Data)
     runHssCreation.write_in_file()
-    print('\trecipe created !')
 
-    # TODO output JSON recipes
     # TODO send recipe to SEM using shell_commands.py
     # TODO get recipe name if we dynamically ask user to name his recipe -> get info in creation -> from hss_creator module
 
 
 if __name__ == "__main__":
+    get_user_inputs()
     run_recipe_creation_w_measure()

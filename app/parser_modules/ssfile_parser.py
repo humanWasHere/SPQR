@@ -49,6 +49,7 @@ class SsfileParser(FileParser):
 
     def ssfile_to_dataframe(self) -> pd.DataFrame:
         '''converts a generic ssfile to a formatted parsing'''
+        print('1. ssfile parsing')  # TODO log
         with open(self.ssfile, 'r') as f:
             # counts the number of columns (separated by tabs) in the first line of the file (header / line with column names)
             header_column_number = len(f.readline().strip().split('\t'))
@@ -61,14 +62,19 @@ class SsfileParser(FileParser):
             self.data = self.drop_empty_column(self.rename_title(self.data))
         if header_column_number != max_column_number:
             print("Reminder that the dataframe does not match expectations :( make it better !")
+        if not self.data.empty:  # TODO add more logic - log
+            print('\tssfile parsing done')
         return self.data
 
     def genepy_to_dataframe(self) -> pd.DataFrame:
         '''converts a genepy ssfile to a formatted parsing'''
+        print('1. genepy ssfile parsing')  # TODO log
         self.data = pd.read_csv(self.ssfile, sep='\t', header=0, on_bad_lines='warn', encoding='utf-8')
         # TODO add validation (column number / column name)
         self.unit = self.data.UNIT_COORD.unique()[0]  # TODO normaliser l' unite d'entree par point
         self.post_parse()
+        if not self.data.empty:  # TODO add more logic - log
+            print('\tgenepy ssfile parsing done')
         return self.data
 
     def post_parse(self) -> None:

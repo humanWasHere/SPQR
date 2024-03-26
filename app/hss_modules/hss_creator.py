@@ -81,20 +81,20 @@ class HssCreator:
                 self.table_sections["<EPS_Data>"][col] = 2
         # if data empty in MPn section is empty, corresponding value type is set to "" else fill with 2s
         # WARNING maintenabilité ?
-        for mp_nb in range(1, 5):
-            mp_n_is_empty = False
-            for col, val in self.table_sections["<EPS_Data>"].items():
-                if str(col).startswith(f"MP{mp_nb}"):
-                    if pd.isnull(val).all():
-                        mp_n_is_empty = True
-                    else:
-                        mp_n_is_empty = False
-            # FIXME override -> based on last column only
-            if mp_n_is_empty:
-                # TODO handle NaN value or other type of empty values
-                self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = ""
-            else:
-                self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = 2
+        # for mp_nb in range(1, 5):
+        #     mp_n_is_empty = False
+        #     for col, val in self.table_sections["<EPS_Data>"].items():
+        #         if str(col).startswith(f"MP{mp_nb}"):
+        #             if pd.isnull(val).all():
+        #                 mp_n_is_empty = True
+        #             else:
+        #                 mp_n_is_empty = False
+        #     # FIXME override -> based on last column only
+        #     if mp_n_is_empty:
+        #         # TODO handle NaN value or other type of empty values
+        #         self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = ""
+        #     else:
+        #         self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = 2
 
     def dataframe_to_hss(self) -> str:
         '''method that converts a dataframe into a HSS format (writes it as a file)'''
@@ -135,32 +135,42 @@ class HssCreator:
             modified_string += line + "," * num_commas + "\n"
         return str(modified_string)
 
-    # def output_dataframe_to_json(self):
-    #     '''method that writes a json of the recipe in a template to output and reuse (in opposition of json_to_dataframe method'''
-    #     # TODO rework / invert import json
-    #     first_lines = self.first_level_df.to_json(orient='records', lines=True)
-    #     json_content = first_lines
-    #     for section_keys, section_df in self.dict_of_second_level_df.items():
-    #         json_content += pd.DataFrame(section_df).to_json('temp.json', orient='records', lines=True)
-    #     print(json_content)
-
-        # Write the combined JSON content to a file
-        # output_path = Path(__file__).resolve().parents[2] / "recipe_output" / "recipe.json"
-        # with open(output_path, 'w') as json_file:
-        #     json_file.write(json_content)
+    def output_dataframe_to_json(self):
+        '''method that writes a json of the recipe in a template to output and reuse (in opposition of json_to_dataframe method'''
+        json_content = self.constant_sections
+        for section_keys, section_series in self.table_sections.items():
+            # change NaN (from dfs) to "NaN" (JSON handled format)
+            for col_name in section_series.columns:
+                for idx in section_series.index:
+                    if pd.isna(section_series.at[idx, col_name]):
+                        section_series.at[idx, col_name] = "NaN"
+            if not section_series.empty:
+                section_dict = section_series.to_dict(orient='records')[0]
+                json_content[section_keys] = section_dict
+            else:
+                raise ValueError("Series is empty")
+        json_str = json.dumps(json_content, indent=4)
+        output_path = Path(__file__).resolve().parents[2] / "recipe_output" / "recipe.json"
+        with open(output_path, 'w') as json_file:
+            json_file.write(json_str)
+        if output_path:  # TODO better check + log
+            print('\tjson recipe created !')
 
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
         self.json_to_dataframe()
+        print('4. other sections creation')
         self.get_set_section()
+        if not self.table_sections["<CoordinateSystem>"].empty:  # TODO better check + log
+            print('\tother sections created')
         self.fill_with_eps_data()
         self.fill_type_in_eps_data()
-        # output json here
-        # self.output_dataframe_to_json()
-        # __________
         whole_recipe_template = self.dataframe_to_hss()
         whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)
         whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)
+        self.output_dataframe_to_json()
         with open(self.output_file, 'w') as f:
             f.write(whole_recipe_to_output)
+        if self.output_file:  # TODO better check + log
+            print('\tcsv recipe created !')

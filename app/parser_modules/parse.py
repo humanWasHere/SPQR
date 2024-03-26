@@ -4,8 +4,6 @@ import re
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-# TODO export xml in another file ? create a generic xml parser as csv ?
-
 
 class DataframeValidator:
     # TODO: implement or rework
@@ -99,15 +97,28 @@ class CalibreXMLParser(FileParser):
 
     def parse_data(self):
         """Dispatch content type to row generators and return dataframe of coordinates"""
+        print('1. calibre ruler parsing')  # TODO log
         if self.type == "rulers":
             rows = self.gen_rows_ruler()
         elif self.type == "clips":
             rows = self.gen_rows_clip()
         else:
             raise ValueError("Unknown XML type")
-        parsed_data = pd.DataFrame(rows, columns=['name', 'x', 'y'])  # todo: name as index? / enforce format?
-        # Fix name
+        parsed_data = pd.DataFrame(rows, columns=['name', 'x', 'y'])  # TODO: name as index? / enforce format?
+        # FIXME Fix name
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r' ', '_', s))
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r'\W+', '', s))  # keep alphanumeric only
         # TODO add generic name if empty
+        if not parsed_data.empty:  # TODO add more logic - log
+            print('\tcalibre ruler parsing done')
         return parsed_data
+
+# TODO get_user_info should be in this file ?
+# according to user's choice, run corresponding parsing
+# make a method like run_parsing() which can be called in main
+# the goal is to manage which parsing is to apply to the type of user input
+# parser_input = input("Select between 'genepy_recipe' or 'calibre_recipe' :\n")
+# if parser_input == 'genepy_recipe':
+    # ssfile_genepy_parser_instance = ...
+# if parser_input == 'calibre_recipe':
+    # calibre_parser_instance = ...
