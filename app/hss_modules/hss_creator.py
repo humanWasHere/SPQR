@@ -11,16 +11,18 @@ from .template_to_all_sections import SectionMaker
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, template=None, output_file=None):
+    def __init__(self, eps_dataframe: pd.DataFrame, template=None, output_path=None, recipe_name=None):
         if template is None:
             template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        if output_file is None:
+        if output_path is None:
             # TODO
-            output_file = Path(__file__).resolve().parents[2] / "recipe_output" / "recipe.csv"
+            self.recipe_output_path = Path(__file__).resolve().parents[2] / "recipe_output"
+        if recipe_name is None:
+            self.recipe_output_name = input("\tfile naming\n\tEnter a name for your recipe (without file extension/words must be separated by underscores) : \n\t") + ".csv"
         self.json_template = self.import_json(template)
         self.num_columns = 0
-        self.output_file = output_file
         self.eps_data = eps_dataframe
+        self.path_output_file = str(self.recipe_output_path) + "/" + self.recipe_output_name
         # TODO: validation?
         self.constant_sections = {}
         self.table_sections = {}
@@ -139,17 +141,13 @@ class HssCreator:
         '''method that writes a json of the recipe in a template to output and reuse (in opposition of json_to_dataframe method'''
         json_content = self.constant_sections
         for section_keys, section_series in self.table_sections.items():
-            # change NaN (from dfs) to "NaN" (JSON handled format)
-            for col_name in section_series.columns:
-                for idx in section_series.index:
-                    if pd.isna(section_series.at[idx, col_name]):
-                        section_series.at[idx, col_name] = "NaN"
             if not section_series.empty:
                 section_dict = section_series.to_dict(orient='records')[0]
                 json_content[section_keys] = section_dict
             else:
                 raise ValueError("Series is empty")
         json_str = json.dumps(json_content, indent=4)
+        json_str = re.sub(r'NaN', r'""', json_str)
         output_path = Path(__file__).resolve().parents[2] / "recipe_output" / "recipe.json"
         with open(output_path, 'w') as json_file:
             json_file.write(json_str)
@@ -170,7 +168,7 @@ class HssCreator:
         whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)
         whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)
         self.output_dataframe_to_json()
-        with open(self.output_file, 'w') as f:
+        with open(self.path_output_file, 'w') as f:
             f.write(whole_recipe_to_output)
-        if self.output_file:  # TODO better check + log
+        if self.path_output_file:  # TODO better check + log
             print('\tcsv recipe created !')

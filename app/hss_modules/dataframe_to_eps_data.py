@@ -61,7 +61,7 @@ class DataFrameToEPSData:
         if direction is None:
             # same as commented in measure -> lines 112 to 115
             target_cd = self.core_data[['x_dim', 'y_dim']].min(axis=1)
-            self.core_data.orientation = np.where(target_cd == self.core_data.y_dim, "Y", "X")
+            self.core_data["orientation"] = np.where(target_cd == self.core_data.y_dim, "Y", "X")
             self.eps_data[f'MP{mp_no}_TargetCD'] = target_cd
             self.eps_data[f'MP{mp_no}_Direction'] = self.core_data.orientation
             self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name

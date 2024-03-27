@@ -12,7 +12,9 @@ __pycache__/
 htmlcov/
 .coverage
 
-# Environments
+# Application secrets
 .env
+
+# Environments
 venv/
 .venv/

@@ -27,7 +27,7 @@ class RecipeModificator(HssCreator):
         csv_parser_instance = CsvParser
         csv_parser_instance.parse_csv(csv_recipe)
 
-    # TODO manage "NaN" strings -> write real NaN values in df creation
+    # TODO manage "" strings -> write real NaN values in df creation
     # for line in self.json_recipe:
     #     if "NaN" in line:
     #         value = np.nan

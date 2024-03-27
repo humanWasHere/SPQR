@@ -3,7 +3,7 @@ from parser_modules.ssfile_parser import SsfileParser
 from measure_modules.measure import Measure
 from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
 from hss_modules.hss_creator import HssCreator
-# from connection_modules.shell_commands import ShellCommands
+from connection_modules.shell_commands import ShellCommands
 
 test_genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"
 # excel_file = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy-proto_data.xlsx"
@@ -22,11 +22,12 @@ MAG = 200_000
 # -> reprendre import_json() and json_to_dataframe() from hss_creator.py -> make a function to import
 # toggle -> send on sem ? yes or no
 # changer parsing and printing en fonction du type d'entrée
+# export recipe to a formatted name -> ex: user_techno_maskset_layers_more
 
 
 def get_user_inputs():
     # FIXME selection between parsing
-    # TODO take different parsing entries
+    # FIXME create a module outside of main in parser_modules that does the parser splitting/distribution
     # __________ruler calibre__________
     # global calibre_ruler, layout, layers
     # calibre_ruler = input("Enter a (valid) path to your calibre ruler file :\n") or test_calibre_rulers
@@ -34,14 +35,14 @@ def get_user_inputs():
     #     print("calibre ruler is set by default")
     # __________genepy ssfile__________
     global genepy_ssfile, layout, layers
-    genepy_ssfile = input("Enter a (valid) path to your genepy ssfile :\n") or test_genepy_ssfile
+    genepy_ssfile = input("Enter a (valid) path to your genepy ssfile (enter to test) :\n") or test_genepy_ssfile
     if genepy_ssfile == test_genepy_ssfile:
         print("ssfile is set by default")
     # __________layout/layers__________
-    layout = input("Enter a (valid) path to your layout :\n") or test_layout
+    layout = input("Enter a (valid) path to your layout (enter to test) :\n") or test_layout
     if layout == test_layout:
         print("layout is set by default")
-    layers_input = input("Enter a (valid) layer number list (separated with comma + space ', ' each time) :\n") or ', '.join(test_layers)
+    layers_input = input("Enter a (valid) layer number list (separated with comma + space ', ' each time / enter to test) :\n") or ', '.join(test_layers)
     layers = [layer.strip() for layer in layers_input.split(',')]
     if layers == test_layers:
         print("layers are set by default")
@@ -70,9 +71,8 @@ def run_recipe_creation_w_measure():
     EPS_Data = EPS_DataFrame.get_eps_data(parser_input)
     runHssCreation = HssCreator(eps_dataframe=EPS_Data)
     runHssCreation.write_in_file()
-
-    # TODO send recipe to SEM using shell_commands.py
-    # TODO get recipe name if we dynamically ask user to name his recipe -> get info in creation -> from hss_creator module
+    shell_command_instance = ShellCommands()
+    shell_command_instance.run_scp_command_to_rcpd(runHssCreation.recipe_output_name, runHssCreation.recipe_output_path)
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ At the moment, this tool processes the following actions :
 * runs measure
 * merges the informations between the first two
 * calculates the last values to enter in the <EPS_Data> of the recipe
-* generates a .csv or .hss file
+* generates a .csv and .json file
 
 ### inputs&outputs :
 To use this software, you will need to enter the following informations :
@@ -53,11 +53,7 @@ pip install -r requirements.txt
 ```
 Then run main.py with the following command
 ```bash
-python main.py
-```
-or
-```bash
-python3 main.py
+python __main__.py
 ```
 Enjoy your free time ! SEMRC is cooking a recipe for you !
 
@@ -65,6 +61,14 @@ Enjoy your free time ! SEMRC is cooking a recipe for you !
 ```
 semrc - project root
 ├── app
+│   ├── app_checkers
+│   │   └── user_input_checker.py
+│   ├── connection_modules
+│   │   ├── connection.py
+│   │   └── shell_commands.py
+│   ├── frontend
+│   │   ├── __init__.py
+│   │   └── main_front.py
 │   ├── hss_modules
 │   │   ├── dataframe_to_eps_data.py
 │   │   ├── hss_creator.py
@@ -72,35 +76,41 @@ semrc - project root
 │   │   ├── __init__.py
 │   │   └── template_to_all_sections.py
 │   ├── __init__.py
-│   ├── main.py
+│   ├── __main__.py
 │   ├── measure_modules
 │   │   ├── measure.py
 │   │   └── measure.tcl
-│   └── parser_modules
-│       ├── clipboard_parser.py
-│       ├── csv_parser.py
-│       ├── excel_parser.py
-│       └── ssfile_parser.py
+│   ├── parser_modules
+│   │   ├── csv_parser.py
+│   │   ├── excel_parser.py
+│   │   ├── __init__.py
+│   │   ├── parse.py
+│   │   ├── ssfile_parser.py
+│   └── └── xml_parser.py
 ├── assets
 │   └── template_SEM_recipe.json
 ├── .git
 ├── .gitignore
 ├── README.md
+├── recipe_output
+│   ├── recipe.csv
+│   └── recipe.json
 ├── requirements.txt
-└── tests
+├── .temp
+├── tests
 │   ├── __init__.py
+│   ├── test_connection_modules
+│   │   ├── __init__.py
+│   │   └── test_shell_commands.py
 │   ├── test_hss_modules
 │   │   ├── __init__.py
 │   │   ├── test_df_to_eps_data.py
 │   │   ├── test_hss_creator.py
-│   │   ├── test_hss_modificator.py
-│   │   └── test_template_to_all_sections.py
-│   ├── test_measure_module.py
+│   │   ├── test_template_to_all_sections.py
+│   │   └── test_temp_output.hss
+│   ├── test_measure.py
 │   └── test_parser_modules
-│       ├── test_clipboard_parser.py
-│       ├── test_csv_parser.py
-│       ├── test_excel_parser.py
-└── └── └── test_ssfile_parser.py
+│       └── test_ssfile_parser.py
 ```
 
 ### Modules :

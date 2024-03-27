@@ -192,46 +192,18 @@ def strip_template_off(tree):
     return tree_copy
 
 
-def sharepoint():
-    # Interface with Sharepoint
-    # https://sharepoint.stackexchange.com/questions/186740/using-linux-shell-scripting-to-upload-a-document-to-sharepoint
-    # https://github.com/JonathanHolvey/sharepy
-    os.environ['HTTPS_PROXY'] = "165.225.20.12:80"
-    # Get user realm
-    url = "https://login.microsoftonline.com/GetUserRealm.srf?login={}&xml=1"
-    realm = et.fromstring(requests.get(url.format("romain.bange@st.com")).text)
-    namespace = realm.find("NameSpaceType").text
-
-    # API calls
-    site = "https://stmicroelectronics.sharepoint.com/sites/RETCROLLES"
-    list_url = f"{site}/_api/Web/Lists/GetByTitle('testList')/items"
-    f"{site}/_api/web/GetFolderByServerRelativeUrl('RET%20Procedure%20%20Quality')?$expand=Folders,Files"
-
-    cookies = {'FedAuth': "77u/PD9...",
-               'rtFa': "OWMWpEM..."}
-    # r = requests.post('http://wikipedia.org', cookies=cookies)
-
-
-if __name__ == "__main__":
-    print("cx_Oracle client version: ", cx_Oracle.clientversion())
-    # with cx_Oracle.connect(**RETDB) as con:
-    #     print("RetDB Oracle version:", con.version)
-    maskset = "656YA"  # 6580A 657LA great testcases
-    result = translation(maskset)
-    print(result)
-    # Check:
-    # print(pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg", sep=' ', names=["block", "tx", "ty", "r"]))
-    check_mrg = (
-        pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg",
-                sep=' ', names=["block", "tx", "ty", "r"]).set_index(result.index).drop(columns="block")
-        == result
-    )
-    print(all(check_mrg))
-
-
-def test():
-    from connections import translation
-    wd = "/work/opc/all/users/banger/custom/C065_GATE_matching/"
-    df = translation("656YA")
-    df.insert(0, 'layout', "crop_from_" + df.index + ".gds")
-    df.to_csv("656YAgen.mrg", sep=' ', header=False, index=False)
+# if __name__ == "__main__":
+#     print("cx_Oracle client version: ", cx_Oracle.clientversion())
+#     # with cx_Oracle.connect(**RETDB) as con:
+#     #     print("RetDB Oracle version:", con.version)
+#     maskset = "656YA"  # 6580A 657LA great testcases
+#     result = translation(maskset)
+#     print(result)
+#     # Check:
+#     # print(pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg", sep=' ', names=["block", "tx", "ty", "r"]))
+#     check_mrg = (
+#         pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg",
+#                 sep=' ', names=["block", "tx", "ty", "r"]).set_index(result.index).drop(columns="block")
+#         == result
+#     )
+#     print(all(check_mrg))
