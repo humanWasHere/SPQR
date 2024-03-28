@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import lxml.etree
 import xml.etree.ElementTree as et
+from dotenv import Dotenv
 from pathlib import Path
 from sqlalchemy.engine import create_engine
 try:
@@ -23,9 +24,11 @@ except ModuleNotFoundError:
                     "cx_Oracle-7.2.1-py3.6-linux-x86_64.egg")  # client version 11.2.0.3.0 - same as cx_Oracle 8.3.0 from python3.10
     import cx_Oracle
 
+dotenv = Dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 RETDB = {
     'user': "retadm",
-    'password': "",
+    'password': dotenv["RET_DB_PASSWORD"],
     'dsn': "c2x3028.cr2.st.com:1529/ret"
 }
 ENGINE = create_engine(f"oracle+cx_oracle://{RETDB['user']}:{RETDB['password']}@{RETDB['dsn']}")

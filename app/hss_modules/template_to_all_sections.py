@@ -43,7 +43,7 @@ class SectionMaker:
         # __________GP_X section__________
         # __________GP_Y section__________
         # __________GP_Template section__________
-        
+
         if self.gp_data["GP_Template"].isna().any():
             raise ValueError("GP_Template is mandatory")
 

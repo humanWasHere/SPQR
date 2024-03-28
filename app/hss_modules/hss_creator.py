@@ -17,8 +17,8 @@ class HssCreator:
         if output_path is None:
             # TODO
             self.recipe_output_path = Path(__file__).resolve().parents[2] / "recipe_output"
-        if recipe_name is None:
-            self.recipe_output_name = input("\tfile naming\n\tEnter a name for your recipe (without file extension/words must be separated by underscores) : \n\t") + ".csv"
+        self.recipe_output_name = input("\tfile naming\n\tEnter a name for your recipe (without file extension/words must be separated by underscores) : \n\t") + ".csv"
+        self.path_output_file = str(self.recipe_output_path) + "/" + self.recipe_output_name
         self.json_template = self.import_json(template)
         self.num_columns = 0
         self.eps_data = eps_dataframe
