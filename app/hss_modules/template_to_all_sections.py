@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 
 
 class SectionMaker:
@@ -13,6 +14,8 @@ class SectionMaker:
         self.gpa_list = self.df_dict["<GPA_List>"]
         self.gp_offset = self.df_dict["<GP_Offset>"]
         self.epa_list = self.df_dict["<EPA_List>"]
+        self.idd_cond = self.df_dict["<IDD_Cond>"]
+        self.idd_layer_data = self.df_dict["<IDD_Layer_Data>"]
 
     # by default, if there is no modification, each section returns the default value in assets/template_SEM_recipe.json
     def make_coordinate_system_section(self) -> pd.DataFrame:
@@ -67,6 +70,13 @@ class SectionMaker:
     def make_gp_offset_section(self) -> pd.DataFrame:
         '''this meathod set corresponding values to gp offset section by calculation or definition'''
         return self.gp_offset
+
+    def make_idd_cond_section(self, layout, topcell):
+        self.idd_cond.loc[0, ["DesignData", "CellName"]] = Path(layout).stem, topcell
+
+    def make_idd_layer_data_section(self, mask_layer):
+        self.idd_layer_data.loc[0, ["LayerNo", "DataType"]] = 0, 114  # TODO link with step / target layer
+        self.idd_layer_data.loc[1:, "LayerNo"] = mask_layer
 
     def make_epa_list_section(self) -> pd.DataFrame:
         '''this meathod set corresponding values to epa list section by calculation or definition'''

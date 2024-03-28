@@ -11,7 +11,7 @@ from .template_to_all_sections import SectionMaker
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, template=None, output_path=None, recipe_name=None):
+    def __init__(self, eps_dataframe: pd.DataFrame, layer=0, layout="", topcell="", template=None, output_path=None, recipe_name=None):
         if template is None:
             template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
         if output_path is None:
@@ -22,6 +22,9 @@ class HssCreator:
         self.json_template = self.import_json(template)
         self.num_columns = 0
         self.eps_data = eps_dataframe
+        self.layer = layer
+        self.layout = layout
+        self.topcell = topcell
         self.path_output_file = str(self.recipe_output_path) + "/" + self.recipe_output_name
         # TODO: validation?
         self.constant_sections = {}
@@ -62,6 +65,8 @@ class HssCreator:
         self.table_sections["<GPA_List>"] = instance_sectionMaker.make_gpa_list_section()
         self.table_sections["<GP_Offset>"] = instance_sectionMaker.make_gp_offset_section()
         self.table_sections["<EPA_List>"] = instance_sectionMaker.make_epa_list_section()
+        instance_sectionMaker.make_idd_cond_section(self.layout, self.topcell)
+        instance_sectionMaker.make_idd_layer_data_section(self.layer)
 
     def fill_with_eps_data(self) -> None:
         '''method that **should** drop all columns of the df_template when column title is not in the df_data else column data is added'''
@@ -79,7 +84,7 @@ class HssCreator:
             if col == "Type1":
                 self.table_sections["<EPS_Data>"][col] = 1
             # WARNING maintenabilité : 11 dépends du nommage et de la place de la colonne Type11 dans le template
-            elif str(col).startswith("Type") and int(str(col)[4:6]) < 11:
+            elif str(col).startswith("Type") and int(str(col)[4:6]) < 12:
                 self.table_sections["<EPS_Data>"][col] = 2
         # if data empty in MPn section is empty, corresponding value type is set to "" else fill with 2s
         # WARNING maintenabilité ?

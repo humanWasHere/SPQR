@@ -20,11 +20,11 @@ class DataFrameToEPSData:
         'AP1_AF_Mag': 45000,
         'AP1_Rot': 0,
         'MP1_X': 0,
-        'MP1_Y': 0
+        'MP1_Y': 0 
     }
 
     # mapping should not be used to assign data ! just make a link between 2 dfs
-    genepy_mapping = {
+    MAPPING = {
         'EPS_Name': "name",
         'Move_X': "x",
         'Move_Y': "y",
@@ -38,16 +38,6 @@ class DataFrameToEPSData:
         'AP1_AF_Y': "y_ap"
     }
 
-    calibre_ruler_mapping = {
-        'EPS_Name': "name",
-        'Move_X': "x",
-        'Move_Y': "y",
-        'EP_Mag_X': "magnification",
-        # 'EP_AF_X': "x_af",
-        # 'EP_AF_Y': "y_af",
-        'EP_AF_Mag': "magnification"
-    }
-
     def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
         # TODO:  validate data (columns, type, nan...)
         self.core_data = core_data  # .astype({'x': int, 'y': int})
@@ -55,13 +45,13 @@ class DataFrameToEPSData:
         assert step in {"PH", "ET"}
         self.step = step
 
-    def add_mp_width(self, mp_no=1, direction: str = None, measleng: int = 100):
+    def add_mp_width(self, mp_no=1, direction: str = None, template: str = "", measleng: int = 100):
         """Add a width measurement point (line/space depending on MP template) at image center"""
         self.eps_data[[f"MP{mp_no}_X", f"MP{mp_no}_Y"]] = (0, 0)  # image center
         if direction is None:
             # same as commented in measure -> lines 112 to 115
             target_cd = self.core_data[['x_dim', 'y_dim']].min(axis=1)
-            self.core_data["orientation"] = np.where(target_cd == self.core_data.y_dim, "Y", "X")
+            self.core_data["orientation"] = np.where(target_cd == self.core_data.y_dim, "Y", "X")  # TODO a revoir
             self.eps_data[f'MP{mp_no}_TargetCD'] = target_cd
             self.eps_data[f'MP{mp_no}_Direction'] = self.core_data.orientation
             self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name
@@ -76,18 +66,12 @@ class DataFrameToEPSData:
         # Limit search area to 30 pixels  #TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
         self.eps_data[f'MP{mp_no}_SA_In'] = self.eps_data[f'MP{mp_no}_SA_Out'] = (target_cd_pixel / 3).fillna(500).astype(int).clip(upper=30)
         self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.measleng  # TODO: compute vs height
-        self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']
+        self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
+        self.eps_data[f'MP{mp_no}_Template'] = template
 
-    def distribute_mapping(self, parser_input) -> None:
+    def mapping_from_df(self) -> None:
         '''makes a link between gauge df and actual column name of recipe header for genepy ssfile parser input'''
-        mapping = None
-        if parser_input == 'genepy_ssfile':
-            mapping = self.genepy_mapping
-        elif parser_input == 'calibre_ruler':
-            mapping = self.calibre_ruler_mapping  # This line was missing the assignment to 'mapping'
-        else:
-            raise ValueError("parser input should be 'genepy_ssfile' or 'calibre_ruler'")
-        for csv_col, gauge_col in mapping.items():  # Use the 'mapping' variable here
+        for csv_col, gauge_col in self.MAPPING.items():  # Use the 'mapping' variable here
             self.eps_data[csv_col] = self.core_data[gauge_col] 
 
     # def mapping_from_df(self) -> None:
@@ -134,13 +118,13 @@ class DataFrameToEPSData:
         # EP_AF_X, EP_AF_Y
         pass
 
-    def get_eps_data(self, parser_input) -> pd.DataFrame:
+    def get_eps_data(self, mp_template) -> pd.DataFrame:
         '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
         print('3. <EPS_Data> section creation')  # to log
-        self.distribute_mapping(parser_input)
+        self.mapping_from_df()
         self.mapping_from_fix_values()
         self.set_eps_data_id()
-        self.add_mp_width(1)
+        self.add_mp_width(1, template=mp_template)
         self.set_eps_data_eps_modification()
         self.set_eps_data_template()
         self.set_eps_data_ap1_modification()

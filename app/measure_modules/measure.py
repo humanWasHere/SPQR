@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 class Measure:
-    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, tcl_measure_file=None):
+    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, tcl_measure_file=None, unit="nm"):
         if tcl_measure_file is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
@@ -19,7 +19,9 @@ class Measure:
         self.parser_df = parser_input
         self.x_y_points = parser_input[['name', 'x', 'y']]
         self.layout = layout
-        self.layers = layers
+        self.layers = layers  # target_layers
+        self.unit = unit
+        self.precision = 1000
         # if isinstance(layers, list):
         #     self.layers = layers
         # else:
@@ -43,8 +45,7 @@ class Measure:
 
     def layout_peek(self, *options) -> bytes:
         '''runs command "layout peek" in Calibre, in ssh, on a defined machine by find_host() in order to extract result'''
-        options = [
-            '-'+opt if not opt.startswith('-') else opt for opt in options]  # add dash if needed
+        options = ['-'+opt if not opt.startswith('-') else opt for opt in options]  # add dash if needed
         # assert set(options).issubset({"-precision", "-topcell", "-layers", "-bbox"})
         host = self.find_host()
         peek_cmd = f"setcalibre rec >/dev/null; calibredrv -a puts [layout peek {self.layout} {' '.join(options)}]"
@@ -52,7 +53,7 @@ class Measure:
                               stdout=subprocess.PIPE, text=True)
         return peek.stdout.splitlines()[-1].strip()
 
-    def creation_script_tmp(self, output, search_area=5, unit="nm") -> Path:
+    def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
         # TODO this method should close temp file ?
         # TODO rationnaliser l'emplacement des fichiers temporaires
@@ -60,9 +61,11 @@ class Measure:
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
         # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")  # gets deleted out of scope?
 
-        precision = self.layout_peek("precision")
+        # self.precision = int(float(self.layout_peek("precision")))  # doesnt work if int!!!!!?????
+        self.precision = self.layout_peek("precision")
+
         # precision = DesignControler(layout).getPrecisionNumber()  # raises GTcheckError
-        correction = {'um': 1, 'nm': 1000, 'dbu': precision}
+        correction = {'um': 1, 'nm': 1000, 'dbu': self.precision}
         # Format coordinates as [{name x y}, ...]
         coordonnees = [
             f"{{{' '.join(row.astype(str).tolist())}}}" for _, row in self.x_y_points.iterrows()]
@@ -71,10 +74,9 @@ class Measure:
             texte = template.read()
             texte = texte.replace("FEED_ME_LAYER", ' '.join(self.layers))
             texte = texte.replace("FEED_ME_SEARCH_AREA", str(search_area))
-            texte = texte.replace("FEED_ME_PRECISION", precision)
-            texte = texte.replace("FEED_ME_CORRECTION", str(correction[unit]))
-            texte = texte.replace("FEED_ME_COORDINATES",
-                                  '\n'.join(coordonnees))
+            texte = texte.replace("FEED_ME_PRECISION", str(self.precision))
+            texte = texte.replace("FEED_ME_CORRECTION", str(correction[self.unit]))
+            texte = texte.replace("FEED_ME_COORDINATES", '\n'.join(coordonnees))
             texte = texte.replace("FEED_ME_GDS", self.layout)
             texte = texte.replace("FEED_ME_OUTPUT", output)
             script.write(texte)
@@ -109,6 +111,8 @@ class Measure:
         meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
                                 'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
+        meas_df.loc[meas_df.x_dim==0, "x_dim"] = 3000 # FIXME measure out of range?
+        meas_df.y_dim.replace(to_replace=0, value=3000, inplace=True)
         # # TODO doublon avec dataframe_to_eps.add_mp  / a decoupler ?
         # meas_df['target_cd'] = meas_df[['x_dim', 'y_dim']].min(axis=1)
         # meas_df.loc[meas_df.target_cd == meas_df.y_dim, 'orient'] = 'Y'
@@ -120,11 +124,21 @@ class Measure:
         measure_tempfile = tempfile.NamedTemporaryFile(dir=Path(__file__).resolve().parents[2] / ".temp")
         # TODO where to store tmp files (script + results)
         measure_tempfile_path = measure_tempfile.name
-        tmp = self.creation_script_tmp(measure_tempfile_path, unit="dbu")
+        tmp = self.creation_script_tmp(measure_tempfile_path)
         print('2. measurement')  # TODO log
         self.lance_script(tmp, verbose=True)
+        (Path(__file__).resolve().parents[2] / "recipe_output" / "last_measure.csv").write_text(Path(measure_tempfile_path).read_text())
         meas_df = self.process_results(measure_tempfile_path)
-        merged_dfs = pd.merge(self.parser_df, meas_df, on="name")
+        parser_df = self.parser_df.copy()
+        nm_per_unit = {'dbu': 1000/int(float(self.precision)), 'nm': 1, 'micron': 1000}
+        parser_df[["x", "y"]] *= nm_per_unit[self.unit]
+        parser_df[["x", "y"]] = parser_df[["x", "y"]].astype(int)
+        try:
+            parser_df[["x_ap", "y_ap"]] *= nm_per_unit[self.unit]
+            parser_df[["x_ap", "y_ap"]] = parser_df[["x_ap", "y_ap"]].astype(int)
+        except ValueError:
+            pass
+        merged_dfs = pd.merge(parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
         measure_tempfile.close()  # remove temporary script
         if not merged_dfs.empty:  # more checks + log

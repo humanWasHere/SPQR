@@ -17,6 +17,7 @@ class SsfileParser(FileParser):
         self.ssfile = file_to_parse
         self.is_genepy = is_genepy
         self.data: pd.DataFrame
+        self.unit = "nm"
 
     def rename_title(dataframe) -> pd.DataFrame:
         """this method allows user to rename the column imported if it is not already in valid format (NaN value)"""
@@ -24,8 +25,7 @@ class SsfileParser(FileParser):
         for col in dataframe.columns:
             if pd.isna(dataframe.loc[0, col]):
                 while True:
-                    user_input = input(
-                        f"Enter a value to replace NaN in column {col}: ")
+                    user_input = input(f"Enter a value to replace NaN in column {col}: ")
                     if user_input not in set_title_names:
                         set_title_names.append(user_input)
                         break
@@ -71,7 +71,7 @@ class SsfileParser(FileParser):
         print('1. genepy ssfile parsing')  # TODO log
         self.data = pd.read_csv(self.ssfile, sep='\t', header=0, on_bad_lines='warn', encoding='utf-8')
         # TODO add validation (column number / column name)
-        self.unit = self.data.UNIT_COORD.unique()[0]  # TODO normaliser l' unite d'entree par point
+        self.unit = self.data.UNIT_COORD.unique()[0].lower()  # TODO normaliser l' unite d'entree par point
         self.post_parse()
         if not self.data.empty:  # TODO add more logic - log
             print('\tgenepy ssfile parsing done')

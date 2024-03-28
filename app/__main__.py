@@ -4,6 +4,8 @@ from measure_modules.measure import Measure
 from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
 from hss_modules.hss_creator import HssCreator
 from connection_modules.shell_commands import ShellCommands
+from connection_modules import connection
+from xml.etree.ElementTree import ParseError
 
 test_genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"
 # excel_file = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy-proto_data.xlsx"
@@ -54,26 +56,40 @@ def run_recipe_creation_w_measure():
     # __________ruler calibre__________
     # TODO recipe returns no eps_data ???
     # calibre_ruler_parser_instance = CalibreXMLParser(test_calibre_rulers)
-    # data_parsed = calibre_ruler_parser_instance.parse_data()
+    # >>>>>>>>>>> DEMO RULERS <<<<<<<<<<<<<<<<<
+    try:
+        parser_instance = CalibreXMLParser(genepy_ssfile)  # test input
+        data_parsed = parser_instance.parse_data()
+    except ParseError:
+        parser_instance = SsfileParser(genepy_ssfile, is_genepy=True)
+        data_parsed = parser_instance.parse_data().iloc[60:70]
+
+    # >>>>>>>>>>>  <<<<<<<<<<<<<<<<<
+
     # parser_input = 'calibre_ruler'
     # __________genepy ssfile__________
-    # FIXME tester recette avant présentation jeudi 28
-    ssfile_parser_instance = SsfileParser(genepy_ssfile, is_genepy=True)
+    # >>>>>>>>>>> DEMO RULERS <<<<<<<<<<<<<<<<<
+    # parser_instance = SsfileParser(genepy_ssfile, is_genepy=True)
+    # data_parsed = parser_instance.parse_data().iloc[60:70]
+    # >>>>>>>>>>>  <<<<<<<<<<<<<<<<<
     # data_parsed = ssfile_parser_instance.parse_data()
-    data_parsed = ssfile_parser_instance.parse_data().iloc[:30]
-    parser_input = 'genepy_ssfile'
+
     # __________following recipe__________
-    measure_instance = Measure(data_parsed, layout, layers)
+    # TODO pass FileParser instance directly (and optional slice?)
+    measure_instance = Measure(data_parsed, layout, layers, unit=parser_instance.unit)
     output_measure = measure_instance.run_measure()
     output_measure['magnification'] = MAG
     EPS_DataFrame = DataFrameToEPSData(output_measure)
     # EPS_Data = EPS_DataFrame.get_eps_data(parser_input)  # can be 'calibre_ruler' or 'genepy_ssfile'
-    EPS_Data = EPS_DataFrame.get_eps_data(parser_input)
-    runHssCreation = HssCreator(eps_dataframe=EPS_Data)
+    EPS_Data = EPS_DataFrame.get_eps_data("X90M_GATE_PH")
+    topcell = measure_instance.layout_peek("topcell")  # TODO move, optimize
+    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layer=layers[0].split('.')[0], layout=layout, topcell=topcell)
     runHssCreation.write_in_file()
-    shell_command_instance = ShellCommands()
-    shell_command_instance.run_scp_command_to_rcpd(runHssCreation.recipe_output_name, runHssCreation.recipe_output_path)
-
+    # shell_command_instance = ShellCommands()
+    # shell_command_instance.run_scp_command_to_rcpd(runHssCreation.recipe_output_name, runHssCreation.recipe_output_path)
+    print(runHssCreation.path_output_file)
+    connection.upload_csv(runHssCreation.path_output_file)
+    connection.upload_gds(layout)
 
 if __name__ == "__main__":
     get_user_inputs()

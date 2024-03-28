@@ -41,13 +41,11 @@ class FileParser(ABC):
         pass
 
     # @abstractmethod
-    def unit_converter(self, unit):
-        '''method that converts different unit into dbu'''
-        # if unit == "nm":
-        #   convert nm to dbu
-        #   return unit
-        # elif unit == "dbu":
-        #   return unit
+    def unit_converter(self, unit, precision):  # precision is linked to a layout...
+        """Converts coordinates from source unit to DBU"""
+        dbu_per_unit = {'dbu': 1, 'nm': precision/1000, 'micron': precision}
+        # self.data[['x', 'y']] *= dbu_per_unit[unit]
+        return dbu_per_unit[unit]
 
     # @DataframeValidator.validate
     @abstractmethod
@@ -80,7 +78,7 @@ class CalibreXMLParser(FileParser):
             y_range = [int(float(coord.text)) for coord in ruler.findall('points/point/y')]
             x = sum(x_range) / 2
             y = sum(y_range) / 2
-            yield name, x, y
+            yield name, int(x), int(y)
 
     def gen_rows_clip(self):
         """Generate clip name and center row by row from Calibre clip XML. Units are defined in XML root"""
@@ -109,6 +107,9 @@ class CalibreXMLParser(FileParser):
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r' ', '_', s))
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r'\W+', '', s))  # keep alphanumeric only
         # TODO add generic name if empty
+        parsed_data['x_ap'] = None
+        parsed_data['y_ap'] = None
+        # TODO manage default columns
         if not parsed_data.empty:  # TODO add more logic - log
             print('\tcalibre ruler parsing done')
         return parsed_data
