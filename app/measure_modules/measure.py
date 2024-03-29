@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 class Measure:
-    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, tcl_measure_file=None, unit="nm"):
+    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, tcl_measure_file=None, unit="nm"):  # TODO should work with dbu ?
         if tcl_measure_file is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
@@ -61,8 +61,7 @@ class Measure:
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
         # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")  # gets deleted out of scope?
 
-        # self.precision = int(float(self.layout_peek("precision")))  # doesnt work if int!!!!!?????
-        self.precision = self.layout_peek("precision")
+        self.precision = int(float(self.layout_peek("precision")))
 
         # precision = DesignControler(layout).getPrecisionNumber()  # raises GTcheckError
         correction = {'um': 1, 'nm': 1000, 'dbu': self.precision}
@@ -111,7 +110,7 @@ class Measure:
         meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
                                 'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
-        meas_df.loc[meas_df.x_dim==0, "x_dim"] = 3000 # FIXME measure out of range?
+        meas_df.loc[meas_df.x_dim == 0, "x_dim"] = 3000  # FIXME measure out of range?
         meas_df.y_dim.replace(to_replace=0, value=3000, inplace=True)
         # # TODO doublon avec dataframe_to_eps.add_mp  / a decoupler ?
         # meas_df['target_cd'] = meas_df[['x_dim', 'y_dim']].min(axis=1)
@@ -127,6 +126,7 @@ class Measure:
         tmp = self.creation_script_tmp(measure_tempfile_path)
         print('2. measurement')  # TODO log
         self.lance_script(tmp, verbose=True)
+        # FIXME why ??
         (Path(__file__).resolve().parents[2] / "recipe_output" / "last_measure.csv").write_text(Path(measure_tempfile_path).read_text())
         meas_df = self.process_results(measure_tempfile_path)
         parser_df = self.parser_df.copy()

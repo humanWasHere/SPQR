@@ -1,40 +1,30 @@
-from app_checkers.user_input_checker import UserInputChecker
-from parser_modules.parse import CalibreXMLParser
-from parser_modules.ssfile_parser import SsfileParser
-from parser_modules.excel_parser import ExcelParser
-from xml.etree.ElementTree import ParseError
+from app_checkers.input_checker import UserInputChecker
+# from parser_modules.parse import CalibreXMLParser
+# from parser_modules.ssfile_parser import SsfileParser
+# from parser_modules.excel_parser import ExcelParser
+# from xml.etree.ElementTree import ParseError
 
 
 class GetUserInputs():
 
     def __init__(self) -> None:
         self.user_input_checker_instance = UserInputChecker()
-        self.parser = ''
-        self.layout = ''
-        self.layers = []  # should be str() for measure.py
 
-    def get_user_parser_path(self):
-        # Get parser input
-        if not self.parser:
+    def get_user_secured_path(self, message) -> str:
+        user_path = ""
+        if not user_path:
             while True:
-                self.parser = self.user_input_checker_instance.get_secured_user_file_path("Enter a path to your parser :\n")
-                if self.parser:
-                    break
+                user_path = self.user_input_checker_instance.get_secured_user_filepath(message)
+                if user_path:
+                    return user_path
 
-    def get_user_layout_path(self):
-        if not self.layout:
+    def get_user_secured_list_int_float(self, message) -> list:
+        user_list = []
+        if not user_list:
             while True:
-                self.layout = self.user_input_checker_instance.get_secured_user_file_path("Enter a path to your layout :\n")
-                if self.layout:
-                    break
-
-    def get_user_layers_list(self):
-        if not self.layers:
-            while True:
-                self.layers = self.user_input_checker_instance.get_secured_user_int_float_list("Enter layer(s) number list (separated with comma + space ', ' each time):\n")
-                if self.layers:
-                    # self.layers = self.layers.join(', ')
-                    break
+                user_list = self.user_input_checker_instance.get_secured_user_list_int_float(message)
+                if user_list:
+                    return user_list
 
     # def auto_select_parser(self):
     #     # TODO change selection logic
@@ -53,8 +43,3 @@ class GetUserInputs():
     #             excel_parser_instance = ExcelParser()
     #             data_parsed = excel_parser_instance.parse_data()
     #     return data_parsed
-
-    def get_user_inputs(self):
-        self.get_user_parser_path()
-        self.get_user_layout_path()
-        self.get_user_layers_list()

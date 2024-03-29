@@ -20,7 +20,7 @@ class DataFrameToEPSData:
         'AP1_AF_Mag': 45000,
         'AP1_Rot': 0,
         'MP1_X': 0,
-        'MP1_Y': 0 
+        'MP1_Y': 0
     }
 
     # mapping should not be used to assign data ! just make a link between 2 dfs
@@ -71,8 +71,8 @@ class DataFrameToEPSData:
 
     def mapping_from_df(self) -> None:
         '''makes a link between gauge df and actual column name of recipe header for genepy ssfile parser input'''
-        for csv_col, gauge_col in self.MAPPING.items():  # Use the 'mapping' variable here
-            self.eps_data[csv_col] = self.core_data[gauge_col] 
+        for csv_col, gauge_col in self.MAPPING.items():
+            self.eps_data[csv_col] = self.core_data[gauge_col]
 
     # def mapping_from_df(self) -> None:
     #     '''makes a link between gauge df and actual column name of recipe header'''

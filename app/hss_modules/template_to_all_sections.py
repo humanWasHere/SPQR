@@ -5,17 +5,17 @@ from pathlib import Path
 class SectionMaker:
     '''this class is used to create, fill or modify the values of all second level sections except <EPS_Data> section. If not modified, value is set default as in template.json'''
 
-    def __init__(self, dictionnary):
-        self.df_dict = dictionnary
-        self.coordinate_system = self.df_dict["<CoordinateSystem>"]
-        self.gp_coordinate_system = self.df_dict["<GPCoordinateSystem>"]
-        self.unit = self.df_dict["<Unit>"]
-        self.gp_data = self.df_dict["<GP_Data>"]
-        self.gpa_list = self.df_dict["<GPA_List>"]
-        self.gp_offset = self.df_dict["<GP_Offset>"]
-        self.epa_list = self.df_dict["<EPA_List>"]
-        self.idd_cond = self.df_dict["<IDD_Cond>"]
-        self.idd_layer_data = self.df_dict["<IDD_Layer_Data>"]
+    def __init__(self, df_dict):
+        self.coordinate_system = df_dict["<CoordinateSystem>"]
+        self.gp_coordinate_system = df_dict["<GPCoordinateSystem>"]
+        self.unit = df_dict["<Unit>"]
+        self.gp_data = df_dict["<GP_Data>"]
+        self.gpa_list = df_dict["<GPA_List>"]
+        self.gp_offset = df_dict["<GP_Offset>"]
+        self.epa_list = df_dict["<EPA_List>"]
+        self.idd_cond = df_dict["<IDD_Cond>"]
+        self.idd_layer_data = df_dict["<IDD_Layer_Data>"]
+        self.image_env = df_dict["<ImageEnv>"]
 
     # by default, if there is no modification, each section returns the default value in assets/template_SEM_recipe.json
     def make_coordinate_system_section(self) -> pd.DataFrame:
@@ -71,13 +71,18 @@ class SectionMaker:
         '''this meathod set corresponding values to gp offset section by calculation or definition'''
         return self.gp_offset
 
-    def make_idd_cond_section(self, layout, topcell):
-        self.idd_cond.loc[0, ["DesignData", "CellName"]] = Path(layout).stem, topcell
-
-    def make_idd_layer_data_section(self, mask_layer):
-        self.idd_layer_data.loc[0, ["LayerNo", "DataType"]] = 0, 114  # TODO link with step / target layer
-        self.idd_layer_data.loc[1:, "LayerNo"] = mask_layer
-
     def make_epa_list_section(self) -> pd.DataFrame:
         '''this meathod set corresponding values to epa list section by calculation or definition'''
         return self.epa_list
+
+    def make_idd_cond_section(self, layout, topcell) -> pd.DataFrame:
+        self.idd_cond.loc[0, ["DesignData", "CellName"]] = Path(layout).stem, topcell
+        return self.idd_cond
+
+    def make_idd_layer_data_section(self, mask_layer) -> pd.DataFrame:
+        self.idd_layer_data.loc[0, ["LayerNo", "DataType"]] = 0, 114  # TODO link with step / target layer
+        self.idd_layer_data.loc[1:, "LayerNo"] = int(float(mask_layer))  # TODO troncate of round ?
+        return self.idd_layer_data
+
+    def make_image_env_section(self) -> pd.DataFrame:
+        return self.image_env

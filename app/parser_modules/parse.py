@@ -112,6 +112,7 @@ class CalibreXMLParser(FileParser):
         # TODO manage default columns
         if not parsed_data.empty:  # TODO add more logic - log
             print('\tcalibre ruler parsing done')
+        print(parsed_data)
         return parsed_data
 
 # TODO get_user_info should be in this file ?

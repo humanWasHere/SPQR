@@ -5,6 +5,7 @@ from ..parser_modules.csv_parser import CsvParser
 
 # TODO check if HssCreator instance is needed to modify the recipe
 # -> get file recipe that already has been output
+# uses json_parser.py -> import HssCreator heritage in RecipeModificator or in JsonParser
 
 
 class RecipeModificator(HssCreator):
