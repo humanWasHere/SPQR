@@ -156,11 +156,10 @@ class HssCreator:
                 raise ValueError("Series is empty")
         json_str = json.dumps(json_content, indent=4)
         json_str = re.sub(r'NaN', r'""', json_str)
-        output_path = Path(__file__).resolve().parents[2] / "recipe_output" / self.recipe_output_name
-        with open(str(output_path) + ".json", 'w') as json_file:
+        with open(str(self.path_output_file) + ".json", 'w') as json_file:
             json_file.write(json_str)
-        if output_path:  # TODO better check + log
-            print(f"\tjson recipe created !  Find it at {str(self.recipe_output_path)}/{self.recipe_output_name}.json")
+        if json_file:  # TODO better check + log
+            print(f"\tjson recipe created !  Find it at {str(self.path_output_file)}.json")
 
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
@@ -178,5 +177,5 @@ class HssCreator:
         self.output_dataframe_to_json()
         with open(self.path_output_file + ".csv", 'w') as f:
             f.write(whole_recipe_to_output)
-        if self.path_output_file:  # TODO better check + log
+        if f:  # TODO better check + log
             print(f"\tcsv recipe created ! Find it at {self.path_output_file}.csv")

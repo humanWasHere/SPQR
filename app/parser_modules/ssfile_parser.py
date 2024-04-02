@@ -19,9 +19,9 @@ class SsfileParser(FileParser):
         self.data: pd.DataFrame
         self.unit = "nm"
 
-    def rename_title(dataframe) -> pd.DataFrame:
+    def rename_column_name(dataframe) -> pd.DataFrame:
         """this method allows user to rename the column imported if it is not already in valid format (NaN value)"""
-        set_title_names = []
+        set_title_names = []  # TODO add all existing columns first
         for col in dataframe.columns:
             if pd.isna(dataframe.loc[0, col]):
                 while True:
@@ -31,7 +31,7 @@ class SsfileParser(FileParser):
                         break
                     else:
                         print("Value already set !")
-                dataframe.loc[0, col] = user_input
+                dataframe.loc[0, col] = user_input  # bad indentation ? should be before break ?
         return dataframe
 
     def unit():
@@ -39,6 +39,15 @@ class SsfileParser(FileParser):
 
     def unit_converter():
         pass
+
+    # def check_x_y_is_int(self) -> pd.DataFrame:
+    #     try:
+    #         self.data['x'] = self.data['x'].astype(float).astype(int)
+    #         self.data['y'] = self.data['y'].astype(float).astype(int)
+    #     except ValueError:
+    #         print("Parsed x/y columns could not be converted to int. Returning original DataFrame.")
+    #         return self.data
+    #     return self.data
 
     def parse_data(self) -> pd.DataFrame:
         '''this method decides wether you need to parse a genepy ssfile or not'''
@@ -59,7 +68,7 @@ class SsfileParser(FileParser):
         if self.data.iloc[0].isnull().values.any():
             print("There is undefined columns name in your dataframe. Have a look :")
             print(self.data.to_string())
-            self.data = self.drop_empty_column(self.rename_title(self.data))
+            self.data = self.rename_column_name(self.data)
         if header_column_number != max_column_number:
             print("Reminder that the dataframe does not match expectations :( make it better !")
         if not self.data.empty:  # TODO add more logic - log
@@ -73,6 +82,7 @@ class SsfileParser(FileParser):
         # TODO add validation (column number / column name)
         self.unit = self.data.UNIT_COORD.unique()[0].lower()  # TODO normaliser l' unite d'entree par point
         self.post_parse()
+        # self.check_x_y_is_int()
         if not self.data.empty:  # TODO add more logic - log
             print('\tgenepy ssfile parsing done')
         return self.data

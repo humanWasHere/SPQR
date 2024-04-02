@@ -41,11 +41,15 @@ class FileParser(ABC):
         pass
 
     # @abstractmethod
-    def unit_converter(self, unit, precision):  # precision is linked to a layout...
+    def unit_converter(self, precision):  # precision is linked to a layout...
         """Converts coordinates from source unit to DBU"""
+        return
+
+    def data_dbu(self, precision):
         dbu_per_unit = {'dbu': 1, 'nm': precision/1000, 'micron': precision}
-        # self.data[['x', 'y']] *= dbu_per_unit[unit]
-        return dbu_per_unit[unit]
+        data = self.parse_data()
+        data[['x', 'y', 'x_ap', 'y_ap']] *= dbu_per_unit[self.unit]
+        return data
 
     # @DataframeValidator.validate
     @abstractmethod
@@ -53,6 +57,11 @@ class FileParser(ABC):
         """Return a dataframe of gauge name and coordinates in original units
         Column labels MUST BE: name, x, y. Name must be alphanumeric or underscore."""
         pass
+
+    # @abstractmethod
+    # def check_x_y_is_int(self) -> pd.DataFrame:
+    #     '''checks if x and y columns contains int values. If not converts it'''
+    #     pass
 
     # def validate_data(self):
 
@@ -84,7 +93,7 @@ class CalibreXMLParser(FileParser):
         """Generate clip name and center row by row from Calibre clip XML. Units are defined in XML root"""
         for clip in self.tree.findall('clip'):
             name = clip.findtext('name')
-            box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}
+            box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}  # FIXME should convert to int ?
             x = box['x'] + box['width'] / 2
             y = box['y'] + box['height'] / 2
             yield name, x, y
@@ -115,12 +124,5 @@ class CalibreXMLParser(FileParser):
         print(parsed_data)
         return parsed_data
 
-# TODO get_user_info should be in this file ?
-# according to user's choice, run corresponding parsing
-# make a method like run_parsing() which can be called in main
+# TODO make a method like run_parsing() which can be called in main
 # the goal is to manage which parsing is to apply to the type of user input
-# parser_input = input("Select between 'genepy_recipe' or 'calibre_recipe' :\n")
-# if parser_input == 'genepy_recipe':
-    # ssfile_genepy_parser_instance = ...
-# if parser_input == 'calibre_recipe':
-    # calibre_parser_instance = ...

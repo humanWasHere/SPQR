@@ -2,6 +2,7 @@ import tempfile
 import subprocess
 import pandas as pd
 from pathlib import Path
+from connection_modules.calibre_python import lance_script
 # from pyrat.DesignControler import DesignControler
 # from pyratImplementation.GTCheck.GTCheckService import GTcheckError
 
@@ -11,7 +12,7 @@ from pathlib import Path
 
 
 class Measure:
-    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, tcl_measure_file=None, unit="nm"):  # TODO should work with dbu ?
+    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, precision, tcl_measure_file=None, unit="nm"):  # TODO should work with dbu ?
         if tcl_measure_file is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
@@ -21,7 +22,7 @@ class Measure:
         self.layout = layout
         self.layers = layers  # target_layers
         self.unit = unit
-        self.precision = 1000
+        self.precision = precision
         # if isinstance(layers, list):
         #     self.layers = layers
         # else:
@@ -29,29 +30,6 @@ class Measure:
         #         self.layers = [layers]
         #     except (TypeError):
         #         raise TypeError("layers argument must be a list")
-
-    def find_host(self) -> str:
-        '''uses perl script to find best available machine to execute a task'''
-        # From /work/ratsoft/bin/fastlinux7
-        cmd = 'use lib "/work/ratsoft/lib/perlmod"; use Rat::choose_host; use strict;' \
-            'print &choose_host::best_machine( "lx24-amd64", "rh70", 100, 1, 0, "all.q" );'
-        try:
-            choose_host = subprocess.run(
-                ['perl', '-e', cmd], stdout=subprocess.PIPE, check=True)
-            host = choose_host.stdout.decode()
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"Failed to run Perl script: {e}") from e
-        return host
-
-    def layout_peek(self, *options) -> bytes:
-        '''runs command "layout peek" in Calibre, in ssh, on a defined machine by find_host() in order to extract result'''
-        options = ['-'+opt if not opt.startswith('-') else opt for opt in options]  # add dash if needed
-        # assert set(options).issubset({"-precision", "-topcell", "-layers", "-bbox"})
-        host = self.find_host()
-        peek_cmd = f"setcalibre rec >/dev/null; calibredrv -a puts [layout peek {self.layout} {' '.join(options)}]"
-        peek = subprocess.run(["ssh", host, peek_cmd],
-                              stdout=subprocess.PIPE, text=True)
-        return peek.stdout.splitlines()[-1].strip()
 
     def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
@@ -61,7 +39,7 @@ class Measure:
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
         # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")  # gets deleted out of scope?
 
-        self.precision = int(float(self.layout_peek("precision")))
+        # self.precision = int(float(self.layout_peek("precision")))
 
         # precision = DesignControler(layout).getPrecisionNumber()  # raises GTcheckError
         correction = {'um': 1, 'nm': 1000, 'dbu': self.precision}
@@ -80,27 +58,6 @@ class Measure:
             texte = texte.replace("FEED_ME_OUTPUT", output)
             script.write(texte)
         return tmp_script
-
-    def lance_script(self, script, debug="/dev/null", verbose=True) -> str:
-        '''runs Calibre script by using "calibredrv"'''
-        # cmd = f"setcalibre rec >/dev/null; calibredrv -64 {script} | tee {debug}"  # 2.71 s ± 43.6 ms
-        host = self.find_host()
-        # TODO : pexpect?
-        # TODO maintenabilité + portée grenoble
-        cmd = "setenv MGC_HOME /sw/mentor/calibre/2018.4_34.26/aoi_cal_2018.4_34.26; " \
-            "setenv PATH $MGC_HOME/bin:$PATH; " \
-            "setenv MGLS_LICENSE_FILE 1717@cr2sx03400:1717@cr2sx03401:1717@cr2sx03402; " \
-            "calibredrv -64 {} | tee {}".format(script,
-                                                debug)  # 2.2 s ± 48.9 ms
-        process = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
-        if verbose:
-            for line in process.stdout:  # .readlines()  # TODO: tqdm
-                print(line.strip())
-        outs, errs = process.communicate()
-        if errs:
-            raise ChildProcessError(errs)
-        return host
 
     def process_results(self, output_path) -> pd.DataFrame:
         meas_df = pd.read_csv(output_path, index_col=False, na_values="unknown")
@@ -125,17 +82,15 @@ class Measure:
         measure_tempfile_path = measure_tempfile.name
         tmp = self.creation_script_tmp(measure_tempfile_path)
         print('2. measurement')  # TODO log
-        self.lance_script(tmp, verbose=True)
-        # FIXME why ??
-        (Path(__file__).resolve().parents[2] / "recipe_output" / "last_measure.csv").write_text(Path(measure_tempfile_path).read_text())
+        lance_script(tmp, verbose=True)
+        # (Path(__file__).resolve().parents[2] / "recipe_output" / "last_measure.csv").write_text(Path(measure_tempfile_path).read_text())
         meas_df = self.process_results(measure_tempfile_path)
+
         parser_df = self.parser_df.copy()
         nm_per_unit = {'dbu': 1000/int(float(self.precision)), 'nm': 1, 'micron': 1000}
         parser_df[["x", "y"]] *= nm_per_unit[self.unit]
-        parser_df[["x", "y"]] = parser_df[["x", "y"]].astype(int)
         try:
             parser_df[["x_ap", "y_ap"]] *= nm_per_unit[self.unit]
-            parser_df[["x_ap", "y_ap"]] = parser_df[["x_ap", "y_ap"]].astype(int)
         except ValueError:
             pass
         merged_dfs = pd.merge(parser_df, meas_df, on="name")

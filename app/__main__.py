@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from parser_modules.parse import CalibreXMLParser
 from parser_modules.ssfile_parser import SsfileParser
 from xml.etree.ElementTree import ParseError
@@ -6,7 +8,10 @@ from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
 from hss_modules.hss_creator import HssCreator
 from app_checkers.get_user_inputs import GetUserInputs
 from connection_modules.shell_commands import ShellCommands
+from connection_modules.calibre_python import layout_peek
 from connection_modules import connection
+
+# TODO call calibre -> precision in measure
 
 
 # test_genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"
@@ -23,6 +28,16 @@ MAG = 200_000
 # toggle -> send on sem ? yes or no
 # export recipe to a formatted name -> ex: user_techno_maskset_layers_more
 
+@dataclass
+class Block:
+    # maskset: str
+    # index: str
+    layout_path: str
+    # rotation: int
+
+    def __post_init__(self):
+        self.precision = layout_peek(self.layout_path, "precision")
+        self.topcell = layout_peek(self.layout_path, "topcell")
 
 def run_recipe_creation_w_measure():
     '''this is the real main function which runs the flow with the measure - "prod" function'''
@@ -42,14 +57,14 @@ def run_recipe_creation_w_measure():
         parser_instance = SsfileParser(parser, is_genepy=True)
         data_parsed = parser_instance.parse_data().iloc[60:70]
         # TODO genepy ssfile checker -> verify file extension vs file content
+    block = Block(layout)
     # TODO pass FileParser instance directly (and optional slice?)
-    measure_instance = Measure(data_parsed, layout, layers, unit=parser_instance.unit)
+    measure_instance = Measure(data_parsed, block.layout_path, layers, unit=parser_instance.unit, precision=block.precision)
     output_measure = measure_instance.run_measure()
     # TODO add it in core_data instead
     output_measure['magnification'] = MAG  # TODO shouldn't be here -> parse should centralize data after measure here
     EPS_DataFrame = DataFrameToEPSData(output_measure)
     EPS_Data = EPS_DataFrame.get_eps_data("X90M_GATE_PH")
-    topcell = measure_instance.layout_peek("topcell")  # TODO move, optimize
     runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=layers[0].split(',')[0], layout=layout, topcell=topcell)
     runHssCreation.write_in_file()
     # shell_command_instance = ShellCommands()
