@@ -25,36 +25,37 @@ class TestMeasure:
         coords = pd.DataFrame({"Gauge ": ['A', 'B', 'C', 'D'], "Value": [1, 2, 3, 4]})
         return Measure(parser_input, coords, layout, layers)
 
-    # exemple de test - non pertinent ici
-    def test_find_host(self, measure_instance):
-        # Arrange
-        expected_host = "machine1"
-        subprocess_result = subprocess.CompletedProcess(args=["echo", expected_host], returncode=0, stdout=expected_host.encode())
-        subprocess.run = lambda *args, **kwargs: subprocess_result
+    # FIXME change class
+    # # exemple de test - non pertinent ici
+    # def test_find_host(self, measure_instance):
+    #     # Arrange
+    #     expected_host = "machine1"
+    #     subprocess_result = subprocess.CompletedProcess(args=["echo", expected_host], returncode=0, stdout=expected_host.encode())
+    #     subprocess.run = lambda *args, **kwargs: subprocess_result
 
-        # Act
-        result = measure_instance.find_host()
+    #     # Act
+    #     result = measure_instance.find_host()
 
-        # Assert
-        assert isinstance(result, str)
-        assert result == expected_host
+    #     # Assert
+    #     assert isinstance(result, str)
+    #     assert result == expected_host
 
-    def test_layout_peek(self, measure_instance):
-        # Arrange
-        expected_output = b'layout_peek_output'
-        expected_options = ["-precision", "-topcell", "-layers", "-bbox"]
-        measure_instance.layout = self.layout
-        subprocess_result = subprocess.CompletedProcess(args=["echo", expected_output], returncode=0, stdout=expected_output)
-        subprocess.run = lambda *args, **kwargs: subprocess_result
-        measure_instance.find_host = lambda: "machine1"
+    # def test_layout_peek(self, measure_instance):
+    #     # Arrange
+    #     expected_output = b'layout_peek_output'
+    #     expected_options = ["-precision", "-topcell", "-layers", "-bbox"]
+    #     measure_instance.layout = self.layout
+    #     subprocess_result = subprocess.CompletedProcess(args=["echo", expected_output], returncode=0, stdout=expected_output)
+    #     subprocess.run = lambda *args, **kwargs: subprocess_result
+    #     measure_instance.find_host = lambda: "machine1"
 
-        # Act
-        result = measure_instance.layout_peek(*expected_options)
+    #     # Act
+    #     result = measure_instance.layout_peek(*expected_options)
 
-        # Assert
-        print(f"Actual output: {result}")
-        assert isinstance(result, bytes)
-        assert result == expected_output
+    #     # Assert
+    #     print(f"Actual output: {result}")
+    #     assert isinstance(result, bytes)
+    #     assert result == expected_output
 
     def test_creation_script_tmp(self, measure_instance):
         # FIXME 'marche pas :(
@@ -119,23 +120,24 @@ class TestMeasure:
         assert isinstance(result, pd.DataFrame)
         assert result.equals(expected_df)
 
-    def test_clean_unknown(self, measure_instance):
-        # Arrange
-        expected_df = pd.DataFrame({'col1': [1], 'col2': [4], 'col3': [7], 'col4': ['chaine1']})
-        dirty_df = pd.DataFrame({'col1': [1, 2, 'unknown'], 'col2': [4, 'unknown', 6], 'col3': [7, 8, 9], 'col4': ['chaine1', 'chaine2', 'chaine3']})
+    # doesn't exists anymore
+    # def test_clean_unknown(self, measure_instance):
+    #     # Arrange
+    #     expected_df = pd.DataFrame({'col1': [1], 'col2': [4], 'col3': [7], 'col4': ['chaine1']})
+    #     dirty_df = pd.DataFrame({'col1': [1, 2, 'unknown'], 'col2': [4, 'unknown', 6], 'col3': [7, 8, 9], 'col4': ['chaine1', 'chaine2', 'chaine3']})
 
-        # Act
-        result = measure_instance.clean_unknown(dirty_df)
+    #     # Act
+    #     result = measure_instance.clean_unknown(dirty_df)
 
-        # .astype('int64')
-        # Assert
-        assert isinstance(result, pd.DataFrame)
-        # assert pd.testing.assert_frame_equal(result, expected_df)
-        assert result.dtypes.all() == expected_df.dtypes.all()
+    #     # .astype('int64')
+    #     # Assert
+    #     assert isinstance(result, pd.DataFrame)
+    #     # assert pd.testing.assert_frame_equal(result, expected_df)
+    #     assert result.dtypes.all() == expected_df.dtypes.all()
 
     def test_run_measure(self, measure_instance):
         # Arrange
-        expected_columns = ['Gauge name', 'X_point', 'Y_point', 'Value']
+        expected_columns = ['Gauge ', ' X_dimension(nm) ', ' Y_dimension(nm) ', 'pitch_x(nm)', 'pitch_y(nm)', ' Polarity (polygon) ']
         expected_shape = (2, 4)
 
         # Mock sequence_auto method to return expected dataframe

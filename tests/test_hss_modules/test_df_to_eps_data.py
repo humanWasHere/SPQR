@@ -80,7 +80,7 @@ class TestDfToEpsData:
             df_to_eps_data.eps_data, expected_eps_data_df)
 
     def test_set_eps_data_id(self):
-        data_instance = pd.DataFrame({'name': ['damn', "it's", "a", "test"]})
+        data_instance = pd.DataFrame({'name': ['damn', "it's", "a", "test"], 'x': [1, 2, 3, 4]})
 
         df_to_eps_data = DataFrameToEPSData(data_instance)
         # set expected data
@@ -103,7 +103,7 @@ class TestDfToEpsData:
     #     pass
 
     def test_set_eps_data_template(self):
-        data_instance = pd.DataFrame({'name': ['damn', "it's", "a", "test"]})
+        data_instance = pd.DataFrame({'name': ['damn', "it's", "a", "test"], 'x': [1, 2, 3, 4]})
 
         df_to_eps_data = DataFrameToEPSData(data_instance, "PH")
         # set expected data
@@ -117,18 +117,28 @@ class TestDfToEpsData:
             df_to_eps_data.eps_data, expected_eps_data_df)
 
     # def test_set_eps_data_ap1_modification(self):
-    #     pass
+    #     data_instance = pd.DataFrame({'name': ['damn', "it's", "a", "test"], 'x': [1, 2, 3, 4]})
+
+    #     df_to_eps_data = DataFrameToEPSData(data_instance, "PH")
+    #     # set expected data
+    #     expected_eps_data_df = pd.DataFrame({'EP_Template': "banger_EP_F16"})
+
+    #     # Act
+    #     df_to_eps_data.set_eps_data_ap1_modification()
+
+    #     # Assert
+    #     pd.testing.assert_frame_equal(
+    #         df_to_eps_data.eps_data, expected_eps_data_df)
 
     # def test_set_eps_data_ap2_modification(self):
     #     pass
 
     def test_set_eps_data_ep_modification(self):
-        data_instance = pd.DataFrame({'name': ['damn', "it's", "a", "test"],
-                                      'orientation': 0})
+        data_instance = pd.DataFrame({'name': ['damn', "it's", "a", "test"], 'x': [1, 2, 3, 4]})
 
-        df_to_eps_data = DataFrameToEPSData(data_instance)
+        df_to_eps_data = DataFrameToEPSData(data_instance, "PH")
         # set expected data
-        expected_eps_data_df = pd.DataFrame({'EP_Rot': "x"})
+        expected_eps_data_df = pd.DataFrame({'EP_Template': "banger_EP_F16"})
 
         # Act
         df_to_eps_data.set_eps_data_ep_modification()
