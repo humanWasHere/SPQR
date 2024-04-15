@@ -1,25 +1,27 @@
 from dataclasses import dataclass
-
-from parser_modules.parse import CalibreXMLParser
-from parser_modules.ssfile_parser import SsfileParser
 from xml.etree.ElementTree import ParseError
-from measure_modules.measure import Measure
-from hss_modules.dataframe_to_eps_data import DataFrameToEPSData
-from hss_modules.hss_creator import HssCreator
-from app_checkers.get_user_inputs import GetUserInputs
-from connection_modules.shell_commands import ShellCommands
-from connection_modules.calibre_python import layout_peek
-from connection_modules import connection
 
-# TODO call calibre -> precision in measure
+from .parsers.xml_parser import CalibreXMLParser
+from .parsers.ssfile_parser import SsfileParser
+from .measure.measure import Measure
+from .export_hitachi.eps_data import DataFrameToEPSData
+from .export_hitachi.hss_creator import HssCreator
+from .interfaces.get_user_inputs import GetUserInputs
+from .interfaces.calibre_python import layout_peek
+from .interfaces import recipedirector as rcpd
 
 
-# test_genepy_ssfile = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt"
+TESTCASE_GENEPY = dict(
+    file="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
+    layout="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+    layers=["1.0"],
+    mag=200_000,
+    mp_template="X90M_GATE_PH"
+)
+MAG = 200_000
+
 # excel_file = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy-proto_data.xlsx"
 # test_calibre_rulers = "/work/opc/all/users/banger/dev/semchef/examples/calibre_rulers.xml"
-# test_layout = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
-# test_layers = ["1.0"]
-MAG = 200_000
 
 # TODO
 # overlap input data with GUI selection
@@ -28,10 +30,11 @@ MAG = 200_000
 # toggle -> send on sem ? yes or no
 # export recipe to a formatted name -> ex: user_techno_maskset_layers_more
 
+
 @dataclass
 class Block:
     # maskset: str
-    # index: str
+    # device: str
     layout_path: str
     # rotation: int
 
@@ -39,24 +42,24 @@ class Block:
         self.precision = layout_peek(self.layout_path, "precision")
         self.topcell = layout_peek(self.layout_path, "topcell")
 
-def run_recipe_creation_w_measure():
+
+def run_recipe_creation_w_measure(upload=False):
     '''this is the real main function which runs the flow with the measure - "prod" function'''
-    # FIXME class ???
+
     get_user_path_instance = GetUserInputs()
     parser = get_user_path_instance.get_user_secured_path("Enter a path to your coordinate source :\n")
     layout = get_user_path_instance.get_user_secured_path("Enter a path to your layout :\n")
     layers = get_user_path_instance.get_user_secured_list_int_float("Enter layer(s) number list (separated by comma + space ', ' each time):\n")
+
     print('\n______________________RUNNING RECIPE CREATION______________________\n')
     # TODO change selection logic
-    # TODO faire des checks de file extension ?
     try:
         parser_instance = CalibreXMLParser(parser)
         data_parsed = parser_instance.parse_data()
-        # TODO calibre ruler checker -> verify file extension vs file content
     except ParseError:
         parser_instance = SsfileParser(parser, is_genepy=True)
         data_parsed = parser_instance.parse_data().iloc[60:70]
-        # TODO genepy ssfile checker -> verify file extension vs file content
+
     block = Block(layout)
     # TODO pass FileParser instance directly (and optional slice?)
     measure_instance = Measure(data_parsed, block.layout_path, layers, unit=parser_instance.unit, precision=block.precision)
@@ -65,12 +68,11 @@ def run_recipe_creation_w_measure():
     output_measure['magnification'] = MAG  # TODO shouldn't be here -> parse should centralize data after measure here
     EPS_DataFrame = DataFrameToEPSData(output_measure)
     EPS_Data = EPS_DataFrame.get_eps_data("X90M_GATE_PH")
-    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=layers[0].split(',')[0], layout=layout, topcell=topcell)
+    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=layers[0].split(',')[0], layout=block.layout_path, topcell=block.topcell)
     runHssCreation.write_in_file()
-    # shell_command_instance = ShellCommands()
-    # shell_command_instance.run_scp_command_to_rcpd(runHssCreation.recipe_output_name, runHssCreation.recipe_output_path)
-    # connection.upload_csv(runHssCreation.path_output_file)
-    # connection.upload_gds(layout)
+    if upload:
+        rcpd.upload_csv(runHssCreation.path_output_file)
+        rcpd.upload_gds(layout)
 
 
 if __name__ == "__main__":

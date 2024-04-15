@@ -1,8 +1,7 @@
 import tempfile
-import subprocess
 import pandas as pd
 from pathlib import Path
-from connection_modules.calibre_python import lance_script
+from ..interfaces.calibre_python import lance_script
 # from pyrat.DesignControler import DesignControler
 # from pyratImplementation.GTCheck.GTCheckService import GTcheckError
 
@@ -12,8 +11,8 @@ from connection_modules.calibre_python import lance_script
 
 
 class Measure:
-    def __init__(self, parser_input: pd.DataFrame, layout, layers: list, precision, tcl_measure_file=None, unit="nm"):  # TODO should work with dbu ?
-        if tcl_measure_file is None:
+    def __init__(self, parser_input: pd.DataFrame, layout: str | Path, layers: list, precision: int, tcl_script=None, unit="nm"):  # TODO should work with dbu ?
+        if tcl_script is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
                 raise FileNotFoundError(f"Could not find {self.tcl_script}")
@@ -23,13 +22,6 @@ class Measure:
         self.layers = layers  # target_layers
         self.unit = unit
         self.precision = precision
-        # if isinstance(layers, list):
-        #     self.layers = layers
-        # else:
-        #     try:
-        #         self.layers = [layers]
-        #     except (TypeError):
-        #         raise TypeError("layers argument must be a list")
 
     def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''

@@ -39,7 +39,8 @@ def lance_script(script, debug="/dev/null", verbose=True) -> str:
         "setenv MGLS_LICENSE_FILE 1717@cr2sx03400:1717@cr2sx03401:1717@cr2sx03402; " \
         "calibredrv -64 {} | tee {}".format(script,
                                             debug)  # 2.2 s ± 48.9 ms
-    process = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True)
+    process = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               bufsize=1, text=True)
     if verbose:
         for line in process.stdout:  # .readlines()  # TODO: tqdm
             print(line.strip())

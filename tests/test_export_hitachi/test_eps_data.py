@@ -1,6 +1,6 @@
 # import pytest
 import pandas as pd
-from app.hss_modules.dataframe_to_eps_data import DataFrameToEPSData
+from app.export_hitachi.eps_data import DataFrameToEPSData
 # FIXME is HssCreator needed ?
 
 

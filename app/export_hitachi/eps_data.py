@@ -40,7 +40,7 @@ class DataFrameToEPSData:
 
     def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
         # TODO:  validate data (columns, type, nan...)
-        self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int})
+        self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int}, errors="ignore")
         self.eps_data = pd.DataFrame()
         assert step in {"PH", "ET"}
         self.step = step

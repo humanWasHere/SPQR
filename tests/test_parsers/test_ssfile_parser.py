@@ -1,4 +1,4 @@
-from app.parser_modules.ssfile_parser import SsfileParser
+from app.parsers.ssfile_parser import SsfileParser
 
 # TODO complete data - do everything :)
 

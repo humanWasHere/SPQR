@@ -1,8 +1,4 @@
-from app_checkers.input_checker import UserInputChecker
-# from parser_modules.parse import CalibreXMLParser
-# from parser_modules.ssfile_parser import SsfileParser
-# from parser_modules.excel_parser import ExcelParser
-# from xml.etree.ElementTree import ParseError
+from .input_checker import UserInputChecker
 
 
 class GetUserInputs():

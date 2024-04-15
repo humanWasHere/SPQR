@@ -3,7 +3,7 @@ import json
 import pathlib
 import pandas as pd
 # from unittest.mock import MagicMock
-from app.hss_modules.hss_creator import HssCreator
+from app.export_hitachi.hss_creator import HssCreator
 
 # TODO make relative file path for "/work/opc/all/users/chanelir/semrc/tests/test_hss_modules/test_template.json"
 

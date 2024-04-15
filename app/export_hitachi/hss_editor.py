@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from .hss_creator import HssCreator
-from ..parser_modules.csv_parser import CsvParser
+from ..parsers.csv_parser import CsvParser
 
 # TODO check if HssCreator instance is needed to modify the recipe
 # -> get file recipe that already has been output
@@ -27,8 +27,3 @@ class RecipeModificator(HssCreator):
     def parse_hss_recipe(self, csv_recipe):
         csv_parser_instance = CsvParser
         csv_parser_instance.parse_csv(csv_recipe)
-
-    # TODO manage "" strings -> write real NaN values in df creation
-    # for line in self.json_recipe:
-    #     if "NaN" in line:
-    #         value = np.nan

@@ -1,8 +1,8 @@
+import re
+import json
 import pandas as pd
 from pathlib import Path
-import json
-import re
-from .template_to_all_sections import SectionMaker
+from .section_maker import SectionMaker
 
 # TODO
 # faire un checker de nom (EPS_Name) -> match requirements de Hitachi -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non

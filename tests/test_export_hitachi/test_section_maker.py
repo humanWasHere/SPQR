@@ -1,4 +1,4 @@
-from app.hss_modules.template_to_all_sections import SectionMaker
+from app.export_hitachi.section_maker import SectionMaker
 # from app.hss_modules.hss_creator import HssCreator
 import pytest
 import pandas as pd

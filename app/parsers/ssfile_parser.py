@@ -12,7 +12,10 @@ from .parse import FileParser
 
 
 class SsfileParser(FileParser):
-    '''this class is used to parse ssfiles which can be genepy ssfile or other (formatted to convention ?) ssfiles'''
+    """Parse OPCField descriptor "ss" files in Genepy format or legacy (undefined) format"""
+
+    unit = "nm"
+
     def __init__(self, file_to_parse: str | Path, is_genepy=False):
         self.ssfile = file_to_parse
         self.is_genepy = is_genepy
@@ -33,21 +36,6 @@ class SsfileParser(FileParser):
                         print("Value already set !")
                 dataframe.loc[0, col] = user_input  # bad indentation ? should be before break ?
         return dataframe
-
-    def unit():
-        pass
-
-    def unit_converter():
-        pass
-
-    # def check_x_y_is_int(self) -> pd.DataFrame:
-    #     try:
-    #         self.data['x'] = self.data['x'].astype(float).astype(int)
-    #         self.data['y'] = self.data['y'].astype(float).astype(int)
-    #     except ValueError:
-    #         print("Parsed x/y columns could not be converted to int. Returning original DataFrame.")
-    #         return self.data
-    #     return self.data
 
     def parse_data(self) -> pd.DataFrame:
         '''this method decides wether you need to parse a genepy ssfile or not'''
@@ -80,7 +68,7 @@ class SsfileParser(FileParser):
         print('1. genepy ssfile parsing')  # TODO log
         self.data = pd.read_csv(self.ssfile, sep='\t', header=0, on_bad_lines='warn', encoding='utf-8')
         # TODO add validation (column number / column name)
-        self.unit = self.data.UNIT_COORD.unique()[0].lower()  # TODO normaliser l' unite d'entree par point
+        self.unit = self.data.UNIT_COORD.unique()[0].lower()  # TODO normaliser l'unite d'entree par point
         self.post_parse()
         # self.check_x_y_is_int()
         if not self.data.empty:  # TODO add more logic - log
@@ -102,7 +90,7 @@ class SsfileParser(FileParser):
         # TODO renaming logic?
 
     def change_coord_to_relative(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        '''this method changes the coordinates to relative (since it is not in the correct format in the ssfile)'''
+        """Modify the AP coordinates in-place from absolute to relative."""
         # FIXME to rework / does it need to be half functionnal half object ?
         dataframe.x_ap -= dataframe.x
         dataframe.y_ap -= dataframe.y

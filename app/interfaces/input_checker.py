@@ -1,9 +1,5 @@
-from pathlib import Path
 import json
-
-# FIXME class ???
-# TODO test anyway
-#   To be a RET lib yes else fonctionnal no
+from pathlib import Path
 
 
 class UserInputChecker:
@@ -99,7 +95,6 @@ class InputSourceValidator:
             raise ValueError(f"File {file_path} does not exist.")
         except Exception as e:
             raise ValueError(f"An error occurred while checking the file: {e}")
-
 
     # import csv
     # def csv_file_content_checker(self, file_path, delimiters=',;\t'):
