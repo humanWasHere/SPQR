@@ -74,11 +74,6 @@ class DataFrameToEPSData:
         for csv_col, gauge_col in self.MAPPING.items():
             self.eps_data[csv_col] = self.core_data[gauge_col]
 
-    # def mapping_from_df(self) -> None:
-    #     '''makes a link between gauge df and actual column name of recipe header'''
-    #     for csv_col, gauge_col in self.MAPPING.items():
-    #         self.eps_data[csv_col] = self.core_data[gauge_col]
-
     def mapping_from_fix_values(self):
         for csv_col, value in self.FIXED_VALUES.items():
             self.eps_data[csv_col] = value

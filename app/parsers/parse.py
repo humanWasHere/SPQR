@@ -49,3 +49,33 @@ class FileParser(ABC):
         data = self.parse_data()
         data[['x', 'y', 'x_ap', 'y_ap']] *= dbu_per_unit[self.unit]
         return data
+
+    # # @abstractmethod
+    # def unit_converter(self, precision):  # precision is linked to a layout...
+    #     """Converts coordinates from source unit to DBU"""
+    #     return
+
+    # # specific to calibre rulers
+    # # FIXME already existing ?
+    # def convert_to_dbu(self, unit, coord):
+    #     if unit == "nanometer":
+    #         return int((coord * self.precision) / 1000)
+    #     elif unit == "micrometer":
+    #         return int(coord * self.precision)
+    #     else:
+    #         raise ValueError("Can't convert to dbu - parse.py")
+
+    # # @abstractmethod
+    # # def check_x_y_is_int(self) -> pd.DataFrame:
+    # #     '''checks if x and y columns contains int values. If not converts it'''
+    # #     pass
+
+    # # FIXME here ?
+    # # def run_parsing(self):
+    # #     try:
+    # #         parser_instance = CalibreXMLParser(parser, block.precision)
+    # #         data_parsed = parser_instance.parse_data()
+    # #         # TODO calibre ruler checker -> verify file extension vs file content
+    # #     except ParseError:
+    # #         parser_instance = SsfileParser(parser, is_genepy=True)
+    # #         data_parsed = parser_instance.parse_data().iloc[60:70]

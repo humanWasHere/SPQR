@@ -5,7 +5,7 @@ from pathlib import Path
 class UserInputChecker:
 
     def __init__(self) -> None:
-        self.file_extension_checker_instance = FileExtensionChecker()
+        self.file_extension_checker_instance = FileExtensionChecker()  # TODO actually use it
 
     def get_secured_user_filepath(self, message) -> str:
         while True:

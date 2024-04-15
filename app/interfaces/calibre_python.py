@@ -1,7 +1,9 @@
 import subprocess
-
-# from pyter.calibre import DesignControlerRet
+from pyter.calibre import DesignControlerRet
 # %time
+
+
+# TODO migration -> layout_peek ou MOA's library
 
 
 def find_host() -> str:
@@ -26,6 +28,18 @@ def layout_peek(layout, *options) -> bytes:
     peek_cmd = f"setcalibre rec >/dev/null; calibredrv -a puts [layout peek {layout} {' '.join(options)}]"
     peek = subprocess.run(["ssh", host, peek_cmd], stdout=subprocess.PIPE, text=True)
     return peek.stdout.splitlines()[-1].strip()
+
+
+def get_precision_from_layout(layout: str):
+    design = DesignControlerRet(str(layout))
+    result = design.getPrecisionNumber()
+    return int(float(result))
+
+
+def get_topcell_from_layout(layout):
+    design = DesignControlerRet(str(layout))
+    result = design.getTopcellNameString()
+    return str(result)
 
 
 def lance_script(script, debug="/dev/null", verbose=True) -> str:

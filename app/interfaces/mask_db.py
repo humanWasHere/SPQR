@@ -22,7 +22,6 @@ load_dotenv()
 
 RETDB = {
     'user': "retadm",
-    # 'password': dotenv["RET_DB_PASSWORD"],
     'password': os.getenv('RET_DB_PASSWORD'),
     'dsn': "c2x3028.cr2.st.com:1529/ret"
 }

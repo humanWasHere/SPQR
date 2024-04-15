@@ -3,6 +3,17 @@ import re
 from .parse import FileParser
 
 
+# abstract class ? -> should be mother class ?
+class CsvParser:
+    '''should parse different type of csv'''
+    def __init__(self):
+        pass
+
+    def parse_csv(self):
+        '''this function actually parses csv'''
+        pass
+
+
 # TODO make it fit the flow
 class TACRulerParser(FileParser):
     '''this class is used to parse TAC rulers'''

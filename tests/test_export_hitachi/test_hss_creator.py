@@ -2,6 +2,7 @@ import pytest
 import json
 import pathlib
 import pandas as pd
+from pandas.testing import assert_frame_equal
 # from unittest.mock import MagicMock
 from app.export_hitachi.hss_creator import HssCreator
 
@@ -302,7 +303,7 @@ class TestHssCreator:
             "AP2_AST_Mag": 0,
             "EP_Mag_X": 1000,
             "EP_Mag_Y": 1000,
-            "EP_Rot": [0.0, 0.0],
+            "EP_Rot": [[0.0, 0.0]],
             "Type8": 2,
             "EP_AF_X": -10000,
             "EP_AF_Y": -10000,
@@ -371,8 +372,8 @@ class TestHssCreator:
             "MP4_MeaLeng": "",
             "MP4_Direction": ""
         })
-        assert hss_creator.table_sections["<EPS_Data>"].equals(
-            expected_eps_data)
+
+        assert hss_creator.table_sections["<EPS_Data>"].equals(expected_eps_data)
 
         # Assert <GPA_List>
         expected_gpa_list = pd.DataFrame({
@@ -392,8 +393,8 @@ class TestHssCreator:
         # Assert <EPA_List>
         expected_epa_list = pd.DataFrame({
             "EPA_No": [1],
-            "Chip_X": [1],
-            "Chip_Y": [1],
+            "Chip_X": [6],
+            "Chip_Y": [4],
             "EPS_ID": [1],
             "Move_Mode": [1]
         })
@@ -404,10 +405,10 @@ class TestHssCreator:
         expected_idd_cond = pd.DataFrame({
             "DesignData": "",
             "CellName": "",
-            "DCRot": 0,
-            "DCOffsetX": 0,
-            "DCOffsetY": 0,
-            "Tone": 0
+            "DCRot": [0],
+            "DCOffsetX": [0],
+            "DCOffsetY": [0],
+            "Tone": [0]
         })
         assert hss_creator.table_sections["<IDD_Cond>"].equals(
             expected_idd_cond)
@@ -429,11 +430,17 @@ class TestHssCreator:
 
         # Assert <ImageEnv>
         expected_image_env = pd.DataFrame({
-            "EPA_No": [1],
-            "Chip_X": [1],
-            "Chip_Y": [1],
-            "EPS_ID": [1],
-            "Move_Mode": [1]
+            "Type": [0, 1, 2],
+            "Size": [0, 0, 0],
+            "CompressSW": [0, 0, 0],
+            "Quality": [32, 32, 32],
+            "MeasCur": [0, 0, 0],
+            "CrossCur": [1, 0, 0],
+            "AreaCur": [0, 0, 0],
+            "DDS": [0, 0, 0],
+            "MeasVal": [0, 0, 0],
+            "LinePro": [0, 0, 0],
+            "umMark": [0, 0, 0]
         })
         assert hss_creator.table_sections["<ImageEnv>"].equals(
             expected_image_env)
@@ -451,7 +458,7 @@ class TestHssCreator:
         # Assert
         # We test that it still returns a dataframe
         for key, value in hss_creator.table_sections.items():
-            assert isinstance(value, (pd.DataFrame, pd.Series))
+            assert isinstance(value, (pd.DataFrame))
 
     def test_fill_with_eps_data(self):
         '''tests that dataframe_to_eps_data.py to check if it returns a dataframes since more precise tests will have to be done in test_dataframe_to_eps_data'''
@@ -515,7 +522,7 @@ class TestHssCreator:
             "AP2_AST_Mag": 0,
             "EP_Mag_X": 1000,
             "EP_Mag_Y": 1000,
-            "EP_Rot": [0.0, 0.0],
+            "EP_Rot": [[0.0, 0.0]],
             "Type8": 2,
             "EP_AF_X": -10000,
             "EP_AF_Y": -10000,
@@ -595,6 +602,9 @@ class TestHssCreator:
         # Assert
         pd.testing.assert_frame_equal(
             hss_creator.table_sections["<EPS_Data>"], expected_eps_data_df)
+
+    # def test_convert_to_nm(self):
+    #     pass
 
     def test_dataframe_to_hss(self):
         '''tests that the function of hss creation works and that the function of hss creation works'''

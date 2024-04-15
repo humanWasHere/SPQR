@@ -17,7 +17,7 @@ class Measure:
             if not self.tcl_script.exists():
                 raise FileNotFoundError(f"Could not find {self.tcl_script}")
         self.parser_df = parser_input
-        self.x_y_points = parser_input[['name', 'x', 'y']]
+        # self.x_y_points = parser_input[['name', 'x', 'y']]
         self.layout = layout
         self.layers = layers  # target_layers
         self.unit = unit
@@ -31,13 +31,11 @@ class Measure:
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
         # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")  # gets deleted out of scope?
 
-        # self.precision = int(float(self.layout_peek("precision")))
-
         # precision = DesignControler(layout).getPrecisionNumber()  # raises GTcheckError
         correction = {'um': 1, 'nm': 1000, 'dbu': self.precision}
         # Format coordinates as [{name x y}, ...]
         coordonnees = [
-            f"{{{' '.join(row.astype(str).tolist())}}}" for _, row in self.x_y_points.iterrows()]
+            f"{{{' '.join(row.astype(str).tolist())}}}" for _, row in self.parser_df[['name', 'x', 'y']].iterrows()]
 
         with open(self.tcl_script, "r", encoding="utf-8") as template, open(tmp_script, "w") as script:
             texte = template.read()
@@ -73,21 +71,20 @@ class Measure:
         # TODO where to store tmp files (script + results)
         measure_tempfile_path = measure_tempfile.name
         tmp = self.creation_script_tmp(measure_tempfile_path)
-        print('2. measurement')  # TODO log
+        # print('2. measurement')  # TODO log
         lance_script(tmp, verbose=True)
-        # (Path(__file__).resolve().parents[2] / "recipe_output" / "last_measure.csv").write_text(Path(measure_tempfile_path).read_text())
         meas_df = self.process_results(measure_tempfile_path)
 
-        parser_df = self.parser_df.copy()
-        nm_per_unit = {'dbu': 1000/int(float(self.precision)), 'nm': 1, 'micron': 1000}
+        parser_df = self.parser_df.copy()  # FIXME why copy ?
+        nm_per_unit = {'dbu': 1000/self.precision, 'nm': 1, 'micron': 1000}  # FIXME why nm ?
         parser_df[["x", "y"]] *= nm_per_unit[self.unit]
         try:
-            parser_df[["x_ap", "y_ap"]] *= nm_per_unit[self.unit]
+            parser_df[["x_ap", "y_ap"]] *= int(float(nm_per_unit[self.unit]))
         except ValueError:
             pass
         merged_dfs = pd.merge(parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
         measure_tempfile.close()  # remove temporary script
-        if not merged_dfs.empty:  # more checks + log
-            print('\tmeasurement done')
+        # if not merged_dfs.empty:  # more checks + log
+        #     print('\tmeasurement done')
         return merged_dfs

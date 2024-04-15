@@ -11,19 +11,22 @@ from .section_maker import SectionMaker
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, layers=[], layout="", topcell="", template=None, output_path=None, recipe_name=None):
+    def __init__(self, eps_dataframe: pd.DataFrame, precision, layers=[], layout="", topcell="", template=None, output_path=None, recipe_name="recipe"):
         if template is None:
             template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        if output_path is None:
+        self.recipe_output_path = output_path
+        if self.recipe_output_path is None:
             # TODO
             self.recipe_output_path = Path(__file__).resolve().parents[2] / "recipe_output"
-        self.recipe_output_name = input("\tEnter a name for your recipe (without file extension/words must be separated by underscores) : \n\t")
+        # self.recipe_output_name = input("\tEnter a name for your recipe (without file extension/words must be separated by underscores) : \n\t")
+        self.recipe_output_name = recipe_name
         self.path_output_file = str(self.recipe_output_path) + "/" + self.recipe_output_name
         self.json_template = self.import_json(template)
         self.eps_data_df = eps_dataframe
         self.layers = layers
         self.layout = layout
         self.topcell = topcell
+        self.precision = precision
         # TODO: validation?
         self.constant_sections = {}
         self.table_sections = {}
@@ -106,6 +109,10 @@ class HssCreator:
         #     else:
         #         self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = 2
 
+    def convert_coord_to_nm(self):
+        self.table_sections["<EPS_Data>"]["Move_X"] *= 1000 / self.precision
+        self.table_sections["<EPS_Data>"]["Move_Y"] *= 1000 / self.precision
+
     def dataframe_to_hss(self) -> str:
         '''method that converts a dataframe into a HSS format (writes it as a file)'''
         whole_recipe = ""
@@ -153,13 +160,14 @@ class HssCreator:
                 section_dict = section_series.to_dict(orient='records')[0]
                 json_content[section_keys] = section_dict
             else:
-                raise ValueError("Series is empty")
+                # TODO raise an error ?
+                print(f"\t{section_keys} has its series empty")
         json_str = json.dumps(json_content, indent=4)
         json_str = re.sub(r'NaN', r'""', json_str)
         with open(str(self.path_output_file) + ".json", 'w') as json_file:
             json_file.write(json_str)
-        if json_file:  # TODO better check + log
-            print(f"\tjson recipe created !  Find it at {str(self.path_output_file)}.json")
+        # if json_file:  # TODO better check + log
+        #     print(f"\tjson recipe created !  Find it at {str(self.path_output_file)}.json")
 
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
@@ -171,6 +179,7 @@ class HssCreator:
             print('\tother sections created')
         self.fill_with_eps_data()
         self.fill_type_in_eps_data()
+        # self.convert_coord_to_nm()
         whole_recipe_template = self.dataframe_to_hss()
         whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)
         whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)
