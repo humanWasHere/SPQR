@@ -100,7 +100,7 @@ def translation(maskset):
     ratio_size = field.bl_y / field.bl_x
     rotated = np.allclose(ratio_coord, 1/ratio_size) and not np.allclose(ratio_coord, 1)
     # return  ratio_coord, ratio_size
-    if maskset[:2] == "28" or rotated:  #TODO: robustize
+    if maskset[:2] == "28" or rotated:  # TODO: robustize
         rotation = 90
     else:
         rotation = 0

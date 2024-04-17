@@ -56,7 +56,7 @@ def run_recipe_creation_w_measure(upload=False):
     EPS_DataFrame = DataFrameToEPSData(output_measure)
     # EPS_Data = EPS_DataFrame.get_eps_data("X90M_GATE_PH")
     EPS_Data = EPS_DataFrame.get_eps_data(TESTCASE_GENEPY["mp_template"])
-    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=layers[0].split(',')[0], layout=block.layout_path, topcell=block.topcell, precision=block.precision)
+    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=int(float(layers[0].split(',')[0])), layout=block.layout_path, topcell=block.topcell, precision=block.precision)
     runHssCreation.write_in_file()
     if upload:
         rcpd.upload_csv(runHssCreation.path_output_file)

@@ -11,7 +11,7 @@ from .section_maker import SectionMaker
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, precision, layers=[], layout="", topcell="", template=None, output_path=None, recipe_name="recipe"):
+    def __init__(self, eps_dataframe: pd.DataFrame, precision, layers=int, layout="", topcell="", template=None, output_path=None, recipe_name="recipe"):
         if template is None:
             template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
         self.recipe_output_path = output_path
@@ -21,6 +21,8 @@ class HssCreator:
         # self.recipe_output_name = input("\tEnter a name for your recipe (without file extension/words must be separated by underscores) : \n\t")
         self.recipe_output_name = recipe_name
         self.path_output_file = str(self.recipe_output_path) + "/" + self.recipe_output_name
+        # if not self.path_output_file:
+        #     print('must create file here ?')
         self.json_template = self.import_json(template)
         self.eps_data_df = eps_dataframe
         self.layers = layers
@@ -79,7 +81,7 @@ class HssCreator:
                 # adding of eps_data dataframe values to the template dataframe header (stored in RAM)
                 template_header_eps_data[column_name] = value_name
             else:
-                raise ValueError(f"{column_name} is not in template dataframe header")
+                raise ValueError(f"{column_name} is not in the template's dataframe header")
         self.table_sections["<EPS_Data>"] = template_header_eps_data
 
     def fill_type_in_eps_data(self) -> None:
@@ -166,8 +168,8 @@ class HssCreator:
         json_str = re.sub(r'NaN', r'""', json_str)
         with open(str(self.path_output_file) + ".json", 'w') as json_file:
             json_file.write(json_str)
-        # if json_file:  # TODO better check + log
-        #     print(f"\tjson recipe created !  Find it at {str(self.path_output_file)}.json")
+        if json_file:  # TODO better check + log
+            print(f"\tjson recipe created !  Find it at {str(self.path_output_file)}.json")
 
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''

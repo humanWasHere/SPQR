@@ -7,7 +7,7 @@ import pandas as pd
 # TODO Beware good import in recipe type (OM or SEM)
 
 
-class TestTemplateToAllSections:
+class TestSectionMaker:
 
     # @pytest.fixture
     # def hss_creator_template(self):
@@ -32,6 +32,7 @@ class TestTemplateToAllSections:
         }
         return dict_df
 
+    # FIXME not correct anymore ???
     @pytest.fixture
     def section_maker_instance_om(self):
         return SectionMaker(self.dict_dataframe_section_maker, "OM")
@@ -57,6 +58,7 @@ class TestTemplateToAllSections:
         return self.dict_dataframe_section_maker
 
     def test_make_coordinate_system_section(self):
+        # TODO make it more relevant
         # Arrange
         expected_coordinate_system = pd.DataFrame({
             "col1": [1, 1, 1],
@@ -83,7 +85,7 @@ class TestTemplateToAllSections:
         actual_coordinate_system = dict_df["<CoordinateSystem>"]
 
         # Assert
-        assert pd.testing.assert_frame_equal(actual_coordinate_system, expected_coordinate_system)
+        pd.testing.assert_frame_equal(actual_coordinate_system, expected_coordinate_system)
 
     # def test_make_gp_coordinate_system_section(self):
     #     pass

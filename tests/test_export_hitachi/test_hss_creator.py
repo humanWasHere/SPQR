@@ -1,8 +1,7 @@
 import pytest
-import json
-import pathlib
+# import json
+from pathlib import Path
 import pandas as pd
-from pandas.testing import assert_frame_equal
 # from unittest.mock import MagicMock
 from app.export_hitachi.hss_creator import HssCreator
 
@@ -236,17 +235,17 @@ class TestHssCreator:
         # Assert <CoordinateSystem>
         expected_coordinate_system = pd.DataFrame(
             {"Type": [1], "ACD_Type": [1]})
-        assert hss_creator.table_sections["<CoordinateSystem>"].equals(
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<CoordinateSystem>"], 
             expected_coordinate_system)
 
         # Assert <GPCoordinateSystem>
         expected_gp_coordinate_system = pd.DataFrame({"Type": [1]})
-        assert hss_creator.table_sections["<GPCoordinateSystem>"].equals(
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<GPCoordinateSystem>"], 
             expected_gp_coordinate_system)
 
         # Assert <Unit>
         expected_unit = pd.DataFrame({"Coordinate": [1], "MP_Box": [1]})
-        assert hss_creator.table_sections["<Unit>"].equals(
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<Unit>"], 
             expected_unit)
 
         # Assert <GP_Data>
@@ -259,7 +258,7 @@ class TestHssCreator:
             "GP_MAG": [210],
             "GP_ROT": [90]
         })
-        assert hss_creator.table_sections["<GP_Data>"].equals(
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<GP_Data>"], 
             expected_gp_data)
 
         # Assert <EPS_Data>
@@ -373,7 +372,7 @@ class TestHssCreator:
             "MP4_Direction": ""
         })
 
-        assert hss_creator.table_sections["<EPS_Data>"].equals(expected_eps_data)
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<EPS_Data>"], expected_eps_data)
 
         # Assert <GPA_List>
         expected_gpa_list = pd.DataFrame({
@@ -382,13 +381,11 @@ class TestHssCreator:
             "Chip_Y": [4, 4, 7],
             "GP_ID": [1, 1, 1]
         })
-        assert hss_creator.table_sections["<GPA_List>"].equals(
-            expected_gpa_list)
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<GPA_List>"], expected_gpa_list)
 
         # Assert <GP_Offset>
         expected_gp_offset = pd.DataFrame({"Offset_X": [0], "Offset_Y": [0]})
-        assert hss_creator.table_sections["<GP_Offset>"].equals(
-            expected_gp_offset)
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<GP_Offset>"], expected_gp_offset)
 
         # Assert <EPA_List>
         expected_epa_list = pd.DataFrame({
@@ -398,8 +395,7 @@ class TestHssCreator:
             "EPS_ID": [1],
             "Move_Mode": [1]
         })
-        assert hss_creator.table_sections["<EPA_List>"].equals(
-            expected_epa_list)
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<EPA_List>"], expected_epa_list)
 
         # Assert <IDD_Cond>
         expected_idd_cond = pd.DataFrame({
@@ -410,8 +406,7 @@ class TestHssCreator:
             "DCOffsetY": [0],
             "Tone": [0]
         })
-        assert hss_creator.table_sections["<IDD_Cond>"].equals(
-            expected_idd_cond)
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<IDD_Cond>"], expected_idd_cond)
 
         # Assert <IDD_Layer_Data>
         expected_idd_layer = pd.DataFrame({
@@ -425,8 +420,7 @@ class TestHssCreator:
             "FillNo": [8, 2, 8, 1, 1],
             "LayerName": ["TARGET", "DUMMIES", "NOOPC", "SRAF", "OPC"]
         })
-        assert hss_creator.table_sections["<IDD_Layer_Data>"].equals(
-            expected_idd_layer)
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<IDD_Layer_Data>"], expected_idd_layer)
 
         # Assert <ImageEnv>
         expected_image_env = pd.DataFrame({
@@ -442,8 +436,7 @@ class TestHssCreator:
             "LinePro": [0, 0, 0],
             "umMark": [0, 0, 0]
         })
-        assert hss_creator.table_sections["<ImageEnv>"].equals(
-            expected_image_env)
+        pd.testing.assert_frame_equal(hss_creator.table_sections["<ImageEnv>"], expected_image_env)
 
     def test_get_set_section(self):
         '''tests that sectionMaker returns dataframes since more precise tests will have to be done in test_sectionMaker'''
@@ -670,14 +663,16 @@ class TestHssCreator:
         '''checks for file writing and content written'''
         # TODO this test is dependent from "OM" or "SEM" type of measure
         # Arrange
-        test_tmp_path = pathlib.Path(__file__).resolve().parent / "test_temp_output.hss"
+        test_tmp_path = Path(__file__).resolve().parent
+        recipe_name = "test_temp_output"
+        output_recipe_file_path = Path(test_tmp_path / (recipe_name + ".csv"))
+        output_json_file_path = Path(test_tmp_path / (recipe_name + ".json"))
         example_test_df_genepy_gauge = pd.DataFrame({'EPS_Name': ['isoRectArea_CD100_Area6000_V', 'isoRectArea_CD200_Area6000_V', 'isoRectArea_CD300_Area6000_V', 'isoRectArea_CD400_Area6000_V', 'isoRectArea_CD500_Area6000_V', 'isoRectArea_CD600_Area6000_V', 'isoRectArea_CD700_Area6000_V', 'isoRectArea_CD800_Area6000_V', 'isoRectArea_CD900_Area6000_V', 'isoRectArea_CD1000_Area6000_V'],
                                                      'Move_X': [55000, 110000, 165000, 220000, 275000, 330000, 385000, 440000, 495000, 550000],
                                                      'Move_Y': [-455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000],
-                                                     'MP_TargetCD': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                                                      'EPS_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
 
-        hss_creator = HssCreator(example_test_df_genepy_gauge, output_path=test_tmp_path, precision=1000)
+        hss_creator = HssCreator(example_test_df_genepy_gauge, output_path=test_tmp_path, recipe_name=recipe_name, layers="1.0", layout="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds", topcell="OPCfield", precision=1000)
         # TODO handle false result when df is empty
         # hss_creator = HssCreator(pd.DataFrame(), template=test_json_template, output_file=test_tmp_path)
 
@@ -691,6 +686,8 @@ class TestHssCreator:
 
         # assert hss_str == expected_hss_str
         assert test_tmp_path.exists(), "The file does not exist."
-        with open(hss_creator.path_output_file, 'r') as file:
+        with open(hss_creator.path_output_file + ".csv", 'r') as file:
             content = file.read()
             assert content, "The file is empty."
+        output_recipe_file_path.unlink()
+        output_json_file_path.unlink()

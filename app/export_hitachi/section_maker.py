@@ -81,7 +81,7 @@ class SectionMaker:
 
     def make_idd_layer_data_section(self, mask_layer) -> pd.DataFrame:
         self.idd_layer_data.loc[0, ["LayerNo", "DataType"]] = 0, 114  # TODO link with step / target layer
-        self.idd_layer_data.loc[1:, "LayerNo"] = int(float(mask_layer))  # TODO troncate of round ?
+        self.idd_layer_data.loc[1:, "LayerNo"] = mask_layer  # TODO troncate of round ?
         return self.idd_layer_data
 
     def make_image_env_section(self) -> pd.DataFrame:
