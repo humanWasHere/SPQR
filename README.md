@@ -61,20 +61,20 @@ Enjoy your free time ! SEMRC is cooking a recipe for you !
 ```
 semrc - project root
 ├── app
-│   ├── app_checkers
-│   │   └── user_input_checker.py
-│   ├── connection_modules
-│   │   ├── connection.py
-│   │   └── shell_commands.py
-│   ├── frontend
-│   │   ├── __init__.py
-│   │   └── main_front.py
-│   ├── hss_modules
-│   │   ├── dataframe_to_eps_data.py
+│   ├── core_block
+│   │   └── block_dataclass.py
+│   ├── export_hitachi
+│   │   ├── eps_data.py
 │   │   ├── hss_creator.py
-│   │   ├── hss_modificator.py
+│   │   ├── hss_editor.py
 │   │   ├── __init__.py
-│   │   └── template_to_all_sections.py
+│   │   └── section_maker.py
+│   ├── interfaces
+│   │   ├── calibre_python.py
+│   │   ├── input_checker.py
+│   │   ├── main_front.py
+│   │   ├── mask_db.py
+│   │   └── recipedirector.py
 │   ├── __init__.py
 │   ├── __main__.py
 │   ├── measure_modules
@@ -102,14 +102,15 @@ semrc - project root
 │   ├── test_connection_modules
 │   │   ├── __init__.py
 │   │   └── test_shell_commands.py
-│   ├── test_hss_modules
+│   ├── test_export_hitachi
 │   │   ├── __init__.py
-│   │   ├── test_df_to_eps_data.py
+│   │   ├── test_eps_data.py
 │   │   ├── test_hss_creator.py
-│   │   ├── test_template_to_all_sections.py
-│   │   └── test_temp_output.hss
+│   │   └── test_section_maker.py
+│   ├── test_output
+│   │   └── recipe.json
 │   ├── test_measure.py
-│   └── test_parser_modules
+│   └── test_parser
 │       └── test_ssfile_parser.py
 ```
 

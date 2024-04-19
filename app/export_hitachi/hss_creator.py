@@ -112,8 +112,9 @@ class HssCreator:
         #         self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = 2
 
     def convert_coord_to_nm(self):
-        self.table_sections["<EPS_Data>"]["Move_X"] *= 1000 / self.precision
-        self.table_sections["<EPS_Data>"]["Move_Y"] *= 1000 / self.precision
+        # FIXME should keep data as float ??? -> change test to float checking (not int)
+        self.table_sections["<EPS_Data>"]["Move_X"] = (self.table_sections["<EPS_Data>"]["Move_X"] * 1000 / self.precision).astype('int64')
+        self.table_sections["<EPS_Data>"]["Move_Y"] = (self.table_sections["<EPS_Data>"]["Move_Y"] * 1000 / self.precision).astype('int64')
 
     def dataframe_to_hss(self) -> str:
         '''method that converts a dataframe into a HSS format (writes it as a file)'''

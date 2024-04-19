@@ -54,6 +54,8 @@ def run_recipe_creation_w_measure(upload=False):
     # TODO core data ?
     output_measure['magnification'] = MAG
     EPS_DataFrame = DataFrameToEPSData(output_measure)
+    # with open('/work/opc/all/users/chanelir/semrc/tests/output_measure.test', 'w') as f:
+    #     f.write(output_measure.to_csv(index=False))
     # EPS_Data = EPS_DataFrame.get_eps_data("X90M_GATE_PH")
     EPS_Data = EPS_DataFrame.get_eps_data(TESTCASE_GENEPY["mp_template"])
     runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=int(float(layers[0].split(',')[0])), layout=block.layout_path, topcell=block.topcell, precision=block.precision)

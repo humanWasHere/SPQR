@@ -45,7 +45,7 @@ class DataFrameToEPSData:
         assert step in {"PH", "ET"}
         self.step = step
 
-    def add_mp_width(self, mp_no=1, direction: str = None, template: str = "", measleng: int = 100):
+    def add_mp_width(self, mp_no=1, direction: str = None, template: str = "", measleng: int = 100) -> None:
         """Add a width measurement point (line/space depending on MP template) at image center"""
         self.eps_data[[f"MP{mp_no}_X", f"MP{mp_no}_Y"]] = (0, 0)  # image center
         if direction is None:
@@ -53,6 +53,7 @@ class DataFrameToEPSData:
             target_cd = self.core_data[['x_dim', 'y_dim']].min(axis=1)
             self.core_data["orientation"] = np.where(target_cd == self.core_data.y_dim, "Y", "X")  # TODO a revoir
             self.eps_data[f'MP{mp_no}_TargetCD'] = target_cd
+            # FIXME 2 following lines could be mapped but they are filling a MPn section -> review developement practices / code direction
             self.eps_data[f'MP{mp_no}_Direction'] = self.core_data.orientation
             self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name
         else:
@@ -74,38 +75,38 @@ class DataFrameToEPSData:
         for csv_col, gauge_col in self.MAPPING.items():
             self.eps_data[csv_col] = self.core_data[gauge_col]
 
-    def mapping_from_fix_values(self):
+    def mapping_from_fix_values(self) -> None:
         for csv_col, value in self.FIXED_VALUES.items():
             self.eps_data[csv_col] = value
 
     # method naming based on Hitachi doc
-    def set_eps_data_id(self):
+    def set_eps_data_id(self) -> None:
         # __________EPS_ID section__________
         self.eps_data['EPS_ID'] = range(1, min(self.core_data.shape[0] + 1, 9999))
         if any(id > 9999 for id in self.eps_data['EPS_ID']):
             raise ValueError("EPS_ID values cannot exceed 9999")
 
-    def set_eps_data_eps_modification(self):
+    def set_eps_data_eps_modification(self) -> None:
         # from eps_name to fer_eps_id
         # EPS_Name is mapped
         # Ref_EPS_ID has default template value
         pass
 
-    def set_eps_data_template(self):
+    def set_eps_data_template(self) -> None:
         # from eps_template to ep_template
         # __________EPS_Template section__________
         self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
 
-    def set_eps_data_ap1_modification(self):
+    def set_eps_data_ap1_modification(self) -> None:
         # from type to AP1_AST_Mag
         pass
 
-    def set_eps_data_ap2_modification(self):
+    def set_eps_data_ap2_modification(self) -> None:
         # from type to AP2_AST_Mag
         # AP1_Mag, AP1_Rot, AP1_AF_Mag are mapped
         pass
 
-    def set_eps_data_ep_modification(self):
+    def set_eps_data_ep_modification(self) -> None:
         """Columns from EP_Mag_X to EP_ABCC_X"""
         # __________EP_Rot section__________
         # TODO auto-rotation en fonction de plusieurs MP ? # FIXME demander a Julien + Mode
