@@ -1,7 +1,10 @@
-from app.parsers.ssfile_parser import SsfileParser
+from app.parsers.ssfile_parser import SSFileParser
+
+
+def test_ssfile_genepy():
+    assert True
 
 # TODO complete data - do everything :)
-
 
 # class TestSsfileParser:
 #     # exemple de test - non pertinent ici

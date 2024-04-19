@@ -2,6 +2,8 @@ import tempfile
 import pandas as pd
 from pathlib import Path
 from ..interfaces.calibre_python import lance_script
+from ..data_structure import Block
+from ..parsers.parse import FileParser
 # from pyrat.DesignControler import DesignControler
 # from pyratImplementation.GTCheck.GTCheckService import GTcheckError
 
@@ -11,17 +13,21 @@ from ..interfaces.calibre_python import lance_script
 
 
 class Measure:
-    def __init__(self, parser_input: pd.DataFrame, layout: str | Path, layers: list, precision: int, tcl_script=None, unit="nm"):  # TODO should work with dbu ?
+    def __init__(self, parser_input: FileParser, block: Block, layers: list, tcl_script: str = None, row_range: tuple = None):
+        if row_range is None:
+            self.parser_df = parser_input.parse_data()
+        else:
+            self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
+        self.unit = parser_input.unit  # TODO should work with dbu ?
+        self.x_y_points = self.parser_df[['name', 'x', 'y']]
+        self.layout = block.layout_path
+        self.precision = int(float(block.precision))
+        self.layers = layers  # target_layers
+
         if tcl_script is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
                 raise FileNotFoundError(f"Could not find {self.tcl_script}")
-        self.parser_df = parser_input
-        # self.x_y_points = parser_input[['name', 'x', 'y']]
-        self.layout = layout
-        self.layers = layers  # target_layers
-        self.unit = unit
-        self.precision = precision
 
     def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''

@@ -33,7 +33,7 @@ class DataframeValidator:
 
 
 class CalibreXMLParser(FileParser):
-    # TODO commonaliser gen_rows_ruler et gen_rows_clip ?
+    """Single entry point for parsing of Calibre Ruler and Clip files"""
     unit = None
 
     def __init__(self, tree: str | Path | ET.ElementTree, precision):
@@ -46,8 +46,6 @@ class CalibreXMLParser(FileParser):
 
     def gen_rows_ruler(self):
         """Generate ruler name and center row by row from Calibre ruler XML. Data is stored in DBU."""
-        if self.type != "rulers":
-            raise TypeError("Can only be used on XML rulers")
         for ruler in self.tree.findall('ruler'):
             # unit = ruler.findtext('units')  # formatting for display only
             name = ruler.findtext('comment')
@@ -64,8 +62,7 @@ class CalibreXMLParser(FileParser):
         """Generate clip name and center row by row from Calibre clip XML. Units are defined in XML root"""
         for clip in self.tree.findall('clip'):
             name = clip.findtext('name')
-            # unit = clip.findtext('units')  # Romain C
-            box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}  # FIXME should convert to int ?
+            box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}
             x = box['x'] + box['width'] / 2
             y = box['y'] + box['height'] / 2
             # x = self.convert_to_dbu(unit, x)
@@ -93,6 +90,6 @@ class CalibreXMLParser(FileParser):
         parsed_data['x_ap'] = None
         parsed_data['y_ap'] = None
         # TODO manage default columns
-        # if not parsed_data.empty:  # TODO add more logic - log
-        #     print('\tcalibre ruler parsing done')
+        if not parsed_data.empty:  # TODO add more logic - log
+            print('\tcalibre ruler parsing done')
         return parsed_data

@@ -26,7 +26,8 @@ class DataframeValidator:
     def validate_schema(cls, dataframe) -> None:
         for col_name, series in dataframe.items():
             # TODO try conversion
-            assert series.dtype == cls.SCHEMA[col_name], f"wrong dtype for {col_name}: expected {cls.SCHEMA[col_name]} got {series.dtype}"
+            assert series.dtype == cls.SCHEMA[col_name], \
+                f"Wrong dtype for {col_name}: expected {cls.SCHEMA[col_name]} got {series.dtype}"
 
 
 class FileParser(ABC):
