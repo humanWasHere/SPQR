@@ -3,9 +3,10 @@ import re
 from .parse import FileParser
 
 
-# TODO make it fit the flow
 class TACRulerParser(FileParser):
     '''this class is used to parse TAC rulers'''
+
+    unit = "nm"
 
     def __init__(self, file: str):
         self.file = file
@@ -34,10 +35,10 @@ class TACRulerParser(FileParser):
         return self.data
 
 
-class HssParser(FileParser):
+class HSSParser(FileParser):
     '''should parse existing recipe'''
-    def __init__(self):
-        self.unit = ""
+
+    unit = None
 
     def parse_data(self):
         pass

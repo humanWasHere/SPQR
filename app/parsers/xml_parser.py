@@ -6,6 +6,7 @@ from .parse import FileParser, DataframeValidator
 
 
 class CalibreXMLParser(FileParser):
+    """Single entry point for parsing of Calibre Ruler and Clip files"""
     unit = None
 
     def __init__(self, tree: str | Path | ET.ElementTree):
@@ -17,8 +18,6 @@ class CalibreXMLParser(FileParser):
 
     def gen_rows_ruler(self):
         """Generate ruler name and center row by row from Calibre ruler XML. Data is stored in DBU."""
-        if self.type != "rulers":
-            raise TypeError("Can only be used on XML rulers")
         for ruler in self.tree.findall('ruler'):
             # unit = ruler.findtext('units')  # formatting for display only
             name = ruler.findtext('comment')
@@ -32,7 +31,7 @@ class CalibreXMLParser(FileParser):
         """Generate clip name and center row by row from Calibre clip XML. Units are defined in XML root"""
         for clip in self.tree.findall('clip'):
             name = clip.findtext('name')
-            box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}  # FIXME should convert to int ?
+            box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}
             x = box['x'] + box['width'] / 2
             y = box['y'] + box['height'] / 2
             yield name, x, y
@@ -60,5 +59,4 @@ class CalibreXMLParser(FileParser):
         # TODO manage default columns
         if not parsed_data.empty:  # TODO add more logic - log
             print('\tcalibre ruler parsing done')
-        print(parsed_data)
         return parsed_data

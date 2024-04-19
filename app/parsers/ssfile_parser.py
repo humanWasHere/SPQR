@@ -11,16 +11,15 @@ from .parse import FileParser
 # interaction with user should be better -> GUI
 
 
-class SsfileParser(FileParser):
+class SSFileParser(FileParser):
     """Parse OPCField descriptor "ss" files in Genepy format or legacy (undefined) format"""
 
-    unit = "nm"
+    unit = None
 
     def __init__(self, file_to_parse: str | Path, is_genepy=False):
         self.ssfile = file_to_parse
         self.is_genepy = is_genepy
         self.data: pd.DataFrame
-        self.unit = "nm"
 
     def rename_column_name(dataframe) -> pd.DataFrame:
         """this method allows user to rename the column imported if it is not already in valid format (NaN value)"""
