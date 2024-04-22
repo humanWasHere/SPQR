@@ -13,7 +13,8 @@ from ..parsers.parse import FileParser
 
 
 class Measure:
-    def __init__(self, parser_input: FileParser, block: Block, layers: list, tcl_script: str = None, row_range: tuple = None):
+    def __init__(self, parser_input: FileParser, block: Block, layers: list,
+                 tcl_script: str = None, row_range: tuple = None):
         if row_range is None:
             self.parser_df = parser_input.parse_data()
         else:

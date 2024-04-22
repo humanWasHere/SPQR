@@ -5,7 +5,7 @@ from pathlib import Path
 class SectionMaker:
     '''this class is used to create, fill or modify the values of all second level sections except <EPS_Data> section. If not modified, value is set default as in template.json'''
 
-    def __init__(self, df_dict):
+    def __init__(self, df_dict: dict[str, pd.DataFrame]):
         self.coordinate_system = df_dict["<CoordinateSystem>"]
         self.gp_coordinate_system = df_dict["<GPCoordinateSystem>"]
         self.unit = df_dict["<Unit>"]
@@ -48,17 +48,13 @@ class SectionMaker:
             raise ValueError("GP_Template is mandatory")
 
         # __________GP_MAG section__________
-        if self.gp_data["GP_Template"].str.contains("OM").any():  # TODO: check in template file
-            # value should be 104 or 210
-            self.gp_data["GP_MAG"] = 210
-            if not self.gp_data["GP_MAG"].isin([104, 210]).all():
-                raise ValueError("GP_MAG for OM should be either 104 or 210")
-        elif self.gp_data["GP_Template"].str.contains("SEM").any():
-            # TODO comment savoir quelle valeur entre 1000 et 500000 ?
-            self.gp_data["GP_MAG"] = 500000
-            if not self.gp_data["GP_MAG"].between(1000, 500_000).any():
-                raise ValueError(
-                    "GP_MAG for SEM should be between 1000 and 500000")
+        gp_template = self.gp_data["GP_Template"]
+        om_template_rows = gp_template.str.contains("OM")
+        sem_template_rows = gp_template.str.contains("SEM")
+        assert self.gp_data.loc[om_template_rows, "GP_MAG"].isin([104, 210]).all(), \
+            "GP_MAG for OM should be either 104 or 210"
+        assert self.gp_data.loc[sem_template_rows, "GP_MAG"].between(1000, 500_000).all(), \
+            "GP_MAG for SEM should be between 1000 and 500000"
 
         # __________GP_ROT section__________
         return self.gp_data
@@ -79,7 +75,7 @@ class SectionMaker:
         self.idd_cond.loc[0, ["DesignData", "CellName"]] = Path(layout).stem, topcell
         return self.idd_cond
 
-    def make_idd_layer_data_section(self, mask_layer) -> pd.DataFrame:
+    def make_idd_layer_data_section(self, mask_layer: int) -> pd.DataFrame:
         self.idd_layer_data.loc[0, ["LayerNo", "DataType"]] = 0, 114  # TODO link with step / target layer
         self.idd_layer_data.loc[1:, "LayerNo"] = mask_layer  # TODO troncate of round ?
         return self.idd_layer_data

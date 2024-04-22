@@ -2,39 +2,41 @@ import re
 import json
 import pandas as pd
 from pathlib import Path
+from ..data_structure import Block
 from .section_maker import SectionMaker
 
 # TODO
-# faire un checker de nom (EPS_Name) -> match requirements de Hitachi -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
+# faire un checker de nom (EPS_Name) -> match requirements de Hitachi
+#    -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
 # implémenter une logique pour le type de parser -> if fichier genepy -> mapping genepy
 # faire un checker pour csv ET hss -> intégrer le tool d'alex
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, precision, layers=int, layout="", topcell="", template=None, output_path=None, recipe_name="recipe"):
+    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, template=None, output_dir=None, recipe_name="recipe",
+                 #  block: Block):  # TODO
+                 layout="", topcell="", precision=""):
         if template is None:
             template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        self.recipe_output_path = output_path
-        if self.recipe_output_path is None:
-            # TODO
-            self.recipe_output_path = Path(__file__).resolve().parents[2] / "recipe_output"
-        # self.recipe_output_name = input("\tEnter a name for your recipe (without file extension/words must be separated by underscores) : \n\t")
-        self.recipe_output_name = recipe_name
-        self.path_output_file = str(self.recipe_output_path) + "/" + self.recipe_output_name
-        # if not self.path_output_file:
-        #     print('must create file here ?')
-        self.json_template = self.import_json(template)
+        if output_dir is None:
+            output_dir = Path(__file__).resolve().parents[2] / "recipe_output"  # TODO
+        self.recipe_output_dir = Path(output_dir)
+        self.recipe_output_file = self.recipe_output_dir / recipe_name  # to create here?
         self.eps_data_df = eps_dataframe
-        self.layers = layers
         self.layout = layout
         self.topcell = topcell
         self.precision = precision
+        # self.layout = block.layout_path
+        # self.topcell = block.topcell
+        # self.precision = block.precision
+        self.layers = layers
+        self.json_template = self.import_json(template)
         # TODO: validation?
         self.constant_sections = {}
         self.table_sections = {}
 
     def import_json(self, template_file) -> dict:
-        '''method that opens a JSON file in reading mode which opens in reading mode the JSON file. Returns it if file is clean else raises an error'''
+        """Parse JSON file and handle exceptions"""  # FIXME
         try:
             with open(template_file, 'r') as f:
                 template_file = json.load(f)
@@ -45,16 +47,17 @@ class HssCreator:
         return template_file
 
     def json_to_dataframe(self) -> None:
-        '''method that parses a valid JSON file (no redondant data in same section) into a dataframe (writes it in instance - not return)'''
-        # checking whether template's sections is first level (direct values) or second level (dict containing another value level) then making it a dataframe by one way or the other
-        for key, value in self.json_template.items():
-            if isinstance(value, dict):
-                if isinstance(list(value.values())[0], list):
-                    self.table_sections[key] = pd.DataFrame(value)
+        """Parse a valid HSS JSON template into two dictionaries of unique sections:
+        - a dict of strings for unique values -> {'section_name': "value"},
+        - a dict of dataframes for table content -> {'section_name': pd.DataFrame}."""
+        for section_name, content in self.json_template.items():
+            if isinstance(content, dict):
+                if isinstance(list(content.values())[0], list):
+                    self.table_sections[section_name] = pd.DataFrame(content)
                 else:
-                    self.table_sections[key] = pd.json_normalize(value)
+                    self.table_sections[section_name] = pd.json_normalize(content)
             else:
-                self.constant_sections[key] = value
+                self.constant_sections[section_name] = content
 
     def get_set_section(self) -> None:
         '''this method gets the logic of sectionMaker which fills the different sections of the recipe except <EPS_Data>'''
@@ -167,10 +170,10 @@ class HssCreator:
                 print(f"\t{section_keys} has its series empty")
         json_str = json.dumps(json_content, indent=4)
         json_str = re.sub(r'NaN', r'""', json_str)
-        with open(str(self.path_output_file) + ".json", 'w') as json_file:
+        with open(str(self.recipe_output_file) + ".json", 'w') as json_file:
             json_file.write(json_str)
         if json_file:  # TODO better check + log
-            print(f"\tjson recipe created !  Find it at {str(self.path_output_file)}.json")
+            print(f"\tjson recipe created !  Find it at {str(self.recipe_output_file)}.json")
 
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
@@ -187,7 +190,7 @@ class HssCreator:
         whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)
         whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)
         self.output_dataframe_to_json()
-        with open(self.path_output_file + ".csv", 'w') as f:
+        with open(self.recipe_output_file.with_suffix(".csv"), 'w') as f:
             f.write(whole_recipe_to_output)
         if f:  # TODO better check + log
-            print(f"\tcsv recipe created ! Find it at {self.path_output_file}.csv")
+            print(f"\tcsv recipe created ! Find it at {self.recipe_output_file}.csv")

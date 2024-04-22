@@ -82,7 +82,7 @@ class DataFrameToEPSData:
     # method naming based on Hitachi doc
     def set_eps_data_id(self) -> None:
         # __________EPS_ID section__________
-        self.eps_data['EPS_ID'] = range(1, min(self.core_data.shape[0] + 1, 9999))
+        self.eps_data['EPS_ID'] = range(1, min(len(self.core_data) + 1, 9999))
         if any(id > 9999 for id in self.eps_data['EPS_ID']):
             raise ValueError("EPS_ID values cannot exceed 9999")
 

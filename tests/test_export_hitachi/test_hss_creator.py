@@ -16,6 +16,8 @@ from app.export_hitachi.hss_creator import HssCreator
 
 # in creation of HssCreator() class, template argument should be empty the check if expected_data == template set in __init__ of the class
 
+LAYOUT_TESTCASE = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
+
 
 class TestHssCreator:
 
@@ -213,7 +215,7 @@ class TestHssCreator:
         }
 
         # Act
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
         actual_json_output = hss_creator.json_template
         # is_file_json = json.loads(actual_json_output)
 
@@ -228,7 +230,7 @@ class TestHssCreator:
     def test_json_to_dataframe(self):
         '''tests that the template is correctly generated in several dataframes'''
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
 
         # Act
         # FIXME dependency
@@ -255,7 +257,7 @@ class TestHssCreator:
     def test_get_set_section(self):
         '''tests that sectionMaker returns dataframes since more precise tests will have to be done in test_sectionMaker'''
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
 
         # Act
         # FIXME dependency
@@ -271,7 +273,7 @@ class TestHssCreator:
         '''tests that dataframe_to_eps_data.py to check if it returns a dataframes since more precise tests will have to be done in test_dataframe_to_eps_data'''
         # TODO test très impertinent -> il check l'init de la fonction'''
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
 
         # Act
         # FIXME dependency
@@ -286,7 +288,7 @@ class TestHssCreator:
     def test_fill_type_in_eps_data(self):
         '''checks for types sections (correct number)'''
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
 
         # Act
         # FIXME dependency
@@ -301,7 +303,8 @@ class TestHssCreator:
     def test_convert_to_nm(self):
         # TODO
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame({'Move_X': [10000, 10000, 10000], 'Move_Y': [90000, 90000, 90000]}), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame({'Move_X': [10000, 10000, 10000], 'Move_Y': [90000, 90000, 90000]}),
+                                 layers=1, precision=1000)
         expected_x_in_nm = pd.Series([10000, 10000, 10000], name='Move_X')
         expected_y_in_nm = pd.Series([90000, 90000, 90000], name='Move_Y')
 
@@ -318,7 +321,7 @@ class TestHssCreator:
     def test_dataframe_to_hss(self):
         '''tests that the function of hss creation works and that the function of hss creation works'''
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
 
         # Act
         # FIXME dependency
@@ -349,7 +352,7 @@ class TestHssCreator:
     def test_rename_eps_data_header(self):
         '''checks that the method renames "TypeN" column name in "Type"'''
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
         # passes with \n
         string_to_edit = "Type1,Type12,Type100\n1,2,3\n1,2,3\n"
         expected_new_string = "Type,Type,Type\n1,2,3\n1,2,3\n"
@@ -364,11 +367,10 @@ class TestHssCreator:
         '''checks that the method adds the correct number of commas at the end of each line'''
         # TODO check if it corresponds to correct commas number
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000)
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
         hss_creator.json_to_dataframe()
         string_to_modify_1 = "<GP_Data>\n" + \
-            hss_creator.table_sections["<GP_Data>"].to_csv(
-                index=False)
+            hss_creator.table_sections["<GP_Data>"].to_csv(index=False)
         expected_modified_string_1 = "<GP_Data>,,,,,,\nGP_ID,Type,GP_X,GP_Y,GP_Template,GP_MAG,GP_ROT\n1,1,20,20,chef_OM_default,210,90\n,,,,,,\n"
 
         # Act
@@ -381,7 +383,7 @@ class TestHssCreator:
     def test_output_dataframe_to_json(self):
         # TODO change dataframe
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), precision=1000, output_path="/work/opc/all/users/chanelir/semrc/tests/test_output")
+        hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000, output_dir="/work/opc/all/users/chanelir/semrc/tests/test_output")
         hss_creator.constant_sections = {'<FileID>': 'LIDP00', '<Version>': 6, '<Revision>': 0}
         hss_creator.table_sections = {
             '<CoordinateSystem>': pd.DataFrame([{'Type': 1, 'ACD_Type': 1}]),
@@ -403,11 +405,11 @@ class TestHssCreator:
 
         # Act
         hss_creator.output_dataframe_to_json()
-        with open(str(hss_creator.path_output_file) + ".json", 'r') as json_file:
+        with open(str(hss_creator.recipe_output_file) + ".json", 'r') as json_file:
             content = json_file.read()
 
         # Assert
-        assert os.path.exists(str(hss_creator.path_output_file) + ".json")
+        assert os.path.exists(str(hss_creator.recipe_output_file) + ".json")
         assert content == expected_json_str
 
     def test_write_in_file(self):
@@ -421,18 +423,22 @@ class TestHssCreator:
         recipe_name = "test_temp_output"
         output_recipe_file_path = Path(test_tmp_path / (recipe_name + ".csv"))
         output_json_file_path = Path(test_tmp_path / (recipe_name + ".json"))
-        example_test_df_genepy_gauge = pd.DataFrame({'EPS_Name': ['isoRectArea_CD100_Area6000_V', 'isoRectArea_CD200_Area6000_V', 'isoRectArea_CD300_Area6000_V', 'isoRectArea_CD400_Area6000_V', 'isoRectArea_CD500_Area6000_V', 'isoRectArea_CD600_Area6000_V', 'isoRectArea_CD700_Area6000_V', 'isoRectArea_CD800_Area6000_V', 'isoRectArea_CD900_Area6000_V', 'isoRectArea_CD1000_Area6000_V'],
-                                                     'Move_X': [55000, 110000, 165000, 220000, 275000, 330000, 385000, 440000, 495000, 550000],
-                                                     'Move_Y': [-455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000],
-                                                     'EPS_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]})
+        example_test_df_genepy_gauge = pd.DataFrame({
+            'EPS_Name': ['isoRectArea_CD100_Area6000_V', 'isoRectArea_CD200_Area6000_V', 'isoRectArea_CD300_Area6000_V', 'isoRectArea_CD400_Area6000_V', 'isoRectArea_CD500_Area6000_V', 'isoRectArea_CD600_Area6000_V', 'isoRectArea_CD700_Area6000_V', 'isoRectArea_CD800_Area6000_V', 'isoRectArea_CD900_Area6000_V', 'isoRectArea_CD1000_Area6000_V'],
+            'Move_X': [55000, 110000, 165000, 220000, 275000, 330000, 385000, 440000, 495000, 550000],
+            'Move_Y': [-455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000],
+            'EPS_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            })
 
-        hss_creator = HssCreator(example_test_df_genepy_gauge, output_path=test_tmp_path, recipe_name=recipe_name, layers="1.0", layout="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds", topcell="OPCfield", precision=1000)
+        hss_creator = HssCreator(example_test_df_genepy_gauge, layers=1, output_dir=test_tmp_path,
+                                 recipe_name=recipe_name, layout=LAYOUT_TESTCASE,
+                                 topcell="OPCfield", precision=1000)
 
         # Act
         hss_creator.write_in_file()
 
         assert test_tmp_path.exists(), "The file does not exist."
-        with open(hss_creator.path_output_file + ".csv", 'r') as file:
+        with open(hss_creator.recipe_output_file.with_suffix(".csv"), 'r') as file:
             content = file.read()
             assert content, "The file is empty."
         output_recipe_file_path.unlink()

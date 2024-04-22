@@ -1,10 +1,10 @@
 import pytest
-from unittest.mock import patch, MagicMock
 import subprocess
 import tempfile
 import pandas as pd
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+from app.data_structure import Block
 from app.measure.measure import Measure
 from app.interfaces.calibre_python import lance_script
 # FIXME layout and layers are not valid file paths

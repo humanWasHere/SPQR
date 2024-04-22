@@ -23,15 +23,15 @@ class TestSectionMaker:
             "col3": [3, 3, 3]
         })
         gp_data_df = pd.DataFrame({
-            "GP_Template": ["chef_SEM_default", "chef_SEM_default"],
-            "GP_MAG": [None, None]
+            "GP_Template": ["chef_OM_default", "chef_SEM_default"],
+            "GP_MAG": [210, 500000]
         })
         idd_cond_df = pd.DataFrame({
             "DesignData": ["COMPLETED_TEMPLATE"],
             "CellName": ["OPCFIeld"]
         })
         idd_layer_data_df = pd.DataFrame({
-            "LayerNo": [0, 1.0],
+            "LayerNo": [0, 1],
             "DataType": [114, 114]
         })
         dict_df = {
@@ -87,9 +87,6 @@ class TestSectionMaker:
         # Act
         section_maker_instance.make_gp_data_section()
 
-        print(section_maker_instance.gp_data)
-        print(expected_df)
-
         # Assert
         pd.testing.assert_frame_equal(section_maker_instance.gp_data, expected_df)
 
@@ -128,9 +125,9 @@ class TestSectionMaker:
         pd.testing.assert_frame_equal(result_df, expected_df)
 
     def test_make_idd_layer_data_section(self, section_maker_instance):
-        mask_layer_value = 1.0  # Valeur fictive pour l'exemple
+        mask_layer_value = 1  # Valeur fictive pour l'exemple
         expected_df = pd.DataFrame({
-            "LayerNo": [0, 1.0],
+            "LayerNo": [0, 1],
             "DataType": [114, 114]
         })
 

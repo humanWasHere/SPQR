@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from .interfaces.calibre_python import layout_peek
 
+
 @dataclass
 class Block:
     # maskset: str
