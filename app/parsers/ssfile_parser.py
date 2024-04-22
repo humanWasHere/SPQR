@@ -17,10 +17,11 @@ class SSFileParser(FileParser):
     unit = None
 
     def __init__(self, file_to_parse: str | Path, is_genepy=False):
-        self.ssfile = file_to_parse
+        self.ssfile = Path(file_to_parse)
         self.is_genepy = is_genepy
         self.data: pd.DataFrame
 
+    @staticmethod
     def rename_column_name(dataframe) -> pd.DataFrame:
         """this method allows user to rename the column imported if it is not already in valid format (NaN value)"""
         set_title_names = []  # TODO add all existing columns first
@@ -39,7 +40,9 @@ class SSFileParser(FileParser):
     def parse_data(self) -> pd.DataFrame:
         '''this method decides wether you need to parse a genepy ssfile or not'''
         if self.is_genepy:
-            return self.genepy_to_dataframe()
+            self.genepy_to_dataframe()
+            self.post_parse()
+            return self.data
         else:
             return self.ssfile_to_dataframe()
 
@@ -68,10 +71,9 @@ class SSFileParser(FileParser):
         self.data = pd.read_csv(self.ssfile, sep='\t', header=0, on_bad_lines='warn', encoding='utf-8')
         # TODO add validation (column number / column name)
         self.unit = self.data.UNIT_COORD.unique()[0].lower()  # TODO normaliser l'unite d'entree par point
-        self.post_parse()
         # self.check_x_y_is_int()
         # if not self.data.empty:  # TODO add more logic - log
-            # print('\tgenepy ssfile parsing done')
+        #    print('\tgenepy ssfile parsing done')
         return self.data
 
     def post_parse(self) -> None:
@@ -88,7 +90,8 @@ class SSFileParser(FileParser):
         self.data = self.change_coord_to_relative(self.data)
         # TODO renaming logic?
 
-    def change_coord_to_relative(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def change_coord_to_relative(dataframe: pd.DataFrame) -> pd.DataFrame:
         """Modify the AP coordinates in-place from absolute to relative."""
         # FIXME to rework / does it need to be half functionnal half object ?
         dataframe.x_ap -= dataframe.x

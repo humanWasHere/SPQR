@@ -5,12 +5,12 @@ from abc import ABC, abstractmethod
 class DataframeValidator:
     # TODO: implement or rework
     SCHEMA = {
-        'name': str,
+        'name': "string",
         'x': int,
         'y': int,
         'x_ap': int,
         'y_ap': int,
-        'orient': str,
+        'orientation': "string",
         'target_cd': int,
         'magnification': int
     }
@@ -36,35 +36,23 @@ class FileParser(ABC):
     @abstractmethod
     def unit(self) -> str:
         """Return coordinate units for conversion"""
-        pass
 
     # @DataframeValidator.validate
     @abstractmethod
     def parse_data(self) -> pd.DataFrame:
         """Return a dataframe of gauge name and coordinates in original units
         Column labels MUST BE: name, x, y. Name must be alphanumeric or underscore."""
-        pass
 
     def parse_data_dbu(self, precision):
         dbu_per_unit = {'dbu': 1, 'nm': precision/1000, 'micron': precision}
         data = self.parse_data()
         data[['x', 'y', 'x_ap', 'y_ap']] *= dbu_per_unit[self.unit]
-        return data
+        return data.astype(int, errors="ignore")
 
     # # @abstractmethod
     # def unit_converter(self, precision):  # precision is linked to a layout...
     #     """Converts coordinates from source unit to DBU"""
     #     return
-
-    # # specific to calibre rulers
-    # # FIXME already existing ?
-    # def convert_to_dbu(self, unit, coord):
-    #     if unit == "nanometer":
-    #         return int((coord * self.precision) / 1000)
-    #     elif unit == "micrometer":
-    #         return int(coord * self.precision)
-    #     else:
-    #         raise ValueError("Can't convert to dbu - parse.py")
 
     # # @abstractmethod
     # # def check_x_y_is_int(self) -> pd.DataFrame:

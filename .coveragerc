@@ -3,6 +3,7 @@
 omit =
     /sw/*
     /work/ratsoft/*
+    /work/retprod/*
     */tests/*
     ; */.local/*
 

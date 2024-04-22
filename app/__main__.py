@@ -1,4 +1,5 @@
-from xml.etree.ElementTree import ParseError
+# from xml.etree.ElementTree import ParseError
+from lxml.etree import XMLSyntaxError
 
 from .data_structure import Block
 from .export_hitachi.eps_data import DataFrameToEPSData
@@ -14,7 +15,8 @@ TESTCASE_GENEPY = dict(
     layout="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
     layers=["1.0"],
     mag=200_000,
-    mp_template="X90M_GATE_PH"
+    mp_template="X90M_GATE_PH",
+    step="PH"
 )
 
 # test_calibre_rulers = "/work/opc/all/users/banger/dev/semchef/examples/calibre_rulers.xml"
@@ -40,10 +42,10 @@ def run_recipe_creation_w_measure(upload=False):
     print('\n______________________RUNNING RECIPE CREATION______________________\n')
     # TODO change selection logic
     try:
-        parser_instance = CalibreXMLParser(INPUTS['coord_file'], block.precision)
+        parser_instance = CalibreXMLParser(INPUTS['coord_file'])
         rows = None
         # data_parsed = parser_instance.parse_data()
-    except (ParseError, AttributeError):
+    except (XMLSyntaxError, AttributeError):
         parser_instance = SSFileParser(INPUTS['coord_file'], is_genepy=True)
         rows = (60, 70)
         # data_parsed = parser_instance.parse_data()
@@ -55,8 +57,9 @@ def run_recipe_creation_w_measure(upload=False):
     EPS_DataFrame = DataFrameToEPSData(output_measure)
     EPS_Data = EPS_DataFrame.get_eps_data(INPUTS['mp_template'])
 
-    mask_layer = layers[0].split(',')[0]
+    mask_layer = int(layers[0].split('.')[0])  # TODO improve
     runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=mask_layer, layout=block.layout_path, topcell=block.topcell, precision=block.precision)
+    # runHssCreation = HssCreator(eps_dataframe=EPS_Data, block=block, layers=mask_layer)
     runHssCreation.write_in_file()
     if upload:
         rcpd.upload_csv(runHssCreation.output_path)

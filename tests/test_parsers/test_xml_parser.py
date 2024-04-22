@@ -1,6 +1,9 @@
 import pytest
+import pandas as pd
+import numpy as np
 # from io import StringIO
-from xml.etree import ElementTree as ET
+import lxml.etree as ET
+
 from app.parsers.xml_parser import CalibreXMLParser
 
 
@@ -78,7 +81,7 @@ def test_init_clip_from_path(clip_xml_file):
 #     assert parser.tree is not None
 
 def test_parse_from_element_tree():
-    tree = ET.ElementTree(ET.fromstring(XML_RULER_CONTENT))
+    tree = ET.fromstring(XML_RULER_CONTENT).getroottree()  # lxml
     parser = CalibreXMLParser(tree)
     assert parser.tree is not None
 
@@ -102,8 +105,7 @@ def test_incorrect_xml_type(xml_content):
     # incorrect_xml_content = "<clips></clips>"
     incorrect_xml_content = xml_content
     with pytest.raises((ET.ParseError, ValueError)):
-        tree = ET.ElementTree(ET.fromstring(incorrect_xml_content))
-        # tree = ET.fromstring(incorrect_xml_content).getroottree()  # lxml
+        tree = ET.fromstring(incorrect_xml_content).getroottree()
         parser = CalibreXMLParser(tree)
         parser.parse_data()
 
@@ -116,3 +118,16 @@ def test_parse_data(xml_file, request):
     # FIXME make post_parse?
     assert not df.empty
     assert set(df.columns).issuperset({'name', 'x', 'y', 'x_ap', 'y_ap'})
+    # TODO pd.testing.assert_frame_equal
+
+
+def test_parse_data_dbu(clip_xml_file):
+    expected = pd.DataFrame(dict(name=["Clip_10"], x=[971780], y=[2788340], x_ap=np.nan, y_ap=np.nan))
+    parser = CalibreXMLParser(clip_xml_file)
+    actual = parser.parse_data_dbu(10000)
+    pd.testing.assert_frame_equal(actual, expected)
+
+
+# def test_validate(ruler_xml_file):
+#     parser = CalibreXMLParser(ruler_xml_file)
+    # parser.parse_data_decorated()
