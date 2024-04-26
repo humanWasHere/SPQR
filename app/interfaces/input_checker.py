@@ -29,7 +29,7 @@ class UserInputChecker:
                     except ValueError:
                         number = float(stripped_layer)
                     numbers.append(str(number))
-                return numbers
+                return list(numbers)
             except ValueError:
                 print("Invalid input for layers. Please enter a list of numbers separated by commas.")
 
@@ -47,7 +47,7 @@ class FileExtensionChecker:
             raise ValueError("No file extension was detected")
 
     def simple_filepath_extension_checker(self, filepath, expected_extension) -> None:
-        if not self.get_extension(filepath) == expected_extension:
+        if self.get_extension(filepath) != expected_extension:
             # TODO change it
             print(f"File extension is not {expected_extension} !")
             # raise ValueError(f"File extension is not {expected_extension} !")

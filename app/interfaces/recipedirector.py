@@ -6,6 +6,7 @@ import socket
 import pexpect
 import lxml.etree
 from pathlib import Path
+from dotenv import load_dotenv
 
 
 try:
@@ -24,9 +25,12 @@ DG_RECIPE = "/Designgauge/DGData/{techno}/Library/{maskset}/{recipe}"\
 # f"{DG_DESIGNDATA}/{design_data}.gds"
 
 
+# TODO change to dotenv ?
 def get_pw(dest):
     import json
     login = dest.split('@')[0]
+    # load_dotenv()
+    # secrets = os.getenv(dest)
     secrets = json.loads((Path.home()/".secrets.json").read_text())
     return secrets[login]
 

@@ -6,16 +6,13 @@ from ..data_structure import Block
 from .section_maker import SectionMaker
 
 # TODO
-# faire un checker de nom (EPS_Name) -> match requirements de Hitachi
-#    -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
-# implémenter une logique pour le type de parser -> if fichier genepy -> mapping genepy
-# faire un checker pour csv ET hss -> intégrer le tool d'alex
+# faire un checker de nom (EPS_Name) -> match requirements de Hitachi -> validator
+# -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
+# faire un checker pour csv ET hss -> intégrer le tool d'alex -> recipe checker
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, template=None, output_dir=None, recipe_name="recipe",
-                 #  block: Block):  # TODO
-                 layout="", topcell="", precision=""):
+    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, block: Block, template=None, output_dir=None, recipe_name="recipe"):
         if template is None:
             template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
         if output_dir is None:
@@ -23,12 +20,9 @@ class HssCreator:
         self.recipe_output_dir = Path(output_dir)
         self.recipe_output_file = self.recipe_output_dir / recipe_name  # to create here?
         self.eps_data_df = eps_dataframe
-        self.layout = layout
-        self.topcell = topcell
-        self.precision = precision
-        # self.layout = block.layout_path
-        # self.topcell = block.topcell
-        # self.precision = block.precision
+        self.layout = block.layout_path
+        self.topcell = block.topcell
+        self.precision = int(float(block.precision))
         self.layers = layers
         self.json_template = self.import_json(template)
         # TODO: validation?
@@ -36,14 +30,14 @@ class HssCreator:
         self.table_sections = {}
 
     def import_json(self, template_file) -> dict:
-        """Parse JSON file and handle exceptions"""  # FIXME
+        """Parse JSON file and handle exceptions"""
         try:
             with open(template_file, 'r') as f:
                 template_file = json.load(f)
         except FileNotFoundError as e:
-            raise ValueError(f"JSON file not found: {e}")
+            print(f"JSON file not found: {e}")
         except json.JSONDecodeError as e:
-            raise ValueError(f"Error loading JSON file {template_file}: {e}")
+            print(f"Error loading JSON file {template_file}: {e}")
         return template_file
 
     def json_to_dataframe(self) -> None:
@@ -70,7 +64,6 @@ class HssCreator:
         self.table_sections["<GPA_List>"] = instance_sectionMaker.make_gpa_list_section()
         self.table_sections["<GP_Offset>"] = instance_sectionMaker.make_gp_offset_section()
         self.table_sections["<EPA_List>"] = instance_sectionMaker.make_epa_list_section()
-        # FIXME why does it work ???
         self.table_sections["<IDD_Cond>"] = instance_sectionMaker.make_idd_cond_section(self.layout, self.topcell)
         self.table_sections["<IDD_Layer_Data>"] = instance_sectionMaker.make_idd_layer_data_section(self.layers)
         self.table_sections["<ImageEnv>"] = instance_sectionMaker.make_image_env_section()
@@ -89,7 +82,6 @@ class HssCreator:
 
     def fill_type_in_eps_data(self) -> None:
         '''Defines if the Type column needs to be filled by 1s, 2s or empty values'''
-        # TODO apply it to whole recipe since it needs to be 'Type' anyway ?
         for col in self.table_sections["<EPS_Data>"]:
             if col == "Type1":
                 self.table_sections["<EPS_Data>"][col] = 1
@@ -109,8 +101,7 @@ class HssCreator:
         #                 mp_n_is_empty = False
         #     # FIXME override -> based on last column only
         #     if mp_n_is_empty:
-        #         # TODO handle NaN value or other type of empty values
-        #         self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = ""
+        #         self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = np.nan
         #     else:
         #         self.table_sections["<EPS_Data>"][f"Type{mp_nb + 10}"] = 2
 
@@ -143,7 +134,6 @@ class HssCreator:
 
     def rename_eps_data_header(self, string_to_edit) -> str:
         '''method that converts all "TypeN" with N a number in "Type"'''
-        # TODO ? modifier seulement la section <EPS_Data> / d'un autre côté RCPD attends des "Type" et pas autre chose
         new_string = re.sub(r"Type(\d+)", r"Type", string_to_edit)
         return new_string
 
@@ -192,5 +182,5 @@ class HssCreator:
         self.output_dataframe_to_json()
         with open(self.recipe_output_file.with_suffix(".csv"), 'w') as f:
             f.write(whole_recipe_to_output)
-        if f:  # TODO better check + log
+        if Path(f).exists():  # TODO better check + log
             print(f"\tcsv recipe created ! Find it at {self.recipe_output_file}.csv")

@@ -1,11 +1,6 @@
 import pandas as pd
 import numpy as np
 
-# FIXME changed orientation in core_data
-# WARNING dependance et ordre de définition
-# TODO if info is from genepy, get genepy mapping / genepy type of recipe
-# TODO recloisonner le code pour simplifier les sorties de test -> <EPS_Data> section trop longue pour test
-
 
 class DataFrameToEPSData:
     '''this class manages the creation of the <EPS_Data> section only'''
@@ -39,7 +34,7 @@ class DataFrameToEPSData:
     }
 
     def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
-        # TODO:  validate data (columns, type, nan...)
+        # TODO:  validate data (columns, type, nan...) -> validator -> see when to validate in flow
         self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int}, errors="ignore")
         self.eps_data = pd.DataFrame()
         assert step in {"PH", "ET"}
@@ -47,12 +42,13 @@ class DataFrameToEPSData:
 
     def add_mp_width(self, mp_no=1, direction: str = None, template: str = "", measleng: int = 100) -> None:
         """Add a width measurement point (line/space depending on MP template) at image center"""
+        # TODO -> convert to nm -> MP1_X/Y ? -> at the end in hss_creator.write_in_file ?
         self.eps_data[[f"MP{mp_no}_X", f"MP{mp_no}_Y"]] = (0, 0)  # image center
         if direction is None:
             # same as commented in measure -> lines 112 to 115
             target_cd = self.core_data[['x_dim', 'y_dim']].min(axis=1)
             self.core_data["orientation"] = np.where(target_cd == self.core_data.y_dim, "Y", "X")  # TODO a revoir
-            self.eps_data[f'MP{mp_no}_TargetCD'] = target_cd
+            self.eps_data[f'MP{mp_no}_TargetCD'] = target_cd.astype(int)
             # FIXME 2 following lines could be mapped but they are filling a MPn section -> review developement practices / code direction
             self.eps_data[f'MP{mp_no}_Direction'] = self.core_data.orientation
             self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name
@@ -67,7 +63,9 @@ class DataFrameToEPSData:
         # Limit search area to 30 pixels  #TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
         self.eps_data[f'MP{mp_no}_SA_In'] = self.eps_data[f'MP{mp_no}_SA_Out'] = (target_cd_pixel / 3).fillna(500).astype(int).clip(upper=30)
         self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.measleng  # TODO: compute vs height
+        # if not self.eps_data['MP2_X']:
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
+        # else: handle if needed
         self.eps_data[f'MP{mp_no}_Template'] = template
 
     def mapping_from_df(self) -> None:

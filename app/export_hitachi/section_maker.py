@@ -38,12 +38,12 @@ class SectionMaker:
         # if any(id > 10 for id in self.gp_data['GP_ID']):
         #     raise ValueError("GP_ID values cannot exceed 10")
         # __________Type section__________
-        # should be one
-        # TODO test if type here is always one -> test template
+        if self.gp_data['Type'] != 1:
+            print("<GP_Data>Type should be 1 !!")
         # __________GP_X section__________
         # __________GP_Y section__________
         # __________GP_Template section__________
-        # FIXME change filling to line filling. not column filling
+        # dynamic assignation of GP_Template
         if self.gp_data["GP_Template"].isna().any():
             raise ValueError("GP_Template is mandatory")
 

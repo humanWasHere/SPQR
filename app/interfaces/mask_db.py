@@ -14,7 +14,7 @@ except ModuleNotFoundError:
     # not installed in python_anaconda > 2020.02
     import sys
     sys.path.append("/sw/freetools/python_anaconda/5.2.0/rh70_64/lib/python3.6/site-packages/"
-                    "cx_Oracle-7.2.1-py3.6-linux-x86_64.egg") 
+                    "cx_Oracle-7.2.1-py3.6-linux-x86_64.egg")
     # client version 11.2.0.3.0 - same as cx_Oracle 8.3.0 from python3.10
     import cx_Oracle
 

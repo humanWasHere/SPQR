@@ -20,7 +20,7 @@ class Measure:
         else:
             self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
         self.unit = parser_input.unit  # TODO should work with dbu ?
-        self.x_y_points = self.parser_df[['name', 'x', 'y']]
+        # self.x_y_points = self.parser_df[['name', 'x', 'y']]
         self.layout = block.layout_path
         self.precision = int(float(block.precision))
         self.layers = layers  # target_layers
@@ -32,7 +32,7 @@ class Measure:
 
     def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
-        # TODO this method should close temp file ?
+        # TODO this method must close temp file ?
         # TODO rationnaliser l'emplacement des fichiers temporaires
         # Place temporary script in user's home because /tmp is not shared across farm
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
@@ -64,26 +64,23 @@ class Measure:
         meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
                                 'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
-        meas_df.loc[meas_df.x_dim == 0, "x_dim"] = 3000  # FIXME measure out of range?
+        meas_df.loc[meas_df.x_dim == 0, "x_dim"] = 3000  # FIXME measure out of range? -> modify tcl to handle empty measurement
         meas_df.y_dim.replace(to_replace=0, value=3000, inplace=True)
-        # # TODO doublon avec dataframe_to_eps.add_mp  / a decoupler ?
-        # meas_df['target_cd'] = meas_df[['x_dim', 'y_dim']].min(axis=1)
-        # meas_df.loc[meas_df.target_cd == meas_df.y_dim, 'orient'] = 'Y'
-        # meas_df.loc[meas_df.target_cd == meas_df.x_dim, 'orient'] = 'X'
         return meas_df
 
     def run_measure(self) -> pd.DataFrame:
         '''runs Calibre script to automatically measure a layout'''
         measure_tempfile = tempfile.NamedTemporaryFile(dir=Path(__file__).resolve().parents[2] / ".temp")
         # TODO where to store tmp files (script + results)
-        measure_tempfile_path = measure_tempfile.name
+        # measure_tempfile_path = measure_tempfile.name
+        measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"
         tmp = self.creation_script_tmp(measure_tempfile_path)
         # print('2. measurement')  # TODO log
         lance_script(tmp, verbose=True)
         meas_df = self.process_results(measure_tempfile_path)
 
         parser_df = self.parser_df.copy()  # FIXME why copy ?
-        nm_per_unit = {'dbu': 1000/self.precision, 'nm': 1, 'micron': 1000}  # FIXME why nm ?
+        nm_per_unit = {'dbu': 1000/self.precision, 'nm': 1, 'um': 1000}
         parser_df[["x", "y"]] *= nm_per_unit[self.unit]
         try:
             parser_df[["x_ap", "y_ap"]] *= int(float(nm_per_unit[self.unit]))
@@ -91,6 +88,7 @@ class Measure:
             pass
         merged_dfs = pd.merge(parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
+        print(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")
         measure_tempfile.close()  # remove temporary script
         # if not merged_dfs.empty:  # more checks + log
         #     print('\tmeasurement done')

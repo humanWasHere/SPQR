@@ -274,6 +274,8 @@ foreach layer_de_travail $layer_de_travail_base {
 			} else {
 				set le_plus_petit [expr max($taille_en_X,$taille_en_Y)]
 			}
+			# if {$taille_en_X == 0 && $taille_en_Y == 0}
+				# should not define value to 0 / return an error / don't allow measurement
 
 			###########################################################################
 			# Recherche pitch

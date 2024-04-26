@@ -59,7 +59,6 @@ class FileParser(ABC):
     # #     '''checks if x and y columns contains int values. If not converts it'''
     # #     pass
 
-    # # FIXME here ?
     # # def run_parsing(self):
     # #     try:
     # #         parser_instance = CalibreXMLParser(parser, block.precision)

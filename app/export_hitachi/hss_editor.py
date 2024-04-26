@@ -3,6 +3,8 @@ import numpy as np
 from .hss_creator import HssCreator
 from ..parsers.csv_parser import CsvParser
 
+# selon l'intégration dans le flow, voir si cette class est nécessaire
+
 # TODO check if HssCreator instance is needed to modify the recipe
 # -> get file recipe that already has been output
 # uses json_parser.py -> import HssCreator heritage in RecipeModificator or in JsonParser

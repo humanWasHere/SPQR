@@ -1,4 +1,3 @@
-# from xml.etree.ElementTree import ParseError
 from lxml.etree import XMLSyntaxError
 
 from .data_structure import Block
@@ -8,7 +7,7 @@ from .interfaces.input_checker import UserInputChecker
 from .interfaces import recipedirector as rcpd
 from .measure.measure import Measure
 from .parsers.xml_parser import CalibreXMLParser
-from .parsers.ssfile_parser import SSFileParser
+from .parsers.ssfile_parser import SSFileParser, OPCfieldReverse
 
 TESTCASE_GENEPY = dict(
     coord_file="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
@@ -32,7 +31,7 @@ TESTCASE_GENEPY = dict(
 def run_recipe_creation_w_measure(upload=False):
     '''this is the real main function which runs the flow with the measure - "prod" function'''
     user_input = UserInputChecker()
-    parser = user_input.get_secured_user_filepath("Enter a path to your coordinate source :\n")
+    parser = input("Enter a path to your coordinate source :\n")
     layout = user_input.get_secured_user_filepath("Enter a path to your layout :\n")
     layers = user_input.get_secured_user_list_int_float(
         "Enter layer(s) number list (separated by comma + space ', ' each time):\n")
@@ -40,26 +39,35 @@ def run_recipe_creation_w_measure(upload=False):
     block = Block(INPUTS['layout'])
 
     print('\n______________________RUNNING RECIPE CREATION______________________\n')
-    # TODO change selection logic
-    try:
-        parser_instance = CalibreXMLParser(INPUTS['coord_file'])
-        rows = None
-        # data_parsed = parser_instance.parse_data()
-    except (XMLSyntaxError, AttributeError):
-        parser_instance = SSFileParser(INPUTS['coord_file'], is_genepy=True)
-        rows = (60, 70)
-        # data_parsed = parser_instance.parse_data()
+    # TODO change to better selection logic (must choose between path or empty but not accept to take both)
+    if parser == '':
+        # considering retro engineering the opcfield
+        # TODO make OPCfieldReverse inputs dynamic ?
+        # parser_instance = OPCfieldReverse(origin_x=13357.5, origin_y=17447.5, step_x=15, step_y=15, num_steps_x=24, num_steps_y=66, origin_number=0)  # layer intérêt = 247
+        parser_instance = OPCfieldReverse(12888.5, 16507.5, 10, 10, 33, 93)  # layer intérêt = 7.0
+        # parser_instance = OPCfieldReverse(origin_x=12895.1, origin_y=17506.4, step_x=10, step_y=10, num_steps_x=39, num_steps_y=97, origin_number=0)  # layer intérêt = 2.0
+        rows = (0, 100)
+        # rows = None
+    else:
+        try:
+            parser_instance = CalibreXMLParser(INPUTS['coord_file'])
+            rows = None
+            # data_parsed = parser_instance.parse_data()
+        except (XMLSyntaxError, AttributeError):
+            parser_instance = SSFileParser(INPUTS['coord_file'], is_genepy=True)
+            rows = (60, 70)
+            # rows = None
+            # data_parsed = parser_instance.parse_data()
 
     measure_instance = Measure(parser_instance, block, layers, row_range=rows)
     output_measure = measure_instance.run_measure()
-    output_measure['magnification'] = INPUTS['mag']  # TODO shouldn't be here - core data ?
+    output_measure['magnification'] = INPUTS['mag']  # TODO shouldn't be here - core data ? / like block that would map
 
     EPS_DataFrame = DataFrameToEPSData(output_measure)
     EPS_Data = EPS_DataFrame.get_eps_data(INPUTS['mp_template'])
 
     mask_layer = int(layers[0].split('.')[0])  # TODO improve
-    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=mask_layer, layout=block.layout_path, topcell=block.topcell, precision=block.precision)
-    # runHssCreation = HssCreator(eps_dataframe=EPS_Data, block=block, layers=mask_layer)
+    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=mask_layer, layout=block.layout_path, topcell=block.topcell, precision=block.precision, recipe_name="recipe")
     runHssCreation.write_in_file()
     if upload:
         rcpd.upload_csv(runHssCreation.output_path)

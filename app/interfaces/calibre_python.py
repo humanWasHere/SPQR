@@ -1,6 +1,5 @@
 import subprocess
 from pyter.calibre import DesignControlerRet
-# %time
 
 
 # TODO migration -> layout_peek ou MOA's library
