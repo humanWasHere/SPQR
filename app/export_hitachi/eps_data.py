@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from typing import Optional
 
 
 class DataFrameToEPSData:
@@ -32,44 +33,49 @@ class DataFrameToEPSData:
         'AP1_AF_X': "x_ap",
         'AP1_AF_Y': "y_ap"
     }
+    meas_len = 100
 
     def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
         # TODO:  validate data (columns, type, nan...) -> validator -> see when to validate in flow
-        self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int}, errors="ignore")
+        self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int},
+                                          errors="ignore")
         self.eps_data = pd.DataFrame()
         assert step in {"PH", "ET"}
         self.step = step
 
-    def add_mp_width(self, mp_no=1, direction: str = None, template: str = "", measleng: int = 100) -> None:
+    def add_mp_width(self, mp_no=1, direction: Optional[str] = None, template: str = "",
+                     measleng: int = 100) -> None:
         """Add a width measurement point (line/space depending on MP template) at image center"""
         # TODO -> convert to nm -> MP1_X/Y ? -> at the end in hss_creator.write_in_file ?
         self.eps_data[[f"MP{mp_no}_X", f"MP{mp_no}_Y"]] = (0, 0)  # image center
         if direction is None:
             # same as commented in measure -> lines 112 to 115
+            # TODO a revoir -> in core data?
             target_cd = self.core_data[['x_dim', 'y_dim']].min(axis=1)
-            self.core_data["orientation"] = np.where(target_cd == self.core_data.y_dim, "Y", "X")  # TODO a revoir
+            self.core_data["orientation"] = np.where(target_cd == self.core_data.y_dim, "Y", "X")
             self.eps_data[f'MP{mp_no}_TargetCD'] = target_cd.astype(int)
-            # FIXME 2 following lines could be mapped but they are filling a MPn section -> review developement practices / code direction
             self.eps_data[f'MP{mp_no}_Direction'] = self.core_data.orientation
             self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name
         else:
             assert direction.upper() in {'X', 'Y'}
             self.eps_data[f'MP{mp_no}_TargetCD'] = self.core_data[f'cd_{direction.lower()}']
             self.eps_data[f'MP{mp_no}_Direction'] = direction
-            self.eps_data[f'MP{mp_no}_Name'] = self.core_data.name + "_" + self.eps_data[f'MP{mp_no}_Direction']
+            self.eps_data[f'MP{mp_no}_Name'] = (self.core_data.name + "_" + self.eps_data[f'MP{mp_no}_Direction'])
 
         # Compute MP width/length (from SEM procedure)
         target_cd_pixel = self.eps_data[f'MP{mp_no}_TargetCD'] * self.eps_data.EP_Mag_X * 512 / 1000 / 135000
-        # Limit search area to 30 pixels  #TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
-        self.eps_data[f'MP{mp_no}_SA_In'] = self.eps_data[f'MP{mp_no}_SA_Out'] = (target_cd_pixel / 3).fillna(500).astype(int).clip(upper=30)
-        self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.measleng  # TODO: compute vs height
+        # Limit search area to 30 pixels
+        # TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
+        self.eps_data[f'MP{mp_no}_SA_In'] = (target_cd_pixel / 3).fillna(500).astype(int).clip(upper=30)
+        self.eps_data[f'MP{mp_no}_SA_Out'] = self.eps_data[f'MP{mp_no}_SA_In']
+        self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.meas_len  # TODO: compute vs height
         # if not self.eps_data['MP2_X']:
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
         # else: handle if needed
         self.eps_data[f'MP{mp_no}_Template'] = template
 
     def mapping_from_df(self) -> None:
-        '''makes a link between gauge df and actual column name of recipe header for genepy ssfile parser input'''
+        """Map columns from core dataframe to target HSS naming"""
         for csv_col, gauge_col in self.MAPPING.items():
             self.eps_data[csv_col] = self.core_data[gauge_col]
 
@@ -108,7 +114,7 @@ class DataFrameToEPSData:
         """Columns from EP_Mag_X to EP_ABCC_X"""
         # __________EP_Rot section__________
         # TODO auto-rotation en fonction de plusieurs MP ? # FIXME demander a Julien + Mode
-        self.eps_data["EP_Rot"] = np.where(self.core_data.orientation == "x", 0, 90)  # self.core_data.orient is equal to MP1_Direction value
+        self.eps_data["EP_Rot"] = np.where(self.core_data.orientation == "x", 0, 90)
         # EP_AF_X, EP_AF_Y
         pass
 

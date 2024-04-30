@@ -63,7 +63,7 @@ class InputSourceValidator:
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 if not "X_coord_Pat" and "Name" in file:
-                    raise ValueError(f"File {file_path} is not a genepy ssfile or is in bad format")
+                    raise ValueError(f"File {file_path} is not a genepy file or is in bad format")
         except FileNotFoundError:
             raise ValueError(f"File {file_path} does not exist.")
         except Exception as e:
@@ -112,7 +112,8 @@ class InputSourceValidator:
     #                 except csv.Error:
     #                     # This delimiter did not work, try the next one
     #                     continue
-    #             raise ValueError(f"File {file_path} does not appear to be a CSV file or uses an unsupported delimiter.")
+    #             raise ValueError(f"File {file_path} does not appear to be a CSV file"
+    #                              "or uses an unsupported delimiter.")
     #     except FileNotFoundError:
     #         raise ValueError(f"File {file_path} does not exist.")
     #     except Exception as e:

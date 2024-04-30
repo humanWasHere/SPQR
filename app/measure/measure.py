@@ -1,6 +1,8 @@
 import tempfile
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
+
 from ..interfaces.calibre_python import lance_script
 from ..data_structure import Block
 from ..parsers.parse import FileParser
@@ -13,14 +15,13 @@ from ..parsers.parse import FileParser
 
 
 class Measure:
-    def __init__(self, parser_input: FileParser, block: Block, layers: list,
+    def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
                  tcl_script: str = None, row_range: tuple = None):
         if row_range is None:
             self.parser_df = parser_input.parse_data()
         else:
             self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
         self.unit = parser_input.unit  # TODO should work with dbu ?
-        # self.x_y_points = self.parser_df[['name', 'x', 'y']]
         self.layout = block.layout_path
         self.precision = int(float(block.precision))
         self.layers = layers  # target_layers
@@ -36,15 +37,18 @@ class Measure:
         # TODO rationnaliser l'emplacement des fichiers temporaires
         # Place temporary script in user's home because /tmp is not shared across farm
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
-        # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")  # gets deleted out of scope?
+        # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")
+        # gets deleted out of scope?
 
         # precision = DesignControler(layout).getPrecisionNumber()  # raises GTcheckError
         correction = {'um': 1, 'nm': 1000, 'dbu': self.precision}
         # Format coordinates as [{name x y}, ...]
         coordonnees = [
-            f"{{{' '.join(row.astype(str).tolist())}}}" for _, row in self.parser_df[['name', 'x', 'y']].iterrows()]
+            f"{{{' '.join(row.astype(str).tolist())}}}"
+            for _, row in self.parser_df[['name', 'x', 'y']].iterrows()]
 
-        with open(self.tcl_script, "r", encoding="utf-8") as template, open(tmp_script, "w") as script:
+        with (open(self.tcl_script, "r") as template,
+              open(tmp_script, "w") as script):
             texte = template.read()
             texte = texte.replace("FEED_ME_LAYER", ' '.join(self.layers))
             texte = texte.replace("FEED_ME_SEARCH_AREA", str(search_area))
@@ -59,18 +63,22 @@ class Measure:
     def process_results(self, output_path) -> pd.DataFrame:
         meas_df = pd.read_csv(output_path, index_col=False, na_values="unknown")
         # TODO : traiter les "Pitch non symetrical" -> minimum?
-        meas_df.dropna(subset=[" X_dimension(nm) ", " Y_dimension(nm) "], inplace=True)  # invalid rows
+        # Drop invalid rows
+        meas_df.dropna(subset=[" X_dimension(nm) ", " Y_dimension(nm) "], inplace=True)
         # TODO : rename in tcl file?
-        meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
-                                'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
+        meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim",
+                                ' Y_dimension(nm) ': "y_dim", 'pitch_x(nm)': "pitch_x",
+                                'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
-        meas_df.loc[meas_df.x_dim == 0, "x_dim"] = 3000  # FIXME measure out of range? -> modify tcl to handle empty measurement
+        # FIXME measure out of range? -> modify tcl to handle empty measurement
+        meas_df.loc[meas_df.x_dim == 0, "x_dim"] = 3000
         meas_df.y_dim.replace(to_replace=0, value=3000, inplace=True)
         return meas_df
 
     def run_measure(self) -> pd.DataFrame:
         '''runs Calibre script to automatically measure a layout'''
-        measure_tempfile = tempfile.NamedTemporaryFile(dir=Path(__file__).resolve().parents[2] / ".temp")
+        measure_tempfile = tempfile.NamedTemporaryFile(
+            dir=Path(__file__).resolve().parents[2] / ".temp")
         # TODO where to store tmp files (script + results)
         # measure_tempfile_path = measure_tempfile.name
         measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"

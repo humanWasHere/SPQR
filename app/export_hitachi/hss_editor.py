@@ -1,5 +1,3 @@
-import pandas as pd
-import numpy as np
 from .hss_creator import HssCreator
 from ..parsers.csv_parser import CsvParser
 
@@ -12,7 +10,8 @@ from ..parsers.csv_parser import CsvParser
 
 class RecipeModificator(HssCreator):
     '''this class is meant to modify current instance of a class or imported recipe'''
-    # TODO should it take a class instance in entry as RecipeModificator(instance) or RecipeModificator(HssCreator.__init__.attributes)
+    # TODO should it take a class instance in entry as RecipeModificator(instance)
+    # or RecipeModificator(HssCreator.__init__.attributes)
     def __init__(self, json_recipe=None, csv_recipe=None):
         if (json_recipe is not None):
             self.imported_json_recipe = self.parse_json_recipe(json_recipe)

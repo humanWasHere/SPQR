@@ -41,12 +41,13 @@ def fast_query(query):
 
 
 def get_mask_info(maskset):
-    queries = ["SELECT * FROM WAFER WHERE MASK_NAME= :mask",
-               "SELECT * FROM FRAME_MASK WHERE FRAME_NAME= :mask",  # retdbLib.recup_infos_masket -> infos_maskset_glob
-               "SELECT * FROM BLOCK WHERE MASK_NAME= :mask ORDER BY BLOCK_NAME,BLOCK_NAME_I ASC",  # block info
-               "SELECT * FROM BLOCK WHERE MASK_NAME= :mask AND BLOCK_NAME LIKE 'F%' ORDER BY BLOCK_NAME ASC",
-               "SELECT * FROM GDS_INFO WHERE MASKSET= :mask AND DEVICE LIKE 'P%'",
-               "SELECT MAX(BLOCK_NAME_I) FROM BLOCK WHERE MASK_NAME= :mask"]
+    queries = [
+        "SELECT * FROM WAFER WHERE MASK_NAME= :mask",
+        "SELECT * FROM FRAME_MASK WHERE FRAME_NAME= :mask",  # retdbLib.recup_infos_masket -> infos_maskset_glob  # noqa E501
+        "SELECT * FROM BLOCK WHERE MASK_NAME= :mask ORDER BY BLOCK_NAME,BLOCK_NAME_I ASC",  # block info  # noqa E501
+        "SELECT * FROM BLOCK WHERE MASK_NAME= :mask AND BLOCK_NAME LIKE 'F%' ORDER BY BLOCK_NAME ASC",  # noqa E501
+        "SELECT * FROM GDS_INFO WHERE MASKSET= :mask AND DEVICE LIKE 'P%'",
+        "SELECT MAX(BLOCK_NAME_I) FROM BLOCK WHERE MASK_NAME= :mask"]
     # with cx_Oracle.connect(**RETDB) as con:
     for query in queries:
         yield pd.read_sql(query, ENGINE, params={'mask': maskset})
@@ -90,7 +91,8 @@ def translation(maskset):
 
     # Compute GDS -> SEM translation
     # Initialize result dataframe, "mrg" style
-    df = pd.DataFrame({'tx': frame.fr_x/2 - frame.overlap_x/2, 'ty': frame.fr_y/2 - frame.overlap_y/2, 'r': 0}, index=['FR'])
+    df = pd.DataFrame({'tx': frame.fr_x/2 - frame.overlap_x/2,
+                       'ty': frame.fr_y/2 - frame.overlap_y/2, 'r': 0}, index=['FR'])
 
     if block.empty:
         return df
@@ -122,10 +124,11 @@ def translation(maskset):
 #     result = translation(maskset)
 #     print(result)
 #     # Check:
-#     # print(pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg", sep=' ', names=["block", "tx", "ty", "r"]))
+#     # print(pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg",
+#     #                   sep=' ', names=["block", "tx", "ty", "r"]))
 #     check_mrg = (
-#         pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg",
-#                 sep=' ', names=["block", "tx", "ty", "r"]).set_index(result.index).drop(columns="block")
+#         pd.read_csv(f"/prj/opc/all/users/banger/mrg/{maskset}.mrg", sep=' ',
+#                 names=["block", "tx", "ty", "r"]).set_index(result.index).drop(columns="block")
 #         == result
 #     )
 #     print(all(check_mrg))

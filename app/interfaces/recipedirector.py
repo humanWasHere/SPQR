@@ -21,7 +21,8 @@ DG_CSVDOWN = f"downguest@{DG_HOST}:/DGTransferData/DGDownload/"  # download CSV
 DG_DESIGNDATA = f"ddguest@{DG_HOST}:/design_data/data/"  # upload GDS
 DG_RECIPE = "/Designgauge/DGData/{techno}/Library/{maskset}/{recipe}"\
     .format(techno="OPC_C028", maskset="2822A", recipe="SJ71_NOSO_2822A_scanmatch_9fields")
-# design_data = lxml.etree.parse(f{DG_RECIPE}/IDD.xml").find("IDD/DesignDataName").text  # GS2_C028_NOSO_2822A_OPCfield
+# design_data = lxml.etree.parse(f{DG_RECIPE}/IDD.xml").find("IDD/DesignDataName").text
+# ex: GS2_C028_NOSO_2822A_OPCfield
 # f"{DG_DESIGNDATA}/{design_data}.gds"
 
 
@@ -64,7 +65,8 @@ def upload_gds(file_path, password=None):
 
 
 def get_template(template_type, name, password=None, write_to=None):
-    child = pexpect.spawn(f"ssh upguest@{DG_HOST} cat /Designgauge/Template/{template_type}/{name}.xml")
+    child = pexpect.spawn(
+        f"ssh upguest@{DG_HOST} cat /Designgauge/Template/{template_type}/{name}.xml")
     child.expect("password:")
     child.sendline(password or input("upguest's password: "))
     xml = child.read().strip()

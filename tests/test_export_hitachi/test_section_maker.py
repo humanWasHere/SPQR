@@ -15,7 +15,7 @@ class TestSectionMaker:
     #     return hss_creator_instance.json_template
 
     @pytest.fixture
-    def section_maker_instance(self):
+    def section_maker(self):
         # TODO TEMP !!! since template_to_all_sections.py needs to be implemented
         default_df = pd.DataFrame({
             "col1": [1, 1, 1],
@@ -23,6 +23,7 @@ class TestSectionMaker:
             "col3": [3, 3, 3]
         })
         gp_data_df = pd.DataFrame({
+            "Type": [1, 1],
             "GP_Template": ["chef_OM_default", "chef_SEM_default"],
             "GP_MAG": [210, 500000]
         })
@@ -64,39 +65,28 @@ class TestSectionMaker:
     #         self.dict_dataframe_section_maker["<GP_Data>"] = gp_data_df_SEM
     #     return self.dict_dataframe_section_maker
 
-    # def test_make_coordinate_system_section(self):
-        # Arrange
-        # Act
-        # Assert
-
-    # def test_make_gp_coordinate_system_section(self):
-    #     pass
-
-    # def test_make_unit_section(self):
-    #     pass
-
-    # FIXME highlights default in line filling -> fills whole column
-    def test_make_gp_data_section(self, section_maker_instance):
+    def test_make_gp_data_section(self, section_maker):
         # TODO
         # Arrange
         expected_df = pd.DataFrame({
+            "Type": [1, 1],
             "GP_Template": ["chef_OM_default", "chef_SEM_default"],
             "GP_MAG": [210, 500000]
         })
 
         # Act
-        section_maker_instance.make_gp_data_section()
+        section_maker.make_gp_data_section()
 
         # Assert
-        pd.testing.assert_frame_equal(section_maker_instance.gp_data, expected_df)
+        pd.testing.assert_frame_equal(section_maker.gp_data, expected_df)
 
-    def test_make_gp_data_section_raises_for_missing_template(self, section_maker_instance):
+    def test_make_gp_data_section_raises_for_missing_template(self, section_maker):
         # Arrange
-        section_maker_instance.gp_data["GP_Template"] = [None, None]
+        section_maker.gp_data["GP_Template"] = [None, None]
 
         # Act / Assert
         with pytest.raises(ValueError) as excinfo:
-            section_maker_instance.make_gp_data_section()
+            section_maker.make_gp_data_section()
         assert "GP_Template is mandatory" in str(excinfo.value)
 
     # def test_make_gpa_list_section(self):
@@ -108,10 +98,10 @@ class TestSectionMaker:
     # def test_make_epa_list_section(self):
     #     pass
 
-    def test_make_idd_cond_section(self, section_maker_instance):
+    def test_make_idd_cond_section(self, section_maker):
         # Arrange
-        test_layout_stem = 'COMPLETED_TEMPLATE'
-        test_layout_path = f'//work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/{test_layout_stem}.gds'
+        test_layout_stem = "COMPLETED_TEMPLATE"
+        test_layout_path = f'/path/to/{test_layout_stem}.gds'
         test_topcell = "OPCFIeld"
         expected_df = pd.DataFrame({
             "DesignData": [test_layout_stem],
@@ -119,12 +109,12 @@ class TestSectionMaker:
         })
 
         # Act
-        result_df = section_maker_instance.make_idd_cond_section(layout=test_layout_path, topcell=test_topcell)
+        result_df = section_maker.make_idd_cond_section(layout=test_layout_path, topcell=test_topcell)
 
         # Assert
         pd.testing.assert_frame_equal(result_df, expected_df)
 
-    def test_make_idd_layer_data_section(self, section_maker_instance):
+    def test_make_idd_layer_data_section(self, section_maker):
         mask_layer_value = 1  # Valeur fictive pour l'exemple
         expected_df = pd.DataFrame({
             "LayerNo": [0, 1],
@@ -132,7 +122,7 @@ class TestSectionMaker:
         })
 
         # Act
-        result_df = section_maker_instance.make_idd_layer_data_section(mask_layer_value)
+        result_df = section_maker.make_idd_layer_data_section(mask_layer_value)
 
         # Assert
         pd.testing.assert_frame_equal(result_df, expected_df)

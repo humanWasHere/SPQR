@@ -15,7 +15,7 @@ class TACRulerParser(FileParser):
     def parse_data(self) -> pd.DataFrame:
         """Dispatch content to corresponding column mapping and return dataframe of coordinates"""
         # Try to identify type by column labels
-        {'cols': lambda x: x in ['gauge', 'base_x', 'base_y', 'head_x', 'head_y'], 'method': self.parse_tac_ruler}
+        # ['gauge', 'base_x', 'base_y', 'head_x', 'head_y'] subset of columns
         return self.parse_tac_ruler()
 
     def parse_tac_ruler(self) -> pd.DataFrame:
@@ -29,9 +29,9 @@ class TACRulerParser(FileParser):
         self.post_parse()
 
     def post_parse(self):
-        """Fix names"""
-        self.data['name'] = self.data['name'].apply(lambda s: re.sub(r'\s+', '_', s))  # remove whitespace
-        self.data['name'] = self.data['name'].apply(lambda s: re.sub(r'\W+', '', s))  # keep alphanumeric only
+        """Fix names: remove whitespace and keep alphanumeric only"""
+        self.data['name'] = self.data['name'].apply(lambda s: re.sub(r'\s+', '_', s))
+        self.data['name'] = self.data['name'].apply(lambda s: re.sub(r'\W+', '', s))
         return self.data
 
 

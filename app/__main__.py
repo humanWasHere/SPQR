@@ -35,7 +35,8 @@ def run_recipe_creation_w_measure(upload=False):
     layout = user_input.get_secured_user_filepath("Enter a path to your layout :\n")
     layers = user_input.get_secured_user_list_int_float(
         "Enter layer(s) number list (separated by comma + space ', ' each time):\n")
-    INPUTS = dict(coord_file=parser, layout=layout, layers=layers, mag=200_000, mp_template="X90M_GATE_PH")
+    INPUTS = dict(coord_file=parser, layout=layout, layers=layers,
+                  mag=200_000, mp_template="X90M_GATE_PH")
     block = Block(INPUTS['layout'])
 
     print('\n______________________RUNNING RECIPE CREATION______________________\n')
@@ -61,13 +62,15 @@ def run_recipe_creation_w_measure(upload=False):
 
     measure_instance = Measure(parser_instance, block, layers, row_range=rows)
     output_measure = measure_instance.run_measure()
-    output_measure['magnification'] = INPUTS['mag']  # TODO shouldn't be here - core data ? / like block that would map
+    output_measure['magnification'] = INPUTS['mag']  # TODO shouldn't be here - core data ?
 
     EPS_DataFrame = DataFrameToEPSData(output_measure)
     EPS_Data = EPS_DataFrame.get_eps_data(INPUTS['mp_template'])
 
     mask_layer = int(layers[0].split('.')[0])  # TODO improve
-    runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=mask_layer, layout=block.layout_path, topcell=block.topcell, precision=block.precision, recipe_name="recipe")
+    runHssCreation = HssCreator(
+        eps_dataframe=EPS_Data, layers=mask_layer, layout=block.layout_path,
+        topcell=block.topcell, precision=block.precision, recipe_name="recipe")
     runHssCreation.write_in_file()
     if upload:
         rcpd.upload_csv(runHssCreation.output_path)

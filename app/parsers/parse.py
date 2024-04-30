@@ -49,21 +49,11 @@ class FileParser(ABC):
         data[['x', 'y', 'x_ap', 'y_ap']] *= dbu_per_unit[self.unit]
         return data.astype(int, errors="ignore")
 
-    # # @abstractmethod
-    # def unit_converter(self, precision):  # precision is linked to a layout...
-    #     """Converts coordinates from source unit to DBU"""
-    #     return
-
-    # # @abstractmethod
-    # # def check_x_y_is_int(self) -> pd.DataFrame:
-    # #     '''checks if x and y columns contains int values. If not converts it'''
-    # #     pass
-
-    # # def run_parsing(self):
-    # #     try:
-    # #         parser_instance = CalibreXMLParser(parser, block.precision)
-    # #         data_parsed = parser_instance.parse_data()
-    # #         # TODO calibre ruler checker -> verify file extension vs file content
-    # #     except ParseError:
-    # #         parser_instance = SsfileParser(parser, is_genepy=True)
-    # #         data_parsed = parser_instance.parse_data().iloc[60:70]
+# def run_parsing():
+#     try:
+#         parser_instance = CalibreXMLParser(parser, block.precision)
+#         data_parsed = parser_instance.parse_data()
+#         # TODO calibre ruler checker -> verify file extension vs file content
+#     except ParseError:
+#         parser_instance = SsfileParser(parser, is_genepy=True)
+#         data_parsed = parser_instance.parse_data().iloc[60:70]

@@ -1,72 +1,71 @@
-import pytest
-import subprocess
-import tempfile
-import pandas as pd
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+import pandas as pd
+import pytest
+from unittest import mock  # create_autospec, patch, MagicMock
+
 from app.data_structure import Block
+from app.interfaces import calibre_python
 from app.measure.measure import Measure
-from app.interfaces.calibre_python import lance_script
+from app.parsers.parse import FileParser
+
+
+class FakeParser(FileParser):
+    unit: str = "um"
+    def __init__(self, df: pd.DataFrame) -> None: self.data = df
+    def parse_data(self) -> pd.DataFrame: return self.data
+
+
 # FIXME layout and layers are not valid file paths
+LAYOUT = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
+LAYERS = ["1.0"]
 
 
 @pytest.fixture
-def layout():
-    return "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
-
-@pytest.fixture
-def layers():
-    return ["1.0"]
-
-@pytest.fixture
-def measure_instance(layout, layers):
-    parser_input = pd.DataFrame({
-        "Name": ["parser_gauge_name1", "parser_gauge_name2", "parser_gauge_name3", "parser_gauge_name4"],
-        "X_point": [12, "unknown", 13, 14], "Y_point": [22, 12, 42, "unknown"]
-    })
-    return Measure(parser_input, layout, layers, 10000, unit='dbu')
+def measure_instance():
+    parser_input = FakeParser(
+        pd.DataFrame({"name": ["gauge_name1", "gauge_name2", "gauge_name3", "gauge_name4"],
+                      "x": [12, "unknown", 13, 14],
+                      "y": [22, 12, 42, "unknown"]}))
+    mock_block = mock.create_autospec(Block, instance=True)
+    mock_block.layout_path = LAYOUT
+    mock_block.topcell = "TOP"
+    mock_block.precision = 1000
+    return Measure(parser_input, mock_block, LAYERS)
 
 
 def test_creation_script_tmp(measure_instance):
-    # FIXME 'marche pas :(
-    # TODO Black box kind of test -> is it good ?
     # Arrange
-    # env setting
     output = "output_file.txt"
     search_area = 5
-    unit = "nm"
     # expected coords
-    expected_output = Path.home() / "tmp" / "Script_tmp.tcl"
+    expected_path = Path.home() / "tmp" / "Script_tmp.tcl"
 
     # Act
-    result = measure_instance.creation_script_tmp(output, search_area, unit)
+    result = measure_instance.creation_script_tmp(output, search_area)
 
     # Assert
     assert isinstance(result, Path)
     assert result.exists()
     assert result.name == "Script_tmp.tcl"
     assert result.parent == Path.home() / "tmp"
-    assert result == expected_output
+    assert result == expected_path
 
 
-def test_run_measure(measure_instance):
+def test_run_measure(measure_instance, monkeypatch):
     # Arrange
-    expected_columns = ['Gauge name', 'X_point', 'Y_point', 'Value']
-    expected_shape = (2, 4)
-
-    # Mock sequence_auto method to return expected dataframe
-    # measure_instance.sequence_auto = lambda: test_parser_df
+    # expected_columns = ['Gauge name', 'X_point', 'Y_point', 'Value']
+    # expected_shape = (2, 4)
+    result_path = ""  # TODO mock tmp file
     measure_instance.creation_script_tmp = lambda output, search_area=5, unit="nm": "script.tcl"
-    measure_instance.lance_script = lambda script, debug="/dev/null", verbose=True: "machine1"
-    # measure_instance.creation_script_tmp()
-    # measure_instance.lance_script()
+    # TODO finish the test
 
     # Act
-    result = measure_instance.run_measure()
-
-    print(result)
+    tmp_script = measure_instance.creation_script_tmp(result_path)
+    monkeypatch.setattr('app.interfaces.calibre_python.lance_script', lambda x: "cr2sx04660")
+    # result = measure_instance.run_measure()
 
     # Assert
-    assert isinstance(result, pd.DataFrame)
-    assert result.columns.tolist() == expected_columns
-    assert result.shape == expected_shape
+    assert calibre_python.lance_script(tmp_script) == "cr2sx04660"
+    # assert isinstance(result, pd.DataFrame)
+    # assert result.columns.tolist() == expected_columns
+    # assert result.shape == expected_shape

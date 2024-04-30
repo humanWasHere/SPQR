@@ -15,12 +15,14 @@ class CalibreXMLParser(FileParser):
             tree = ET.parse(tree)
         self.tree = tree
         self.type = tree.getroot().tag
-        self.unit = tree.findtext('units') or 'dbu'  # rulers -> None
+        self.unit = tree.findtext('units') or 'dbu'
+        # clips: units are defined in XML root / rulers: findtext -> None
 
     def gen_rows_ruler(self):
-        """Generate ruler name and center row by row from Calibre ruler XML. Data is stored in DBU."""
+        """Generate ruler name and center row by row from Calibre ruler XML"""
         for ruler in self.tree.findall('ruler'):
-            # unit = ruler.findtext('units')  # formatting for display only
+            # unit = ruler.findtext('units')
+            # formatting for display only, data is stored in dbu
             name = ruler.findtext('comment')
             x_range = [int(float(coord.text)) for coord in ruler.findall('points/point/x')]
             y_range = [int(float(coord.text)) for coord in ruler.findall('points/point/y')]
@@ -29,7 +31,7 @@ class CalibreXMLParser(FileParser):
             yield name, x, y
 
     def gen_rows_clip(self):
-        """Generate clip name and center row by row from Calibre clip XML. Units are defined in XML root"""
+        """Generate clip name and center row by row from Calibre clip XML."""
         for clip in self.tree.findall('clip'):
             name = clip.findtext('name')
             box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}
@@ -51,10 +53,11 @@ class CalibreXMLParser(FileParser):
             rows = self.gen_rows_clip()
         else:
             raise ValueError("Unknown XML type")
-        parsed_data = pd.DataFrame(rows, columns=['name', 'x', 'y'])  # TODO: name as index? / enforce format?
-        # Normalize name
+        # TODO: name as index? / enforce format?
+        parsed_data = pd.DataFrame(rows, columns=['name', 'x', 'y'])
+        # Normalize name - keep alphanumeric only
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r' ', '_', s))
-        parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r'\W+', '', s))  # keep alphanumeric only
+        parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r'\W+', '', s))
         # TODO add generic name if empty
         parsed_data['x_ap'] = np.nan
         parsed_data['y_ap'] = np.nan
