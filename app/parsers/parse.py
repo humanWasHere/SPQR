@@ -2,34 +2,6 @@ import pandas as pd
 from abc import ABC, abstractmethod
 
 
-class DataframeValidator:
-    # TODO: implement or rework
-    SCHEMA = {
-        'name': "string",
-        'x': int,
-        'y': int,
-        'x_ap': int,
-        'y_ap': int,
-        'orientation': "string",
-        'target_cd': int,
-        'magnification': int
-    }
-
-    @classmethod
-    def validate(cls, func):
-        def wrapper(*args, **kwargs):
-            data = func(*args, **kwargs)
-            cls.validate_schema(data)
-        return wrapper
-
-    @classmethod
-    def validate_schema(cls, dataframe) -> None:
-        for col_name, series in dataframe.items():
-            # TODO try conversion
-            assert series.dtype == cls.SCHEMA[col_name], \
-                f"Wrong dtype for {col_name}: expected {cls.SCHEMA[col_name]} got {series.dtype}"
-
-
 class FileParser(ABC):
     """Main interface for parser modules."""
     @property
