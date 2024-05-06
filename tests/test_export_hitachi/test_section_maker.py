@@ -25,7 +25,7 @@ class TestSectionMaker:
         gp_data_df = pd.DataFrame({
             "Type": [1, 1],
             "GP_Template": ["chef_OM_default", "chef_SEM_default"],
-            "GP_MAG": [210, 500000]
+            "GP_Mag": [210, 500000]
         })
         idd_cond_df = pd.DataFrame({
             "DesignData": ["COMPLETED_TEMPLATE"],
@@ -71,7 +71,7 @@ class TestSectionMaker:
         expected_df = pd.DataFrame({
             "Type": [1, 1],
             "GP_Template": ["chef_OM_default", "chef_SEM_default"],
-            "GP_MAG": [210, 500000]
+            "GP_Mag": [210, 500000]
         })
 
         # Act

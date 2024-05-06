@@ -6,6 +6,7 @@ class UserInputChecker:
 
     def __init__(self) -> None:
         self.file_extension_checker_instance = FileExtensionChecker()  # TODO actually use it
+        self.input_source = InputSourceValidator()
 
     def get_secured_user_filepath(self, message) -> str:
         while True:

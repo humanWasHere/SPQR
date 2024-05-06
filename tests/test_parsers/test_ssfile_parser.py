@@ -36,7 +36,7 @@ def test_genepy_to_dataframe(genepy_file):
         Location=["A7", "B7"],
         Name=["CDvP_CD50_P310_V", "CDvP_CD70_P310_V"]
     ))
-    
+
     parser = SSFileParser(genepy_file, is_genepy=True)
     actual_data = parser.genepy_to_dataframe()
 
@@ -54,7 +54,7 @@ def test_post_parse(genepy_file):
         Location=["A7", "B7"],
         name=["CDvP_CD50_P310_V", "CDvP_CD70_P310_V"]
     ))
-    
+
     parser = SSFileParser(genepy_file, is_genepy=True)
     parser.data = pd.DataFrame(dict(
         UNIT_COORD=["DBU", "DBU"],
@@ -80,12 +80,8 @@ def test_parse_data(genepy_file):
         Location=["A7", "B7"],
         name=["CDvP_CD50_P310_V", "CDvP_CD70_P310_V"]
     ))
-    
+
     parser = SSFileParser(genepy_file, is_genepy=True)
     parser.parse_data()
 
     pd.testing.assert_frame_equal(parser.data, expected_data)
-
-
-# def test_ssfile_to_dataframe(self):
-#     pass

@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import lxml.etree as ET
 from pathlib import Path
-from .parse import FileParser, DataframeValidator
+from .parse import FileParser
 
 
 class CalibreXMLParser(FileParser):
@@ -38,11 +38,6 @@ class CalibreXMLParser(FileParser):
             x = box['x'] + box['width'] / 2
             y = box['y'] + box['height'] / 2
             yield name, x, y
-
-    @DataframeValidator.validate
-    def parse_data_decorated(self):
-        # TODO dtypes = enfer
-        return self.parse_data()
 
     def parse_data(self):
         """Dispatch content type to row generators and return dataframe of coordinates"""

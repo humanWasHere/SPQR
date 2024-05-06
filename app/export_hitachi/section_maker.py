@@ -54,9 +54,9 @@ class SectionMaker:
         gp_template = self.gp_data["GP_Template"]
         om_template_rows = gp_template.str.contains("OM")
         sem_template_rows = gp_template.str.contains("SEM")
-        assert self.gp_data.loc[om_template_rows, "GP_MAG"].isin([104, 210]).all(), \
+        assert self.gp_data.loc[om_template_rows, "GP_Mag"].isin([104, 210]).all(), \
             "GP_MAG for OM should be either 104 or 210"
-        assert self.gp_data.loc[sem_template_rows, "GP_MAG"].between(1000, 500_000).all(), \
+        assert self.gp_data.loc[sem_template_rows, "GP_Mag"].between(1000, 500_000).all(), \
             "GP_MAG for SEM should be between 1000 and 500000"
 
         # __________GP_ROT section__________

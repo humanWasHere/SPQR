@@ -19,8 +19,8 @@
         "GP_X": [0, 0],
         "GP_Y": [0, 0],
         "GP_Template": ["chef_OM_default", "chef_SEM_default"],
-        "GP_MAG": [210, 12000],
-        "GP_ROT": [null, 0]
+        "GP_Mag": [210, 12000],
+        "GP_Rot": [null, 0]
     },
     "<EPS_Data>": {
         "EPS_ID": 1,

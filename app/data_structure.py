@@ -25,7 +25,7 @@ class CoreData:
         'name': "string",
         'x': int, 'y': int, 'x_ap': int, 'y_ap': int, 'x_af': int, 'y_af': int,
         'orientation': "string", 'target_cd': int, 'magnification': int
-        }
+    }
 
     def __init__(self, parser: FileParser, block: Block, mag: int) -> None:
         self.parser = parser
