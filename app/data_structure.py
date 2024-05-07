@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import pandas as pd
 
@@ -10,7 +11,7 @@ from .interfaces.calibre_python import layout_peek
 class Block:
     # maskset: str
     # device: str
-    layout_path: str
+    layout_path: Path
     topcell: str = field(init=False)
     precision: int = field(init=False)
     # rotation: int

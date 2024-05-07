@@ -1,5 +1,5 @@
-import tempfile
 from pathlib import Path
+import tempfile
 
 import pandas as pd
 
@@ -55,7 +55,7 @@ class Measure:
             texte = texte.replace("FEED_ME_PRECISION", str(self.precision))
             texte = texte.replace("FEED_ME_CORRECTION", str(correction[self.unit]))
             texte = texte.replace("FEED_ME_COORDINATES", '\n'.join(coordonnees))
-            texte = texte.replace("FEED_ME_GDS", self.layout)
+            texte = texte.replace("FEED_ME_GDS", str(self.layout))
             texte = texte.replace("FEED_ME_OUTPUT", output)
             script.write(texte)
         return tmp_script

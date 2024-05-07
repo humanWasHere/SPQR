@@ -1,10 +1,10 @@
 import json
 import os
 from pathlib import Path
+from unittest import mock
 
 import pandas as pd
 import pytest
-from unittest import mock
 
 from app.data_structure import Block
 from app.export_hitachi.hss_creator import HssCreator

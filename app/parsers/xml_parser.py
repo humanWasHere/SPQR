@@ -1,8 +1,10 @@
-import re
-import pandas as pd
-import numpy as np
-import lxml.etree as ET
 from pathlib import Path
+import re
+
+import lxml.etree as ET
+import numpy as np
+import pandas as pd
+
 from .parse import FileParser
 
 

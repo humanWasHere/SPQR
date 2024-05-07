@@ -3,20 +3,14 @@
 Interface with RetDB to fetch mask data
 """
 import os
+from pathlib import Path
+
+import cx_Oracle
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
-from dotenv import load_dotenv
-from pathlib import Path
 from sqlalchemy.engine import create_engine
-try:
-    import cx_Oracle
-except ModuleNotFoundError:
-    # not installed in python_anaconda > 2020.02
-    import sys
-    sys.path.append("/sw/freetools/python_anaconda/5.2.0/rh70_64/lib/python3.6/site-packages/"
-                    "cx_Oracle-7.2.1-py3.6-linux-x86_64.egg")
-    # client version 11.2.0.3.0 - same as cx_Oracle 8.3.0 from python3.10
-    import cx_Oracle
+
 
 load_dotenv()
 

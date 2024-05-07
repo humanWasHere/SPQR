@@ -1,5 +1,6 @@
-import pytest
 import pandas as pd
+import pytest
+
 from app.parsers.ssfile_parser import SSFileParser
 
 

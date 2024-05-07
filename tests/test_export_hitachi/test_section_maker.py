@@ -1,18 +1,10 @@
-from app.export_hitachi.section_maker import SectionMaker
-# from app.hss_modules.hss_creator import HssCreator
-import pytest
 import pandas as pd
+import pytest
 
-# FIXME nothing works :)
-# TODO Beware good import in recipe type (OM or SEM)
+from app.export_hitachi.section_maker import SectionMaker
 
 
 class TestSectionMaker:
-
-    # @pytest.fixture
-    # def hss_creator_template(self):
-    #     hss_creator_instance = hssCreator(pd.DataFrame())
-    #     return hss_creator_instance.json_template
 
     @pytest.fixture
     def section_maker(self):

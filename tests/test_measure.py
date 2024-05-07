@@ -1,7 +1,8 @@
 from pathlib import Path
+from unittest import mock  # create_autospec, patch, MagicMock
+
 import pandas as pd
 import pytest
-from unittest import mock  # create_autospec, patch, MagicMock
 
 from app.data_structure import Block
 from app.interfaces import calibre_python
@@ -15,8 +16,7 @@ class FakeParser(FileParser):
     def parse_data(self) -> pd.DataFrame: return self.data
 
 
-# FIXME layout and layers are not valid file paths
-LAYOUT = "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds"
+LAYOUT = Path(__file__).resolve().parents[1] / "testfiles" / "COMPLETED_TEMPLATE.gds"
 LAYERS = ["1.0"]
 
 

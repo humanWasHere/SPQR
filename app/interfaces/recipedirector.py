@@ -2,11 +2,12 @@
 Interface with DesignGauge station
 """
 import os
-import socket
-import pexpect
-import lxml.etree
 from pathlib import Path
+import pexpect
+import socket
+
 from dotenv import load_dotenv
+import lxml.etree
 
 
 try:

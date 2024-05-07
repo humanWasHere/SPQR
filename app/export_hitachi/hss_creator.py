@@ -1,7 +1,9 @@
-import re
 import json
-import pandas as pd
 from pathlib import Path
+import re
+
+import pandas as pd
+
 from ..data_structure import Block
 from .section_maker import SectionMaker
 
