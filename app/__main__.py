@@ -69,8 +69,7 @@ def run_recipe_creation_w_measure(upload=False):
 
     mask_layer = int(layers[0].split('.')[0])  # TODO improve
     runHssCreation = HssCreator(
-        eps_dataframe=EPS_Data, layers=mask_layer, layout=block.layout_path,
-        topcell=block.topcell, precision=block.precision, recipe_name="recipe")
+        eps_dataframe=EPS_Data, layers=mask_layer, block=block, recipe_name="recipe")
     runHssCreation.write_in_file()
     if upload:
         rcpd.upload_csv(runHssCreation.output_path)

@@ -1,4 +1,12 @@
+cx-Oracle==8.3.0
+lxml==4.9.4
+numpy==1.26.2
+pandas==2.1.4
+pexpect==4.9.0
+python-dotenv==1.0.1
+SQLAlchemy==2.0.23
+# Dev req
+coverage==7.3.4
 flake8==6.1.0
-pycodestyle==2.11.1
-pyflakes==3.1.0
-temp==2020.7.2
+pylint==3.0.3
+pytest==7.4.3

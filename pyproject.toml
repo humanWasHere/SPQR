@@ -1,3 +1,46 @@
+[tool.poetry]
+name = "semrc"
+version = "0.1.0"
+description = "A tool for automating the generation of layout-based CD-SEM recipes."
+authors = ["Romain BANGE <romain.bange@st.com>, Romain CHANELIERE <romain.chaneliere@st.com>"]
+readme = "README.md"
+
+include = [
+    { path = "app" },
+]
+
+
+[[tool.poetry.source]]
+name = "artifactory"
+url = "https://artifactory.st.com/artifactory/api/pypi/remote-pypi-central/simple"
+priority = "primary"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+cx-oracle = "^8.3.0"
+lxml = "^4.9.4"
+numpy = "^1.26.2"
+pandas = "^2.1.4"
+pexpect = "^4.9.0"
+python-dotenv = "^1.0.1"
+sqlalchemy = "^2.0.23"
+
+
+[tool.poetry.group.dev.dependencies]
+coverage = "^7.3.4"
+pytest = "^7.4.3"
+flake8 = "^6.1.0"
+pylint = "^3.0.3"
+
+
+[tool.poetry.group.temp.dependencies]
+pyparsing = "^3.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
 [tool.pytest.ini_options]
 tmp_path_retention_policy = "failed"
 addopts = "--basetemp=tests/tmp"
