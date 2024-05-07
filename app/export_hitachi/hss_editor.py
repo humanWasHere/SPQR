@@ -1,5 +1,5 @@
 from .hss_creator import HssCreator
-from ..parsers.csv_parser import CsvParser
+# from ..parsers.csv_parser import CsvParser
 
 # selon l'intégration dans le flow, voir si cette class est nécessaire
 

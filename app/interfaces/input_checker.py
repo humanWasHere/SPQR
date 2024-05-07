@@ -2,6 +2,58 @@ import json
 from pathlib import Path
 
 
+# /!\ should not exist ? type checking -> done w/ dedicated lib or dedicated class ?
+class Config:
+    def __init__(self, json_conf: dict) -> None:
+        self.user_conf = json_conf
+        self.recipe_name = json_conf['recipe_name']
+        self.parser = Path(json_conf['parser'])
+        self.layout = Path(json_conf['layout'])
+        self.layers = json_conf['layers']
+        self.mag = json_conf['magnification']
+        self.mp_template = json_conf['mp_template']
+        self.step = json_conf['step']
+
+    def check_json(self):
+        try:
+            isinstance(self.user_conf, dict)
+        except json.JSONDecodeError as e:
+            raise ValueError("The provided configuration is not valid JSON.") from e
+        return True
+
+    def check_str(self):
+        is_recipe_name_str = isinstance(self.recipe_name, str)
+        is_mp_template_str = isinstance(self.mp_template, str)
+        is_step_str = isinstance(self.step, str)
+        return is_recipe_name_str and is_mp_template_str and is_step_str
+
+    def check_int(self):
+        is_mag_int = isinstance(self.mag, int)
+        return is_mag_int
+
+    def check_path(self):
+        if not self.parser.exists():
+            return False
+        if not self.layout.exists():
+            return False
+
+    def check_layer_type(self):
+        if not isinstance(self.layers, list):
+            return False
+        for layer in self.layers:
+            if not isinstance(layer, str):
+                return False
+        # test for float
+        return True
+
+    def check_config(self):
+        self.check_json()
+        self.check_str()
+        self.check_int()
+        self.check_path()
+        self.check_layer_type()
+
+
 class UserInputChecker:
 
     def __init__(self) -> None:

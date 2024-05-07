@@ -1,0 +1,42 @@
+{
+    "name": "SEMRC",
+    "version": "0.1.0",
+    "scripts": {
+        "start": "python -m app",
+        "build": "python -m app",
+        "test": "pytest tests/",
+        "lint": "flake8 .",
+        "coverage": "run coverage",
+        "doc": "make apidoc; make html"
+    },
+
+    "test_env_genepy": {
+        "recipe_name": "test_env_genepy",
+        "parser": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
+        "layout": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+        "layers": ["1.0"],
+        "magnification": 200000,
+        "mp_template": "X90M_GATE_PH",
+        "step": "PH"
+    },
+
+    "test_env_calibre_rulers": {
+        "recipe_name": "test_env_calibre_rulers",
+        "parser": "/work/opc/all/users/banger/dev/semchef/examples/calibre_rulers.xml",
+        "layout": "",
+        "layers": [""],
+        "magnification": 200000,
+        "mp_template": "X90M_GATE_PH",
+        "step": "PH"
+    },
+
+    "test_env_OPCField": {
+        "recipe_name": "test_env_OPCField",
+        "parser": "",
+        "layout": "",
+        "layers": [""],
+        "magnification": 200000,
+        "mp_template": "X90M_GATE_PH",
+        "step": ""
+    }
+}

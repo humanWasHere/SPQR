@@ -31,6 +31,7 @@ class HssCreator:
         self.table_sections: dict[str, pd.DataFrame] = {}
         self.section_maker: SectionMaker
 
+    # TODO not instance method
     def import_json(self, template_file) -> dict:
         """Parse JSON file. Do not handle exceptions yet"""
         return json.loads(template_file.read_text())

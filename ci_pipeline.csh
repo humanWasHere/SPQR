@@ -16,6 +16,7 @@ echo "Running auto-documentation..."
 pyreverse -A -o png app/  #  --ignore frontend
 # sphinx
 # cd docs; make html
+# cd sphinx; make apidoc; make html
 
 
 # Cleanup
