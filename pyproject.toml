@@ -1,0 +1,27 @@
+[tool.pytest.ini_options]
+tmp_path_retention_policy = "failed"
+addopts = "--basetemp=tests/tmp"
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+#    "ignore::DeprecationWarning",
+    "ignore::Warning:pyrat*"
+]
+
+[tool.coverage.run]
+omit = [
+    "/sw/*",
+    "/work/ratsoft/*",
+    "/work/retprod/*",
+    "*/tests/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "def __repr__"
+]
+skip_empty = true
+ignore_errors = true
+
+[tool.mypy]
+ignore_missing_imports = true
