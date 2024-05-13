@@ -2,6 +2,9 @@
 tmp/
 recipe_output/
 
+# Build
+dist/
+
 # Compiled / IDE
 __pycache__/
 .vscode/
@@ -24,4 +27,5 @@ venv/
 # Typing
 .mypy_cache
 
+# Other
 *.png

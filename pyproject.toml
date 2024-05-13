@@ -4,11 +4,7 @@ version = "0.1.0"
 description = "A tool for automating the generation of layout-based CD-SEM recipes."
 authors = ["Romain BANGE <romain.bange@st.com>, Romain CHANELIERE <romain.chaneliere@st.com>"]
 readme = "README.md"
-
-include = [
-    { path = "app" },
-]
-
+packages = [{include = "app"}]
 
 [[tool.poetry.source]]
 name = "artifactory"
@@ -25,13 +21,11 @@ pexpect = "^4.9.0"
 python-dotenv = "^1.0.1"
 sqlalchemy = "^2.0.23"
 
-
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.3.4"
 pytest = "^7.4.3"
 flake8 = "^6.1.0"
 pylint = "^3.0.3"
-
 
 [tool.poetry.group.temp.dependencies]
 pyparsing = "^3.1.2"
@@ -44,12 +38,17 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 tmp_path_retention_policy = "failed"
 addopts = "--basetemp=tests/tmp"
+testpaths = [
+    "tests",
+    "integration",
+]
 filterwarnings = [
     "error",
     "ignore::UserWarning",
 #    "ignore::DeprecationWarning",
     "ignore::Warning:pyrat*"
 ]
+
 
 [tool.coverage.run]
 omit = [
@@ -65,6 +64,7 @@ exclude_lines = [
 ]
 skip_empty = true
 ignore_errors = true
+
 
 [tool.mypy]
 ignore_missing_imports = true

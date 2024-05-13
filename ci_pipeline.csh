@@ -2,7 +2,7 @@
 
 # Coverage
 echo "Running pytest coverage..."
-coverage run -m pytest tests > /dev/null
+coverage run -m pytest tests -q  # > /dev/null
 coverage report -m
 coverage html
 

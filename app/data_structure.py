@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from .parsers.parse import FileParser
-from .interfaces.calibre_python import layout_peek
+from .interfaces.calibre_python import get_layout_precision, get_layout_topcell
 
 
 @dataclass
@@ -17,8 +17,8 @@ class Block:
     # rotation: int
 
     def __post_init__(self):
-        self.precision = int(float(layout_peek(self.layout_path, "precision")))
-        self.topcell = layout_peek(self.layout_path, "topcell")
+        self.precision = get_layout_precision(self.layout_path)
+        self.topcell = get_layout_topcell(self.layout_path)
 
 
 class CoreData:

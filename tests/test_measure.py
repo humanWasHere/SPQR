@@ -24,8 +24,8 @@ LAYERS = ["1.0"]
 def measure_instance():
     parser_input = FakeParser(
         pd.DataFrame({"name": ["gauge_name1", "gauge_name2", "gauge_name3", "gauge_name4"],
-                      "x": [12, "unknown", 13, 14],
-                      "y": [22, 12, 42, "unknown"]}))
+                      "x": [12, None, 13, 14],
+                      "y": [22, 12, 42, None]}))
     mock_block = mock.create_autospec(Block, instance=True)
     mock_block.layout_path = LAYOUT
     mock_block.topcell = "TOP"

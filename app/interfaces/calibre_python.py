@@ -1,9 +1,9 @@
+from pathlib import Path
 import subprocess
 
 from pyter.calibre import DesignControlerRet
-
-
-# TODO migration -> layout_peek ou MOA's library
+# from pyrat.DesignControler import DesignControler
+# from pyratImplementation.GTCheck.GTCheckService import GTcheckError
 
 
 def find_host() -> str:
@@ -30,13 +30,13 @@ def layout_peek(layout, *options) -> bytes:
     return peek.stdout.splitlines()[-1].strip()
 
 
-def get_precision_from_layout(layout: str):
+def get_layout_precision(layout: str | Path) -> int:
     design = DesignControlerRet(str(layout))
     result = design.getPrecisionNumber()
     return int(float(result))
 
 
-def get_topcell_from_layout(layout):
+def get_layout_topcell(layout: str | Path) -> str:
     design = DesignControlerRet(str(layout))
     result = design.getTopcellNameString()
     return str(result)
@@ -46,7 +46,6 @@ def lance_script(script, debug="/dev/null", verbose=True) -> str:
     '''runs Calibre script by using "calibredrv"'''
     # cmd = f"setcalibre rec >/dev/null; calibredrv -64 {script} | tee {debug}"  # 2.71 s ± 43.6 ms
     host = find_host()
-    # TODO : pexpect?
     # TODO maintenabilité + portée grenoble
     cmd = "setenv MGC_HOME /sw/mentor/calibre/2018.4_34.26/aoi_cal_2018.4_34.26; " \
         "setenv PATH $MGC_HOME/bin:$PATH; " \

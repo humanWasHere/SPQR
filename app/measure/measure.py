@@ -6,12 +6,10 @@ import pandas as pd
 from ..interfaces.calibre_python import lance_script
 from ..data_structure import Block
 from ..parsers.parse import FileParser
-# from pyrat.DesignControler import DesignControler
-# from pyratImplementation.GTCheck.GTCheckService import GTcheckError
+
 
 # TODO change path access if code is running on prod serv
 # does it closes the temp file ?
-# Warning Path must be str not Path file
 
 
 class Measure:
@@ -43,10 +41,12 @@ class Measure:
         # precision = DesignControler(layout).getPrecisionNumber()  # raises GTcheckError
         correction = {'um': 1, 'nm': 1000, 'dbu': self.precision}
         # Format coordinates as [{name x y}, ...]
-        coordonnees = [
-            f"{{{' '.join(row.astype(str).tolist())}}}"
-            for _, row in self.parser_df[['name', 'x', 'y']].iterrows()]
-
+        coordonnees = (
+            self.parser_df.loc[:, ['name', 'x', 'y']]
+            .astype({'x': float, 'y': float}).astype(str)
+            .apply(lambda row: f"{{{' '.join(row.values)}}}", axis=1)
+        )
+        # Paths must be passed as str
         with (open(self.tcl_script, "r") as template,
               open(tmp_script, "w") as script):
             texte = template.read()
@@ -72,7 +72,7 @@ class Measure:
                        inplace=True)
         # FIXME measure out of range? -> modify tcl to handle empty measurement
         meas_df.loc[meas_df.x_dim == 0, "x_dim"] = 3000
-        meas_df.y_dim.replace(to_replace=0, value=3000, inplace=True)
+        meas_df.replace({'y_dim': {0: 3000}}, inplace=True)
         return meas_df
 
     def run_measure(self) -> pd.DataFrame:
@@ -80,13 +80,12 @@ class Measure:
         measure_tempfile = tempfile.NamedTemporaryFile(
             dir=Path(__file__).resolve().parents[2] / ".temp")
         # TODO where to store tmp files (script + results)
-        # measure_tempfile_path = measure_tempfile.name
-        measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"
+        measure_tempfile_path = measure_tempfile.name
+        # measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"
         tmp = self.creation_script_tmp(measure_tempfile_path)
         # print('2. measurement')  # TODO log
         lance_script(tmp, verbose=True)
         meas_df = self.process_results(measure_tempfile_path)
-
         parser_df = self.parser_df.copy()  # FIXME why copy ?
         nm_per_unit = {'dbu': 1000/self.precision, 'nm': 1, 'um': 1000}
         parser_df[["x", "y"]] *= nm_per_unit[self.unit]
@@ -97,6 +96,10 @@ class Measure:
         merged_dfs = pd.merge(parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
         print(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")
+
+        # DEBUG copy results CSV
+        results = Path(measure_tempfile_path).read_text()
+        (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
         measure_tempfile.close()  # remove temporary script
         # if not merged_dfs.empty:  # more checks + log
         #     print('\tmeasurement done')
