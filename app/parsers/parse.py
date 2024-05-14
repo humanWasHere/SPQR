@@ -22,10 +22,4 @@ class FileParser(ABC):
         return data.astype(int, errors="ignore")
 
 # def run_parsing():
-#     try:
-#         parser_instance = CalibreXMLParser(parser, block.precision)
-#         data_parsed = parser_instance.parse_data()
-#         # TODO calibre ruler checker -> verify file extension vs file content
-#     except ParseError:
-#         parser_instance = SsfileParser(parser, is_genepy=True)
-#         data_parsed = parser_instance.parse_data().iloc[60:70]
+# '''this method holds the logic of parser selection'''

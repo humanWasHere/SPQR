@@ -27,14 +27,15 @@ class HssCreator:
         self.layers = layers
         self.json_template = self.import_json(template)
         # TODO: validation?
+        # FIXME no df in constant_sections
         self.constant_sections: dict[str, pd.DataFrame] = {}
         self.table_sections: dict[str, pd.DataFrame] = {}
         self.section_maker: SectionMaker
 
     # TODO not instance method
-    def import_json(self, template_file) -> dict:
+    def import_json(self, json_file) -> dict:
         """Parse JSON file. Do not handle exceptions yet"""
-        return json.loads(template_file.read_text())
+        return json.loads(json_file.read_text())
 
     def json_to_dataframe(self) -> None:
         """Parse a valid HSS JSON template into two dictionaries of unique sections:
