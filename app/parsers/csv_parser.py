@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import re
 from .parse import FileParser
@@ -46,55 +47,41 @@ class HSSParser(FileParser):
     def parse_hss(self, csv_recipe) -> dict:
         """Parse HSS file. Do not handle exceptions yet"""
         # FIXME not all dataframe are working
+        # FIXME must rename 'Type' columns before parsing
+        # FIXME trouver la manière la plus propre entre prendre la première valeur de first_level, dropna for rows, autre ? -> comparer à l'existant
         # TODO data -> convert int to int or float to float when possible -> first level
-        # TODO change var name / make it more pandas friendly
-        first_level = {}
-        second_level = {}
-        # TODO change to index[-1] == "#" à la place de stocker dans une var ?
+        constant_sections = {}
+        table_sections = {}
         previous_row_type = ""
         current_section = ""
-        # current_second_section_series = pd.Series
+        # parsing engine ?
         result = pd.read_csv(csv_recipe, index_col=False, header=None)
         for index, row in result.iterrows():
-            # print(f"{row.iloc[0]}")
-            row.dropna(axis=0, how='all', inplace=True)
+            # section
             if str(row.iloc[0]).startswith("<") & str(row.iloc[0]).endswith(">"):
-                # row.is_section
                 current_section = str(row.iloc[0])
                 previous_row_type = "<"
+            # subsection
             elif str(row.iloc[0]).startswith("#"):
-                # row.is_sous_section
-                # current_second_section_series = row
+                # TODO remove # from column  (beginning of the row)
+                # if str(row.iloc[0]).startswith('#'):
+                #    row = str(row.iloc[0])[1:]
+                table_sections[current_section] = pd.DataFrame(columns=row.to_list())
                 previous_row_type = "#"
-                # TODO remove # from column names
-                # TODO row.dropna ?
-                second_level[current_section] = pd.DataFrame(columns=row.to_list())
+            # value
             else:
-                # row.is_value
+                # first level
                 if previous_row_type == "<":
-                    # row.dropna(axis=0, how='all', inplace=True)
-                    first_level[current_section] = str(row.values)
-                elif previous_row_type == "#":
-                    # TODO check this row
-                    # if len(second_level[current_section]) == len(row.to_list()):
-                    #     for i in range(0, len(second_level[current_section].columns)):
-                    #         for columns in second_level[current_section].columns:
-                    #             second_level[current_section][columns] = row.to_list()[i]
-                    # else:
-                    #     print(f"dataframe {current_section} has columns/values mismatch")
-                    columns = second_level[current_section].columns
-                    values = row.to_list()
-                    data_to_add = dict(zip(columns, values))
-                    second_level[current_section] = pd.DataFrame([data_to_add])
-                    previous_row_type = "value"
-                elif previous_row_type == "value":
-                    # TODO EPS_Data -> don't override
-                    second_level[current_section] = row.to_list()
+                    row.dropna(axis=0, how='all', inplace=True)
+                    constant_sections[current_section] = list(row.values)
+                # second level
+                elif previous_row_type == "#" or previous_row_type == "value":
+                    table_sections[current_section] = pd.concat([table_sections[current_section],
+                                                                pd.DataFrame([row.to_list()],
+                                                                columns=table_sections[current_section].columns)],
+                                                                ignore_index=True)
                     previous_row_type = "value"
                 else:
                     print("should not exist : error in csv parsing (row syntax)")
-
-        # print(f"first level : {first_level}")
-        # print(f"{second_level}")
-                    
-        return first_level, second_levelssss
+        table_sections = [table_sections[section].loc[:, table_sections[section].columns.notnull()] for section in table_sections]
+        return constant_sections, table_sections

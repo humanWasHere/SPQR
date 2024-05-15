@@ -33,7 +33,7 @@ class DataFrameToEPSData:
         'AP1_AF_X': "x_ap",
         'AP1_AF_Y': "y_ap"
     }
-    meas_len = 100
+    # meas_len = 100
 
     def __init__(self, core_data: pd.DataFrame, step: str = "PH"):
         # TODO:  validate data (columns, type, nan...) -> validator -> see when to validate in flow

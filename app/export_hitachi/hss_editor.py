@@ -43,6 +43,16 @@ class RecipeModificator(HssCreator):
             print("imported recipe is not valid")
             return False
 
+    def check_hss_recipe_validity(self) -> bool:
+        '''checks wether or not the imported recipe to modificate
+        has the columns of the json template'''
+        # /!\ self.recipe_to_modify should be --expected_format--
+        if self.recipe_to_modify.columns == super().json_to_dataframe(self.json_template).columns:
+            return True
+        else:
+            print("imported recipe is not valid")
+            return False
+
     def section_modification(self):
         section_to_modify = input("print the exact name of the section you want to modify")
         value_to_modify = input("give the new value of the element you want to modify")
@@ -54,6 +64,11 @@ class RecipeModificator(HssCreator):
             else:
                 super().constant_sections[section_to_modify] = value_to_modify
         elif section_to_modify in super().table_sections:
+            for section_second_level_key in super().table_sections.keys():
+                if section_to_modify in super().table_sections[section_second_level_key]:
+                    super().table_sections[section_second_level_key]
+                else:
+                    print("apparently not in dict/df")
             if place_value_to_modify != "":
                 super().constant_sections[section_to_modify].iloc[place_value_to_modify] = value_to_modify
             else:
