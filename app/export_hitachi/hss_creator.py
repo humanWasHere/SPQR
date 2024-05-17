@@ -4,8 +4,10 @@ import pandas as pd
 from pathlib import Path
 from ..data_structure import Block
 from .section_maker import SectionMaker
+from ..parsers.json_parser import import_json, JsonParser
 
 # TODO
+# export QCG 5k vs 6k
 # faire un checker de nom (EPS_Name) -> match requirements de Hitachi -> validator
 # -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
 # faire un checker pour csv ET hss -> intégrer le tool d'alex -> recipe checker
@@ -15,7 +17,7 @@ class HssCreator:
     def __init__(self, eps_dataframe: pd.DataFrame, layers: int, block: Block,
                  template=None, output_dir=None, recipe_name="recipe"):
         if template is None:
-            template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
+            self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
         if output_dir is None:
             output_dir = Path(__file__).resolve().parents[2] / "recipe_output"  # TODO
         self.recipe_output_dir = Path(output_dir)
@@ -25,30 +27,12 @@ class HssCreator:
         self.topcell = block.topcell
         self.precision = int(float(block.precision))
         self.layers = layers
-        self.json_template = self.import_json(template)
+        # self.json_template = import_json(template)
         # TODO: validation?
         # FIXME no df in constant_sections
         self.constant_sections: dict[str, pd.DataFrame] = {}
         self.table_sections: dict[str, pd.DataFrame] = {}
         self.section_maker: SectionMaker
-
-    # TODO not instance method
-    def import_json(self, json_file) -> dict:
-        """Parse JSON file. Do not handle exceptions yet"""
-        return json.loads(json_file.read_text())
-
-    def json_to_dataframe(self) -> None:
-        """Parse a valid HSS JSON template into two dictionaries of unique sections:
-        - a dict of strings for unique values -> {'section_name': "value"},
-        - a dict of dataframes for table content -> {'section_name': pd.DataFrame}."""
-        for section_name, content in self.json_template.items():
-            if isinstance(content, dict):
-                if isinstance(list(content.values())[0], list):
-                    self.table_sections[section_name] = pd.DataFrame(content)
-                else:
-                    self.table_sections[section_name] = pd.json_normalize(content)
-            else:
-                self.constant_sections[section_name] = content
 
     def get_set_section(self) -> None:
         """Fills the different sections of the recipe except <EPS_Data> using SectionMaker"""
@@ -160,7 +144,8 @@ class HssCreator:
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
-        self.json_to_dataframe()
+        json_template_instance = JsonParser(self.json_template)
+        self.constant_sections, self.table_sections = json_template_instance.json_to_dataframe()
         print('4. other sections creation')
         self.get_set_section()
         print('\tother sections created')

@@ -3,8 +3,7 @@ from pathlib import Path
 
 from .hss_creator import HssCreator
 from ..parsers.csv_parser import HSSParser
-
-# selon l'intégration dans le flow, voir si cette class est nécessaire
+from ..parsers.json_parser import JsonParser, import_json
 
 # TODO check if HssCreator instance is needed to modify the recipe
 # -> get file recipe that already has been output
@@ -16,15 +15,16 @@ class RecipeModificator(HssCreator):
     # TODO should it take a class instance in entry as RecipeModificator(instance)
     # or RecipeModificator(HssCreator.__init__.attributes)
     def __init__(self, json_recipe: Path = None, csv_recipe: Path = None):
+        # super().__init__  -> after for eps
         # self.recipe_to_modify = dict
         # self.recipe_name = Path
         if (json_recipe is not None):
             self.imported_json_recipe = Path(json_recipe)
             self.recipe_name: Path = self.imported_json_recipe.name
             # FIXME
-            self.recipe_to_modify_json = super().import_json(self.imported_json_recipe)
+            self.recipe_to_modify_json = import_json(self.imported_json_recipe)
             # TODO return 2 dict (dict / pd.DataFrame)
-            self.recipe_to_modify: dict = super().json_to_dataframe(self.recipe_to_modify_json)
+            self.recipe_to_modify: dict = JsonParser.json_to_dataframe(self.recipe_to_modify_json)
         elif (csv_recipe is not None):
             self.imported_csv_recipe = Path(csv_recipe)
             self.recipe_name: Path = self.imported_csv_recipe.name

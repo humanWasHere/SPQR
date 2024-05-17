@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 # /!\ should not exist ? type checking -> done w/ dedicated lib or dedicated class ?
-class Config:
+class CheckConfig:
     def __init__(self, json_conf: dict) -> None:
         self.user_conf = json_conf
         self.recipe_name = json_conf['recipe_name']
