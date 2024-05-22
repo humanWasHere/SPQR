@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 from ..data_structure import Block
 from .section_maker import SectionMaker
-from ..parsers.json_parser import import_json, JsonParser
+from ..parsers.json_parser import JsonParser
 
 # TODO
 # export QCG 5k vs 6k
@@ -14,7 +14,7 @@ from ..parsers.json_parser import import_json, JsonParser
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, block: Block,
+    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, block: Block, step = "PH",
                  template=None, output_dir=None, recipe_name="recipe"):
         if template is None:
             self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
@@ -22,11 +22,13 @@ class HssCreator:
             output_dir = Path(__file__).resolve().parents[2] / "recipe_output"  # TODO
         self.recipe_output_dir = Path(output_dir)
         self.recipe_output_file = self.recipe_output_dir / recipe_name  # to create here?
+        assert re.match(r'^[a-zA-Z0-9_-]{0,40}$', recipe_name), "String does not meet the requirements"
         self.eps_data_df = eps_dataframe
         self.layout = block.layout_path
         self.topcell = block.topcell
         self.precision = int(float(block.precision))
         self.layers = layers
+        self.step = step
         # self.json_template = import_json(template)
         # TODO: validation?
         # FIXME no df in constant_sections
@@ -44,14 +46,18 @@ class HssCreator:
         self.section_maker.make_gp_data_section()  # content validation
         self.section_maker.make_idd_cond_section(self.layout, self.topcell)  # design info
         self.section_maker.make_idd_layer_data_section(self.layers)  # layer mapping
+        self.section_maker.make_recipe_section(self.step)
         # Placeholders
         sections['<CoordinateSystem>'] = self.section_maker.make_coordinate_system_section()
         sections['<GPCoordinateSystem>'] = self.section_maker.make_gp_coordinate_system_section()
         sections['<Unit>'] = self.section_maker.make_unit_section()
         sections['<GPA_List>'] = self.section_maker.make_gpa_list_section()
         sections['<GP_Offset>'] = self.section_maker.make_gp_offset_section()
+        # [movex_x + 2.6 for movex_x in self.eps_data_df["Move_X"]]
         sections['<EPA_List>'] = self.section_maker.make_epa_list_section()
         sections['<ImageEnv>'] = self.section_maker.make_image_env_section()
+        sections["MeasEnv_Exec"] = self.section_maker.make_measenv_exec_section()
+        sections["MeasEnv_MeasRes"] = self.section_maker.make_measenv_measres_section()
 
     def fill_with_eps_data(self) -> None:
         """Use template header and fill it with columns from the external EPSData dataframe"""

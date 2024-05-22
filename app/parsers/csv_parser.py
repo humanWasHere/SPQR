@@ -77,4 +77,4 @@ class HSSParser(FileParser):
             )
             for section in table_sections
         }
-        return constant_sections, table_sections
+        return (constant_sections, table_sections)

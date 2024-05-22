@@ -24,9 +24,9 @@ class JsonParser(FileParser):
         pass
 
     def parse_data(self):
-        self.json_to_dataframe()
+        return self.json_to_dataframe()
 
-    def json_to_dataframe(self) -> None:
+    def json_to_dataframe(self) -> pd.DataFrame:
         """Parse a valid HSS JSON template into two dictionaries of unique sections:
         - a dict of strings for unique values -> {'section_name': "value"},
         - a dict of dataframes for table content -> {'section_name': pd.DataFrame}."""
@@ -38,4 +38,4 @@ class JsonParser(FileParser):
                     self.table_sections[section_name] = pd.json_normalize(content)
             else:
                 self.constant_sections[section_name] = content
-        return self.constant_sections, self.table_sections
+        return (self.constant_sections, self.table_sections)

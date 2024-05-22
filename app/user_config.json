@@ -1,9 +1,9 @@
 {
     "build_env": {
-    "recipe_name": "chanelir_testcase_elodie_ODIFF3",
-    "parser": "/work/opc/all/users/chanelir/semrc-assets/testcases/testcase_elodie/ssfile_test_case_elodie_04-24.txt",
-    "layout": "/work/opc/all/users/chanelir/semrc-assets/testcases/testcase_elodie/OPCfield_ODIFF3_V3_DFLL.gds",
-    "layers": ["33", "33.31"],
+    "recipe_name": "test_test",
+    "parser": "",
+    "layout": "/prj/opc/all/users/bigarnen/P18/GDS/1808A_OPCMACRO_OPCF_FGAT.oas",
+    "layers": ["7.0"],
     "magnification": 200000,
     "mp_template": "X90M_GATE_PH",
     "step": "PH",
@@ -13,5 +13,24 @@
     "step_y": 10,
     "num_step_x": 33,
     "num_step_y": 93
-    }
+    },
+
+    "testcase_elodie": {
+        "recipe_name": "chanelir_test_ODIFF3_elodie_05-24",
+        "parser": "/work/opc/all/users/chanelir/semrc-assets/testcases/testcase_elodie/ssfile_test_case_elodie_04-24.txt",
+        "layout": "/prj/opc/all/users/se22/ODIFF/ODIFF3/gds/Frame_deliveries/Z1B_respin/OPCfield_ODIFF3_V3_DFLL.gds",
+        "layers": ["33", "33.31"],
+        "magnification": 120000,
+        "mp_template": {
+            "1D": "OPC_se22_Width_Space_Th80",
+            "2D": "OPC_se22_LE_Th80_N"
+        },
+        "step": ["PH_HR", "ET_HR"],
+        "opcfield_x": "",
+        "opcfield_y": "",
+        "step_x": "",
+        "step_y": "",
+        "num_step_x": "",
+        "num_step_y": ""
+        }
 }

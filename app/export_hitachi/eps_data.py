@@ -31,7 +31,8 @@ class DataFrameToEPSData:
         'AP1_X': "x_ap",
         'AP1_Y': "y_ap",
         'AP1_AF_X': "x_ap",
-        'AP1_AF_Y': "y_ap"
+        'AP1_AF_Y': "y_ap",
+        'MP1_Template': "mp1_template"
     }
     # meas_len = 100
 
@@ -40,7 +41,7 @@ class DataFrameToEPSData:
         self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int},
                                           errors="ignore")
         self.eps_data = pd.DataFrame()
-        assert step in {"PH", "ET"}
+        assert step in {"PH", "ET", "PH_HR", "ET_HR"}
         self.step = step
 
     def add_mp_width(self, mp_no=1, direction: Optional[str] = None, template: str = "",
@@ -99,7 +100,9 @@ class DataFrameToEPSData:
     def set_eps_data_template(self) -> None:
         # from eps_template to ep_template
         # __________EPS_Template section__________
-        self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
+        # self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
+        self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32", PH_HR="template_EP_F16_HR",
+                                            ET_HR="template_EP_F32_HR")[self.step]
 
     def set_eps_data_ap1_modification(self) -> None:
         # from type to AP1_AST_Mag
@@ -118,13 +121,13 @@ class DataFrameToEPSData:
         # EP_AF_X, EP_AF_Y
         pass
 
-    def get_eps_data(self, mp_template) -> pd.DataFrame:
+    def get_eps_data(self) -> pd.DataFrame:
         '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
         print('3. <EPS_Data> section creation')  # to log
         self.mapping_from_df()
         self.mapping_from_fix_values()
         self.set_eps_data_id()
-        self.add_mp_width(1, template=mp_template)
+        self.add_mp_width(1)
         self.set_eps_data_eps_modification()
         self.set_eps_data_template()
         self.set_eps_data_ap1_modification()
