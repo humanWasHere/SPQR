@@ -6,7 +6,7 @@ from pathlib import Path
 from .data_structure import Block
 from .export_hitachi.eps_data import DataFrameToEPSData
 from .export_hitachi.hss_creator import HssCreator
-from .interfaces.input_checker import UserInputChecker, CheckConfig
+from .interfaces.input_checker import CheckConfig
 from .interfaces.recipedirector import rpcd
 from .measure.measure import Measure
 from .parsers.parse import OPCfieldReverse
@@ -18,23 +18,30 @@ from .parsers.ssfile_parser import SSFileParser
 # TODO
 # overlap input data with GUI selection
 # export recipe to a formatted name -> ex: user_techno_maskset_layers_more
+# check if output_dir+recipe_name.(json/csv).exists -> ask user
 
 
 def manage_app_launch():
     '''reads the user command at __main__.py start, then config.json and launches the corresponding command'''
     parser = argparse.ArgumentParser(description='Manage application launch commands.')
     parser.add_argument('command', help='The command to execute (start or build).')
+    parser.add_argument('subcommand', nargs='?', help='The subcommand to execute (genepy, calibre_ruler, opcfield).')
     args = parser.parse_args()
 
     app_config_file = Path(__file__).resolve().parent / "app_config.json"
     app_config = import_json(app_config_file)
 
     command_name = args.command
+    subcommand_name = args.subcommand
     command = app_config.get('scripts', {}).get(command_name)
     if command:
-        if command_name == "start":
-            test_env_config = app_config.get('test_env_genepy', {})
-            run_recipe_creation_w_measure(test_env_config)
+        if command_name == "start" and subcommand_name:
+            if subcommand_name in ["genepy", "calibre_rulers", "opcfield"]:
+                test_env_config = app_config.get(subcommand_name, {})
+                run_recipe_creation_w_measure(test_env_config)
+            else:
+                print(f"Le sous-commande '{subcommand_name}' n'est pas définie pour la commande 'start'.")
+                sys.exit(1)
         elif command_name == "build":
             user_config_file = Path(__file__).resolve().parent / "user_config.json"
             user_config = import_json(user_config_file)
@@ -46,7 +53,7 @@ def manage_app_launch():
                 for step in build_env_config['step']:
                     copied_build_env_config = {key: value for key, value in build_env_config.items()}
                     recipe_part += 1
-                    print(f"\ncreating recipe{recipe_part} : {step} pour {copied_build_env_config['step']}")
+                    print(f"\ncreating recipe{recipe_part}/{len(build_env_config['step'])} : {step} pour {copied_build_env_config['step']}")
                     copied_build_env_config['step'] = step
                     copied_build_env_config['recipe_name'] = str(f"{build_env_config['recipe_name']}_p{recipe_part}")
                     run_recipe_creation_w_measure(copied_build_env_config)
@@ -81,33 +88,16 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False):
             # /!\ only manages genepy ssfile at the moment
             rows = (60, 70)  # (60, 70) / None
 
-    # TODO should implement ? if json_conf['ep_template']:
-    #         output_measure['EP_Template'] = json_conf['ep_template']
-
     measure_instance = Measure(parser_instance, block, json_conf['layers'], row_range=rows)
     output_measure = measure_instance.run_measure()
-    output_measure['magnification'] = json_conf['magnification']  # TODO shouldn't be here - core data ?
-    # TODO faire une logique de section
-    if isinstance(json_conf['mp_template'], str):
-        output_measure['mp1_template'] = json_conf['mp_template']
-    # elif isinstance(json_conf['mp_template'], list):
-    #     output_measure['mp1_template'] = output_measure['1D/2D'].apply(lambda x: 'OPC_se22_Width_Space_Th80' if x == '1D' else
-    #                                                                    ('OPC_se22_LE_Th80_N' if x == '2D' else ''))
-    elif isinstance(json_conf['mp_template'], dict):
-        output_measure['mp1_template'] = output_measure['1D/2D'].apply(lambda x: json_conf['mp_template']['1D'] if x == '1D' else
-                                                                       (json_conf['mp_template']['2D'] if x == '2D' else ''))
 
-    EPS_DataFrame = DataFrameToEPSData(output_measure)
+    EPS_DataFrame = DataFrameToEPSData(output_measure, json_conf)
     EPS_Data = EPS_DataFrame.get_eps_data()
-    EPS_Data['EP_Template'] = "se22_EP_Template_64F_TV4X_150K_Fast"
-    EPS_Data['EPS_Template'] = "OPC_EPS_Template"
-    EPS_Data['AP1_Template'] = "se22_AP1_Template_16FR_50K_Fast"
-    EPS_Data['AP1_Mag'] = 50000
 
-    # round number to unit ?
+    # TODO round number to unit ?
     mask_layer = int(json_conf['layers'][0].split('.')[0])
     runHssCreation = HssCreator(eps_dataframe=EPS_Data, layers=mask_layer, block=block, recipe_name=json_conf['recipe_name'],
-                                output_dir="/work/opc/all/users/chanelir/semrc/recipe_output/testcase_elodie")
+                                output_dir=json_conf['output_dir'])
     runHssCreation.write_in_file()
     if upload:
         qcg_5_k_instance = rpcd(runHssCreation.recipe_output_dir)

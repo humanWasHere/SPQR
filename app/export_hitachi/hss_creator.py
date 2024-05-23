@@ -14,11 +14,11 @@ from ..parsers.json_parser import JsonParser
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, block: Block, step = "PH",
-                 template=None, output_dir=None, recipe_name="recipe"):
+    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, block: Block, step="PH",
+                 template=None, output_dir="", recipe_name="recipe"):
         if template is None:
             self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        if output_dir is None:
+        if output_dir == "":
             output_dir = Path(__file__).resolve().parents[2] / "recipe_output"  # TODO
         self.recipe_output_dir = Path(output_dir)
         self.recipe_output_file = self.recipe_output_dir / recipe_name  # to create here?
@@ -35,6 +35,18 @@ class HssCreator:
         self.constant_sections: dict[str, pd.DataFrame] = {}
         self.table_sections: dict[str, pd.DataFrame] = {}
         self.section_maker: SectionMaker
+
+    def fill_with_eps_data(self) -> None:
+        """Use template header and fill it with columns from the external EPSData dataframe"""
+        # external_epsdata_columns.issubset(template_epsdata_columns)
+        template_eps_data_header = pd.DataFrame(columns=self.table_sections["<EPS_Data>"].columns)
+        for column_name, column_values in self.eps_data_df.items():
+            if column_name in template_eps_data_header:
+                # adding of eps_data dataframe values to the template dataframe header
+                template_eps_data_header[column_name] = column_values
+            else:
+                raise ValueError(f"{column_name} is not in the template's EPS_Data header")
+        self.table_sections["<EPS_Data>"] = template_eps_data_header
 
     def get_set_section(self) -> None:
         """Fills the different sections of the recipe except <EPS_Data> using SectionMaker"""
@@ -53,32 +65,22 @@ class HssCreator:
         sections['<Unit>'] = self.section_maker.make_unit_section()
         sections['<GPA_List>'] = self.section_maker.make_gpa_list_section()
         sections['<GP_Offset>'] = self.section_maker.make_gp_offset_section()
+        # TODO call for eps data creation here ?
         # [movex_x + 2.6 for movex_x in self.eps_data_df["Move_X"]]
         sections['<EPA_List>'] = self.section_maker.make_epa_list_section()
         sections['<ImageEnv>'] = self.section_maker.make_image_env_section()
         sections["MeasEnv_Exec"] = self.section_maker.make_measenv_exec_section()
         sections["MeasEnv_MeasRes"] = self.section_maker.make_measenv_measres_section()
 
-    def fill_with_eps_data(self) -> None:
-        """Use template header and fill it with columns from the external EPSData dataframe"""
-        # external_epsdata_columns.issubset(template_epsdata_columns)
-        template_eps_data_header = pd.DataFrame(columns=self.table_sections["<EPS_Data>"].columns)
-        for column_name, column_values in self.eps_data_df.items():
-            if column_name in template_eps_data_header:
-                # adding of eps_data dataframe values to the template dataframe header
-                template_eps_data_header[column_name] = column_values
-            else:
-                raise ValueError(f"{column_name} is not in the template's EPS_Data header")
-        self.table_sections["<EPS_Data>"] = template_eps_data_header
-
-    def fill_type_in_eps_data(self) -> None:
-        '''Defines if the Type column needs to be filled by 1s, 2s or empty values'''
-        for col in self.table_sections["<EPS_Data>"]:
-            if col == "Type1":
-                self.table_sections["<EPS_Data>"][col] = 1
-            # FIXME maintenabilité : 11 dépends du nommage et de la place de la colonne Type11 dans le template  # noqa E501
-            elif str(col).startswith("Type") and int(str(col)[4:6]) < 12:
-                self.table_sections["<EPS_Data>"][col] = 2
+    # Moved to eps_data for more relevent splitting
+    # def fill_type_in_eps_data(self) -> None:
+    #     '''Defines if the Type column needs to be filled by 1s, 2s or empty values'''
+    #     for col in self.table_sections["<EPS_Data>"]:
+    #         if col == "Type1":
+    #             self.table_sections["<EPS_Data>"][col] = 1
+    #         # FIXME maintenabilité : 11 dépends du nommage et de la place de la colonne Type11 dans le template  # noqa E501
+    #         elif str(col).startswith("Type") and int(str(col)[4:6]) < 12:
+    #             self.table_sections["<EPS_Data>"][col] = 2
 
     # def convert_coord_to_nm(self):
     #     # FIXME should keep data as float ??? -> change test to float checking (not int)
@@ -115,11 +117,13 @@ class HssCreator:
         whole_recipe = whole_recipe.rstrip('\n')
         return whole_recipe
 
+    # FIXME out of class ?
     def rename_eps_data_header(self, string_to_edit: str) -> str:
         """Convert all 'TypeN' with N a number in 'Type'"""
         new_string = re.sub(r"Type(\d+)", r"Type", string_to_edit)
         return new_string
 
+    # FIXME out of class ?
     def set_commas_afterwards(self, string_to_modify: str) -> str:
         """Get the max number of columns and write the same number of commas in the file """
         lines = [line.rstrip() for line in string_to_modify.splitlines()]
@@ -152,11 +156,11 @@ class HssCreator:
         # beware to not modify order
         json_template_instance = JsonParser(self.json_template)
         self.constant_sections, self.table_sections = json_template_instance.json_to_dataframe()
+        self.fill_with_eps_data()
         print('4. other sections creation')
         self.get_set_section()
         print('\tother sections created')
-        self.fill_with_eps_data()
-        self.fill_type_in_eps_data()
+        # self.fill_type_in_eps_data()
         # self.convert_coord_to_nm()
         whole_recipe_template = self.dataframe_to_hss()
         whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)

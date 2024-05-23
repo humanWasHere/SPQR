@@ -125,8 +125,3 @@ class RecipeModificator(HssCreator):
                 super().output_dataframe_to_json()
         # else:
         #     print("no recipe has been given")
-
-
-csv_recipe = "/work/opc/all/users/chanelir/semrc/recipe_output/test_env_genepy.csv"
-recipe_modificator_instance = RecipeModificator(csv_recipe=csv_recipe)
-recipe_modificator_instance.run_recipe_modification()
