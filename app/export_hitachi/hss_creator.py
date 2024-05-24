@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from pathlib import Path
 from ..data_structure import Block
+from .eps_data import DataFrameToEPSData
 from .section_maker import SectionMaker
 from ..parsers.json_parser import JsonParser
 
@@ -14,33 +15,40 @@ from ..parsers.json_parser import JsonParser
 
 
 class HssCreator:
-    def __init__(self, eps_dataframe: pd.DataFrame, layers: int, block: Block, step="PH",
-                 template=None, output_dir="", recipe_name="recipe"):
+    def __init__(self, core_data: pd.DataFrame, block: Block, json_conf: dict, template=None):
+        self.json_conf = json_conf
+        # FIXME add template in user_input ?
         if template is None:
             self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        if output_dir == "":
-            output_dir = Path(__file__).resolve().parents[2] / "recipe_output"  # TODO
-        self.recipe_output_dir = Path(output_dir)
-        self.recipe_output_file = self.recipe_output_dir / recipe_name  # to create here?
-        assert re.match(r'^[a-zA-Z0-9_-]{0,40}$', recipe_name), "String does not meet the requirements"
-        self.eps_data_df = eps_dataframe
+        if self.json_conf['output_dir'] == "":
+            self.recipe_output_dir = Path(__file__).resolve().parents[2] / "recipe_output"
+        else:
+            self.recipe_output_dir = Path(self.json_conf['output_dir'])
+        if self.json_conf['recipe_name'] == "":
+            self.recipe_output_file = self.recipe_output_dir / "recipe"
+        else:
+            self.recipe_output_file = self.recipe_output_dir / str(self.json_conf['recipe_name'])
+        # TODO add in core_data_validator ! in data_structure.py
+        assert re.match(r'^[a-zA-Z0-9_-]{0,40}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
+        self.core_data = core_data
+        # self.eps_data_df = pd.DataFrame()  # faire un self.eps_data_df ??? since core_data != eps_data
         self.layout = block.layout_path
         self.topcell = block.topcell
         self.precision = int(float(block.precision))
-        self.layers = layers
-        self.step = step
-        # self.json_template = import_json(template)
-        # TODO: validation?
-        # FIXME no df in constant_sections
-        self.constant_sections: dict[str, pd.DataFrame] = {}
+        # TODO round number to unit ?
+        self.layers = int(self.json_conf['layers'][0].split('.')[0])
+        self.step = self.json_conf['step']
+        self.constant_sections: dict[str] = {}
         self.table_sections: dict[str, pd.DataFrame] = {}
         self.section_maker: SectionMaker
 
     def fill_with_eps_data(self) -> None:
         """Use template header and fill it with columns from the external EPSData dataframe"""
         # external_epsdata_columns.issubset(template_epsdata_columns)
+        EPS_DataFrame = DataFrameToEPSData(self.core_data, self.json_conf)
+        EPS_Data = EPS_DataFrame.get_eps_data()
         template_eps_data_header = pd.DataFrame(columns=self.table_sections["<EPS_Data>"].columns)
-        for column_name, column_values in self.eps_data_df.items():
+        for column_name, column_values in EPS_Data.items():
             if column_name in template_eps_data_header:
                 # adding of eps_data dataframe values to the template dataframe header
                 template_eps_data_header[column_name] = column_values

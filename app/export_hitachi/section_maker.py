@@ -102,7 +102,9 @@ class SectionMaker:
             'PH_HR': 11,
             'ET_HR': 12
         }
-        self.recipe["SEMCondNo"] = step_to_value.get(step, ValueError("step is not recognized"))
+        # self.recipe["SEMCondNo"] = step_to_value.get(step, ValueError("step is not recognized"))
+        self.recipe["SEMCondNo"] = [step_to_value[step] if step in step_to_value else print('step not expected !!!')]
+        return self.recipe
 
     def make_unit_section(self) -> pd.DataFrame:
         """Set unit section by calculation or definition"""

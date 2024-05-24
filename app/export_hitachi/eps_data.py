@@ -94,14 +94,14 @@ class DataFrameToEPSData:
                                                                                  else (self.json_conf['mp_template']['2D']
                                                                                        if x == '2D' else ''))
 
-    def mapping_from_fix_values(self) -> None:
-        for csv_col, value in self.FIXED_VALUES.items():
-            self.eps_data[csv_col] = value
-
     def mapping_from_df(self) -> None:
         """Map columns from core dataframe to target HSS naming"""
         for csv_col, gauge_col in self.MAPPING.items():
-            self.eps_data[csv_col] = self.core_data[gauge_col]
+            self.eps_data[csv_col] = self.core_data[gauge_col]    
+
+    def mapping_from_fix_values(self) -> None:
+        for csv_col, value in self.FIXED_VALUES.items():
+            self.eps_data[csv_col] = value
 
     def mapping_core_data(self) -> None:
         for csv_col, value_user_input in self.MAPPING_CORE_DATA.items():
@@ -110,7 +110,7 @@ class DataFrameToEPSData:
             elif csv_col in self.FIXED_VALUES and self.json_conf[value_user_input] == "":
                 self.eps_data[csv_col] = self.FIXED_VALUES[csv_col]
             else:
-                print(f"/!\ {csv_col} is not specified in user_config.json. Make sure there is a default value for this column")
+                print(f"/!\\ {csv_col} is not specified in user_config.json. Make sure there is a default value for this column")
                 pass
 
     # method naming based on Hitachi doc
@@ -163,8 +163,9 @@ class DataFrameToEPSData:
     def get_eps_data(self) -> pd.DataFrame:
         '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
         print('3. <EPS_Data> section creation')  # to log
-        self.mapping_from_fix_values()
+        # Do not change order, EPS_ID/EPS_Name should be initialized first
         self.mapping_from_df()
+        self.mapping_from_fix_values()
         self.mapping_core_data()
         self.set_eps_data_id()
         self.add_mp_width(1)  # TODO make it dynamic ?
