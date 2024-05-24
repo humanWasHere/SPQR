@@ -2,9 +2,15 @@
 name = "semrc"
 version = "0.1.0"
 description = "A tool for automating the generation of layout-based CD-SEM recipes."
-authors = ["Romain BANGE <romain.bange@st.com>, Romain CHANELIERE <romain.chaneliere@st.com>"]
+authors = [
+    "Romain Bange <romain.bange@st.com>",
+    "Romain Chaneliere <romain.chaneliere@st.com>"
+]
 readme = "README.md"
-packages = [{include = "app"}]
+packages = [
+    {include = "app"},
+    {include = "assets"},
+]
 
 [[tool.poetry.source]]
 name = "artifactory"
@@ -17,15 +23,19 @@ cx-oracle = "^8.3.0"
 lxml = "^4.9.4"
 numpy = "^1.26.2"
 pandas = "^2.1.4"
+pandera = "^0.19.3"
 pexpect = "^4.9.0"
 python-dotenv = "^1.0.1"
 sqlalchemy = "^2.0.23"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.3.4"
-pytest = "^7.4.3"
 flake8 = "^6.1.0"
+mypy = "^1.10.0"
 pylint = "^3.0.3"
+pytest = "^7.4.3"
+pandas-stubs = "^2.2.2.240514"
+lxml-stubs = "^0.5.1"
 
 [tool.poetry.group.temp.dependencies]
 pyparsing = "^3.1.2"
@@ -68,3 +78,4 @@ ignore_errors = true
 
 [tool.mypy]
 ignore_missing_imports = true
+packages = "app"

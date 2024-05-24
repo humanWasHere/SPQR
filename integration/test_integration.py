@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 from typing import Type
 
 from app.data_structure import Block
@@ -7,6 +8,9 @@ from app.export_hitachi.hss_creator import HssCreator
 from app.interfaces import recipedirector as rcpd
 from app.measure.measure import Measure
 from app.parsers import FileParser, CalibreXMLParser, SSFileParser
+
+# TODO: internalize test sfiles
+TESTFILES = Path(__file__).resolve().parents[1] / "tests" / "testfiles"
 
 
 def run_recipe(coord_file: str, parser: Type[FileParser], layout: str, layers: list[str],
@@ -38,12 +42,26 @@ def run_recipe(coord_file: str, parser: Type[FileParser], layout: str, layers: l
 def test_genepy():
     run_recipe(
         parser=SSFileParser,
-        coord_file="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
-        layout="/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+        coord_file=TESTFILES / "ssfile_proto.txt",
+        layout=TESTFILES / "COMPLETED_TEMPLATE.gds",
         layers=["1.0"],
         rows=(60, 70),
+        mag=200_000,
+        mp_template="Width_Default",
+        # step="PH"
+    )
+    assert True  # TODO
+
+
+def test_rulers():
+    run_recipe(
+        parser=CalibreXMLParser,
+        coord_file="/work/opc/all/users/banger/X90M/GATE/rulers_product.xml",
+        layout="/work/opc/all/users/banger/X90M/GATE/466_Product_clips.oas",
+        layers=["13.0"],
+        rows=None,
         mag=200_000,
         mp_template="X90M_GATE_PH",
         # step="PH"
     )
-    assert True  # TODO
+    assert True
