@@ -27,17 +27,23 @@ class TestSectionMaker:
             "LayerNo": [0, 1],
             "DataType": [114, 114]
         })
+        recipe_df = pd.DataFrame({
+            "SEMCondNo": [2]
+        })
         dict_df = {
             "<CoordinateSystem>": default_df,
             "<GPCoordinateSystem>": default_df,
             "<Unit>": default_df,
             "<GP_Data>": gp_data_df,
-            "<GP_Offset>": default_df,
             "<GPA_List>": default_df,
+            "<GP_Offset>": default_df,
             "<EPA_List>": default_df,
             "<IDD_Cond>": idd_cond_df,
             "<IDD_Layer_Data>": idd_layer_data_df,
-            "<ImageEnv>": default_df
+            "<ImageEnv>": default_df,
+            "<Recipe>": recipe_df,
+            "<MeasEnv_Exec>": default_df,
+            "<MeasEnv_MeasRes>": default_df
         }
         return SectionMaker(dict_df)
 
@@ -107,6 +113,7 @@ class TestSectionMaker:
         pd.testing.assert_frame_equal(result_df, expected_df)
 
     def test_make_idd_layer_data_section(self, section_maker):
+        # Arrange
         mask_layer_value = 1  # Valeur fictive pour l'exemple
         expected_df = pd.DataFrame({
             "LayerNo": [0, 1],
@@ -121,3 +128,16 @@ class TestSectionMaker:
 
     # def test_make_image_env_section(self):
         # pass
+
+    def test_make_recipe_section(self, section_maker):
+        # Arrange
+        step = "PH"
+        expected_df = pd.DataFrame({
+            "SEMCondNo": [2]
+        })
+
+        # Act
+        result_df = section_maker.make_recipe_section(step)
+
+        # Assert
+        pd.testing.assert_frame_equal(result_df, expected_df)

@@ -8,6 +8,7 @@ import pytest
 
 from app.data_structure import Block
 from app.export_hitachi.hss_creator import HssCreator
+from app.parsers.json_parser import JsonParser
 
 
 # TODO make relative file path for "test_template.json"
@@ -22,6 +23,27 @@ TEST_TEMPLATE = Path(__file__).resolve().parents[1] / "testfiles" / "test_templa
 
 class TestHssCreator:
 
+    test_json_user_config = {
+        "recipe_name": "test_env_genepy",
+        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+        "parser": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
+        "layout": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+        "layers": ["1.0"],
+        "ap1_template": "",
+        "ap1_mag": 50000,
+        "ep_template": "",
+        "eps_template": "OPC_EPS_Template",
+        "magnification": 200000,
+        "mp_template": "X90M_GATE_PH",
+        "step": "PH",
+        "opcfield_x": "",
+        "opcfield_y": "",
+        "step_x": "",
+        "step_y": "",
+        "num_step_x": "",
+        "num_step_y": ""
+    }
+
     @pytest.fixture
     def block_instance(self):
         """Mock the execution of layout peek"""
@@ -31,9 +53,10 @@ class TestHssCreator:
         mock_block.precision = 1000
         return mock_block
 
+    # TODO change once EPS_Data is called in HssCreator
     @pytest.fixture
     def hss_instance(self, block_instance):
-        return HssCreator(pd.DataFrame(), layers=1, block=block_instance, template=TEST_TEMPLATE)
+        return HssCreator(core_data=pd.DataFrame(), block=block_instance, json_conf=self.test_json_user_config)
 
     # @pytest.fixture
     # def test_file_hss_creator(tmp_path, filename, content):
@@ -41,238 +64,12 @@ class TestHssCreator:
     #     tmp_file.write_text(content)
     #     return tmp_file
 
-    def test_import_json(self, hss_instance):
-        '''checks that the template is correclty imported in memory'''
-        # Arrange
-        # TODO shorter version
-        expected_output = {
-            "<FileID>": "LIDP00",
-            "<Version>": 6,
-            "<Revision>": 0,
-            "<CoordinateSystem>": {
-                "Type": 1,
-                "ACD_Type": 1
-            },
-            "<GPCoordinateSystem>": {
-                "Type": 1
-            },
-            "<Unit>": {
-                "Coordinate": 1,
-                "MP_Box": 1
-            },
-            "<GP_Data>": {
-                "GP_ID": [1, 2],
-                "Type": [1, 1],
-                "GP_X": [0, 0],
-                "GP_Y": [0, 0],
-                "GP_Template": ["chef_OM_default", "chef_SEM_default"],
-                "GP_Mag": [210, 12000],
-                "GP_Rot": [None, 0]
-            },
-            "<EPS_Data>": {
-                "EPS_ID": 1,
-                "Type1": 1,
-                "Move_X": -300000000,
-                "Move_Y": -300000000,
-                "Mode": 1,
-                "EPS_Name": "chaine",
-                "Ref_EPS_ID": 1,
-                "EPS_Template": "chaine",
-                "AP1_Template": "chaine",
-                "AP2_Template": "chaine",
-                "EP_Template": "chaine",
-                "Type2": 2,
-                "AP1_X": -300000000,
-                "AP1_Y": -300000000,
-                "AP1_Mag": 1000,
-                "AP1_Rot": 0,
-                "Type3": 2,
-                "AP1_AF_X": -300000000,
-                "AP1_AF_Y": -300000000,
-                "AP1_AF_Mag": 0,
-                "Type4": 2,
-                "AP1_AST_X": -300000000,
-                "AP1_AST_Y": -300000000,
-                "AP1_AST_Mag": 0,
-                "Type5": 2,
-                "AP2_X": -300000000,
-                "AP2_Y": -300000000,
-                "AP2_Mag": 1000,
-                "AP2_Rot": 0,
-                "Type6": 2,
-                "AP2_AF_X": -300000000,
-                "AP2_AF_Y": -300000000,
-                "AP2_AF_Mag": 0,
-                "Type7": 2,
-                "AP2_AST_X": -300000000,
-                "AP2_AST_Y": -300000000,
-                "AP2_AST_Mag": 0,
-                "EP_Mag_X": 1000,
-                "EP_Mag_Y": 1000,
-                "EP_Rot": [0.0, 0.0],
-                "Type8": 2,
-                "EP_AF_X": -10000,
-                "EP_AF_Y": -10000,
-                "EP_AF_Mag": 0,
-                "Type9": 2,
-                "EP_AST_X": -10000,
-                "EP_AST_Y": -10000,
-                "EP_AST_Mag": 0,
-                "Type10": 2,
-                "EP_ABCC_X": -10000,
-                "EP_ABCC_Y": -10000,
-                "Type11": 2,
-                "MP1_X": -300000000,
-                "MP1_Y": -300000000,
-                "MP1_Template": "chaine",
-                "MP1_PNo": 1,
-                "MP1_DNo1": 0,
-                "MP1_DNo2": 0,
-                "MP1_Name": "chaine",
-                "MP1_TargetCD": -200000,
-                "MP1_PosOffset": -200000,
-                "MP1_SA_In": 0,
-                "MP1_SA_Out": 0,
-                "MP1_MeaLeng": 1,
-                "MP1_Direction": 1,
-                "Type12": "",
-                "MP2_X": "",
-                "MP2_Y": "",
-                "MP2_Template": "",
-                "MP2_PNo": "",
-                "MP2_DNo1": "",
-                "MP2_DNo2": "",
-                "MP2_Name": "",
-                "MP2_TargetCD": "",
-                "MP2_PosOffset": "",
-                "MP2_SA_In": "",
-                "MP2_SA_Out": "",
-                "MP2_MeaLeng": "",
-                "MP2_Direction": "",
-                "Type13": "",
-                "MP3_X": "",
-                "MP3_Y": "",
-                "MP3_Template": "",
-                "MP3_PNo": "",
-                "MP3_DNo1": "",
-                "MP3_DNo2": "",
-                "MP3_Name": "",
-                "MP3_TargetCD": "",
-                "MP3_PosOffset": "",
-                "MP3_SA_In": "",
-                "MP3_SA_Out": "",
-                "MP3_MeaLeng": "",
-                "MP3_Direction": "",
-                "Type14": "",
-                "MP4_X": "",
-                "MP4_Y": "",
-                "MP4_Template": "",
-                "MP4_PNo": "",
-                "MP4_DNo1": "",
-                "MP4_DNo2": "",
-                "MP4_Name": "",
-                "MP4_TargetCD": "",
-                "MP4_PosOffset": "",
-                "MP4_SA_In": "",
-                "MP4_SA_Out": "",
-                "MP4_MeaLeng": "",
-                "MP4_Direction": ""
-            },
-            "<GPA_List>": {
-                'Chip_X': [2, 8, 8, 2, 5, 5],
-                'Chip_Y': [4, 4, 4, 4, 6, 2],
-                'GPA_No': [1, 2, 3, 4, 5, 6],
-                'GP_ID': [1, 1, 2, 2, 2, 2]
-            },
-            "<GP_Offset>": {
-                "Offset_X": 0,
-                "Offset_Y": 0
-            },
-            "<EPA_List>": {
-                "EPA_No": 1,
-                "Chip_X": 6,
-                "Chip_Y": 4,
-                "EPS_ID": 1,
-                "Move_Mode": 1
-            },
-            "<IDD_Cond>": {
-                "DesignData": "",
-                "CellName": "",
-                "DCRot": 0,
-                "DCOffsetX": 0,
-                "DCOffsetY": 0,
-                "Tone": 0
-            },
-            "<IDD_Layer_Data>": {
-                "LayerNo": [0, 13, 13, 13, 13],
-                "DataType": [114, 4, 31, 100, 0],
-                "Type": [0, 0, 0, 2, 2],
-                "Level": [None, None, None, None, None],
-                "DUMMY": [None, None, None, None, None],
-                "Tone": [0, 0, 0, 0, 0],
-                "ColorNo": [4, 4, 4, 13, 4],
-                "FillNo": [8, 2, 8, 1, 1],
-                "LayerName": ["TARGET", "DUMMIES", "NOOPC", "SRAF", "OPC"]
-            },
-            "<ImageEnv>": {
-                "Type": [0, 1, 2],
-                "Size": [0, 0, 0],
-                "CompressSW": [0, 0, 0],
-                "Quality": [32, 32, 32],
-                "MeasCur": [0, 0, 0],
-                "CrossCur": [1, 0, 0],
-                "AreaCur": [0, 0, 0],
-                "DDS": [0, 0, 0],
-                "MeasVal": [0, 0, 0],
-                "LinePro": [0, 0, 0],
-                "umMark": [0, 0, 0]
-            }
-        }
-
-        # TODO parametrize different JSON inputs / check exceptions?
-        # hss_creator = HssCreator(pd.DataFrame(), layers=1, block_instance, template=)
-
-        # Act
-        actual_json_output = hss_instance.json_template
-        # is_file_json = json.loads(actual_json_output)
-
-        # Assert
-        assert actual_json_output == expected_output
-        # assert is_file_json == (dict, list)
-
-    def test_json_to_dataframe(self, hss_instance):
-        '''tests that the template is correctly generated in several dataframes'''
-        # Arrange
-        # hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
-
-        # Act
-        # FIXME dependency
-        hss_instance.json_to_dataframe()
-
-        # Assert
-        # Assert first_level_df
-        expected_first_level_df = {
-            "<FileID>": "LIDP00",
-            "<Version>": 6,
-            "<Revision>": 0
-        }
-        expected_coordinate_system = pd.DataFrame({"Type": [1], "ACD_Type": [1]})
-        assert hss_instance.constant_sections == expected_first_level_df
-
-        # Assert that all sections have been set as pd.DataFrame
-        for section in hss_instance.table_sections.values():
-            assert isinstance(section, pd.DataFrame)
-        # Assert <CoordinateSystem>
-        pd.testing.assert_frame_equal(
-            hss_instance.table_sections["<CoordinateSystem>"], expected_coordinate_system)
-
     def test_get_set_section(self, hss_instance):
         """Tests the calls to SectionMaker. SectionMaker is tested separately"""
         # Arrange
 
         # Act
-        # FIXME dependency
-        hss_instance.json_to_dataframe()
+        hss_instance.load_sections()
         hss_instance.get_set_section()
 
         # Assert
@@ -284,8 +81,6 @@ class TestHssCreator:
         '''tests that dataframe_to_eps_data.py to check if it returns a dataframes'''
         # TODO test très impertinent -> il check l'init de la fonction
         # Act
-        # FIXME dependency
-        hss_instance.json_to_dataframe()
         hss_instance.fill_with_eps_data()
 
         # Assert
@@ -293,30 +88,15 @@ class TestHssCreator:
         # EPS_Data is already test covered in its own
         assert isinstance(hss_instance.table_sections["<EPS_Data>"], pd.DataFrame)
 
-    def test_fill_type_in_eps_data(self, hss_instance):
-        '''checks for types sections (correct number)'''
-        # Act
-        # FIXME dependency
-        hss_instance.json_to_dataframe()
-        hss_instance.fill_type_in_eps_data()
-
-        # Assert
-        # integrates all 4 MPs -> if all 4 MPs, there is 14 types
-        for i in range(1, 14):
-            assert f"Type{i}" in hss_instance.table_sections['<EPS_Data>']
-
     # def test_convert_to_nm(self, block_instance):
     #     # TODO
     #     # Arrange
     #     hss_creator = HssCreator(
-    #         pd.DataFrame({'Move_X': [10000, 10000, 10000], 'Move_Y': [90000, 90000, 90000]}),
-    #         layers=1, block=block_instance)
+    #         pd.DataFrame({'Move_X': [10000, 10000, 10000], 'Move_Y': [90000, 90000, 90000]}),, block=block_instance)
     #     expected_x_in_nm = pd.Series([10000, 10000, 10000], name='Move_X')
     #     expected_y_in_nm = pd.Series([90000, 90000, 90000], name='Move_Y')
 
     #     # Act
-    #     # FIXME dependency
-    #     hss_creator.json_to_dataframe()
     #     hss_creator.fill_with_eps_data()
     #     hss_creator.convert_coord_to_nm()
 
@@ -345,16 +125,32 @@ class TestHssCreator:
         expected_df_Image_Env_str = """<ImageEnv>\n#Type,Size,CompressSW,Quality,MeasCur,CrossCur,AreaCur,DDS,MeasVal,LinePro,umMark\n0,0,0,32,0,1,0,0,0,0,0\n1,0,0,32,0,0,0,0,0,0,0\n2,0,0,32,0,0,0,0,0,0,0"""
 
         # Act
+        # FIXME why ?
+        # del hss_instance.table_sections['<GPA_List>']
+        # del hss_instance.table_sections['<GP_Data>']
         # FIXME dependency
-        hss_instance.json_to_dataframe()
-        del hss_instance.table_sections['<GPA_List>']
-        del hss_instance.table_sections['<GP_Data>']
+        json_template_instance = JsonParser(TEST_TEMPLATE)
+        hss_instance.constant_sections, hss_instance.table_sections = json_template_instance.json_to_dataframe()
         hss_str = hss_instance.dataframe_to_hss()
+        print(hss_str)
 
         # Assert
         assert isinstance(hss_str, str)
+        # TODO assert line per line
+        # print("AAAAAAAAAAAAAAAAAAH")
+        # print(expected_df_first_level_str)
+        # print(expected_df_C_S_str)
+        # print(expected_df_GP_C_S_str)
+        # print(expected_df_Unit_str)
+        # print(expected_df_EPS_Data_str)
+        # print(expected_df_GP_Offset_str)
+        # print(expected_df_EPA_List_str)
+        # print(expected_df_IDD_Cond_str)
+        # print(expected_df_IID_Layer_Data_str)
+        # print(expected_df_Image_Env_str)
         assert hss_str == expected_df_first_level_str + expected_df_C_S_str + expected_df_GP_C_S_str + expected_df_Unit_str \
-             + expected_df_EPS_Data_str + expected_df_GP_Offset_str + expected_df_EPA_List_str + expected_df_IDD_Cond_str + expected_df_IID_Layer_Data_str + expected_df_Image_Env_str
+               + expected_df_EPS_Data_str + expected_df_GP_Offset_str + expected_df_EPA_List_str + expected_df_IDD_Cond_str \
+               + expected_df_IID_Layer_Data_str + expected_df_Image_Env_str
 
     def test_rename_eps_data_header(self, hss_instance):
         '''checks that the method renames "TypeN" column name in "Type"'''
@@ -373,7 +169,6 @@ class TestHssCreator:
         '''checks that the method adds the correct number of commas at the end of each line'''
         # TODO check if it corresponds to correct commas number
         # Arrange
-        hss_instance.json_to_dataframe()
         string_to_modify_1 = (
             "<GP_Data>\n"
             "GP_ID,Type,GP_X,GP_Y,GP_Template,GP_Mag,GP_Rot\n"
@@ -389,13 +184,13 @@ class TestHssCreator:
         # Assert
         assert modified_string_1 == expected_modified_string_1
 
-    def test_output_dataframe_to_json(self, block_instance):
+    def test_output_dataframe_to_json(self, hss_instance):
         # TODO change dataframe
         # Arrange
-        hss_creator = HssCreator(pd.DataFrame(), layers=1, block=block_instance,
-                                 output_dir="/work/opc/all/users/chanelir/semrc/tests/test_output")
-        hss_creator.constant_sections = {'<FileID>': 'LIDP00', '<Version>': 6, '<Revision>': 0}
-        hss_creator.table_sections = {
+        # hss_creator = HssCreator(pd.DataFrame(), block=block_instance,)
+
+        hss_instance.constant_sections = {'<FileID>': 'LIDP00', '<Version>': 6, '<Revision>': 0}
+        hss_instance.table_sections = {
             '<CoordinateSystem>': pd.DataFrame([{'Type': 1, 'ACD_Type': 1}]),
             '<Unit>': pd.DataFrame([{'Coordinate': 1, 'MP_Box': 1}])
         }
@@ -414,12 +209,12 @@ class TestHssCreator:
         expected_json_str = json.dumps(expected_json_content, indent=4)
 
         # Act
-        hss_creator.output_dataframe_to_json()
-        with open(str(hss_creator.recipe_output_file) + ".json", 'r') as json_file:
+        hss_instance.output_dataframe_to_json()
+        with open(str(hss_instance.recipe_output_file) + ".json", 'r') as json_file:
             content = json_file.read()
 
         # Assert
-        assert os.path.exists(str(hss_creator.recipe_output_file) + ".json")
+        assert os.path.exists(str(hss_instance.recipe_output_file) + ".json")
         assert content == expected_json_str
 
     def test_write_in_file(self, block_instance):
@@ -439,9 +234,7 @@ class TestHssCreator:
             'EPS_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
             })
 
-        hss_creator = HssCreator(example_test_df_genepy_gauge, layers=1, block=block_instance,
-                                 output_dir=test_tmp_path, recipe_name=recipe_name)
-        # hss_creator.json_to_dataframe()  # debug
+        hss_creator = HssCreator(example_test_df_genepy_gauge, block=block_instance, json_conf=self.test_json_user_config)
         # hss_creator.get_set_section()  # debug
         # Act
         hss_creator.write_in_file()

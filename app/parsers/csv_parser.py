@@ -1,5 +1,8 @@
 import re
+from io import StringIO
+
 import pandas as pd
+
 from .parse import FileParser
 
 
@@ -36,9 +39,42 @@ class TACRulerParser(FileParser):
 
 
 class HSSParser(FileParser):
-    '''should parse existing recipe'''
+    '''parse existing hss recipe'''
+
+    def __init__(self, csv_recipe_path) -> None:
+        self.csv_recipe = csv_recipe_path
 
     unit = None
 
-    def parse_data(self):
-        pass
+    def parse_data(self) -> pd.DataFrame:
+        return self.parse_hss()
+
+    def parse_hss(self) -> dict:
+        """Parse HSS file. Do not handle exceptions yet"""
+        # TODO check 'Type' columns before parsing ?
+        # TODO data -> convert int to int or float to float when possible -> first level
+        file_content = ""
+        with open(self.csv_recipe, "r") as f:
+            file_content = f.read()
+        hss_sections: list[tuple[str, str]] = re.findall(r"(<\w+>),*([^<]*)", file_content)
+        # sections = dict(hss_sections)
+        constant_sections = {name: content.replace(',', '').replace('\n', '')
+                             for name, content in hss_sections
+                             if not content.strip().startswith('#')}
+        table_sections = {name: pd.read_csv(StringIO(content))
+                          for name, content in hss_sections
+                          if content.strip().startswith('#')}
+        # renaming '#', 'Type' and drop nan columns
+        table_sections = {section: table_sections[section].rename(columns=lambda x: x.replace('#', ''))for section in table_sections}
+        # TODO change for whole file ?
+        table_sections['<EPS_Data>'].columns = [re.sub(r"Type\.(\d+)", r"Type\1", str(column)) for column in table_sections['<EPS_Data>'].columns]
+        table_sections = {
+            section: table_sections[section].drop(
+                columns=table_sections[section].columns[
+                    table_sections[section].columns.str.contains('Unnamed', case=False)
+                ],
+                axis=1
+            )
+            for section in table_sections
+        }
+        return (constant_sections, table_sections)

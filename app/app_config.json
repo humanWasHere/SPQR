@@ -1,0 +1,75 @@
+{
+    "name": "SEMRC",
+    "version": "0.1.0",
+    "scripts": {
+        "start": "python -m app",
+        "build": "python -m app",
+        "test": "pytest tests/",
+        "lint": "flake8 .",
+        "coverage": "run coverage",
+        "doc": "make apidoc; make html"
+    },
+
+    "genepy": {
+        "recipe_name": "test_env_genepy",
+        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+        "parser": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
+        "layout": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+        "layers": ["1.0"],
+        "ap1_template": "",
+        "ap1_mag": "",
+        "ep_template": "",
+        "eps_template": "",
+        "magnification": 200000,
+        "mp_template": "X90M_GATE_PH",
+        "step": "PH",
+        "opcfield_x": "",
+        "opcfield_y": "",
+        "step_x": "",
+        "step_y": "",
+        "num_step_x": "",
+        "num_step_y": ""
+    },
+
+    "calibre_rulers": {
+        "recipe_name": "test_env_calibre_rulers",
+        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+        "parser": "/work/opc/all/users/banger/dev/semchef/examples/calibre_rulers.xml",
+        "layout": "",
+        "layers": [""],
+        "ap1_template": "",
+        "ap1_mag": "",
+        "ep_template": "",
+        "eps_template": "",
+        "magnification": 200000,
+        "mp_template": "X90M_GATE_PH",
+        "step": "PH",
+        "opcfield_x": "",
+        "opcfield_y": "",
+        "step_x": "",
+        "step_y": "",
+        "num_step_x": "",
+        "num_step_y": ""
+    },
+
+    "opcfield": {
+        "recipe_name": "test_env_OPCField",
+        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+        "parser": "",
+        "layout": "",
+        "layers": [""],
+        "ap1_template": "",
+        "ap1_mag": "",
+        "ep_template": "",
+        "eps_template": "",
+        "magnification": 200000,
+        "mp_template": "X90M_GATE_PH",
+        "step": "",
+        "opcfield_x": "",
+        "opcfield_y": "",
+        "step_x": "",
+        "step_y": "",
+        "num_step_x": "",
+        "num_step_y": ""
+    }
+}

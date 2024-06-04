@@ -11,13 +11,32 @@ class TestEpsData:
         data_instance = pd.DataFrame({'name': ['gauge1', 'gauge2', 'gauge3'],
                                       'x': [10, 20, 30],
                                       'y': [100, 200, 300],
-                                      'magnification': [200000, 200000, 200000],
                                       'x_ap': [10, 20, 30],
                                       'y_ap': [30, 20, 10],
                                       'x_dim': [3000, 3000, 3000],
                                       'y_dim': [3000, 3000, 3000],
                                       'orientation': ['Y', 'Y', 'Y']})
-        test_ex_gauge_df = DataFrameToEPSData(data_instance, "PH")
+        test_json_user_config = {
+            "recipe_name": "test_env_genepy",
+            "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+            "parser": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
+            "layout": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+            "layers": ["1.0"],
+            "ap1_template": "",
+            "ap1_mag": 50000,
+            "ep_template": "",
+            "eps_template": "OPC_EPS_Template",
+            "magnification": 200000,
+            "mp_template": "X90M_GATE_PH",
+            "step": "PH",
+            "opcfield_x": "",
+            "opcfield_y": "",
+            "step_x": "",
+            "step_y": "",
+            "num_step_x": "",
+            "num_step_y": ""
+        }
+        test_ex_gauge_df = DataFrameToEPSData(core_data=data_instance, user_config_info=test_json_user_config)
         return test_ex_gauge_df
 
     def test_add_mp_width(self, df_to_eps_data_instance):
@@ -41,7 +60,7 @@ class TestEpsData:
                                       })
 
         # Act
-        df_to_eps_data_instance.add_mp_width(template="X90M_GATE_PH")
+        df_to_eps_data_instance.add_mp_width()
 
         # Assert
         pd.testing.assert_frame_equal(df_to_eps_data_instance.eps_data, expected_data)
@@ -52,8 +71,6 @@ class TestEpsData:
         expected_data = pd.DataFrame({'EPS_Name': ['gauge1', 'gauge2', 'gauge3'],
                                       'Move_X': [10, 20, 30],
                                       'Move_Y': [100, 200, 300],
-                                      'EP_Mag_X': [200000, 200000, 200000],
-                                      'EP_AF_Mag': [200000, 200000, 200000],
                                       'AP1_X': [10, 20, 30],
                                       'AP1_Y': [30, 20, 10],
                                       'AP1_AF_X': [10, 20, 30],
@@ -61,6 +78,23 @@ class TestEpsData:
 
         # Act
         df_to_eps_data_instance.mapping_from_df()
+
+        # Assert
+        pd.testing.assert_frame_equal(
+            df_to_eps_data_instance.eps_data, expected_data)
+
+    def test_mapping_core_data(self, df_to_eps_data_instance):
+        # Arrange
+        df_to_eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # indexes the df
+        expected_data = pd.DataFrame({'EPS_ID': [1, 2, 3],
+                                      'EPS_Template': ["OPC_EPS_Template", "OPC_EPS_Template", "OPC_EPS_Template"],
+                                      'AP1_Mag': [50000, 50000, 50000],
+                                      'EP_Mag_X': [200000, 200000, 200000],
+                                      'EP_AF_Mag': [200000, 200000, 200000],
+                                      })
+
+        # Act
+        df_to_eps_data_instance.mapping_core_data()
 
         # Assert
         pd.testing.assert_frame_equal(
@@ -142,6 +176,18 @@ class TestEpsData:
         pd.testing.assert_frame_equal(
             df_to_eps_data_instance.eps_data, expected_eps_data_df)
 
+    # TODO
+    # retrived from test_hss_creator.py
+    # def test_fill_type_in_eps_data(self, hss_instance):
+    #     '''checks for types sections (correct number)'''
+    #     # Act
+    #     hss_instance.fill_type_in_eps_data()
+
+    #     # Assert
+    #     # integrates all 4 MPs -> if all 4 MPs, there is 14 types
+    #     for i in range(1, 14):
+    #         assert f"Type{i}" in hss_instance.table_sections['<EPS_Data>']
+
     def test_get_eps_data(self, df_to_eps_data_instance):
         '''checks wether whole eps_data data setting works as expected'''
         # Arrange
@@ -150,23 +196,23 @@ class TestEpsData:
         expected_data_df = pd.DataFrame({'EPS_Name': ['gauge1', 'gauge2', 'gauge3'],
                                          'Move_X': [10, 20, 30],
                                          'Move_Y': [100, 200, 300],
-                                         'EP_Mag_X': [200000, 200000, 200000],
-                                         'EP_AF_Mag': [200000, 200000, 200000],
                                          'AP1_X': [10, 20, 30],
                                          'AP1_Y': [30, 20, 10],
                                          'AP1_AF_X': [10, 20, 30],
                                          'AP1_AF_Y': [30, 20, 10],
                                          'Mode': [1, 1, 1],
-                                         'EPS_Template': ["EPS_Default", "EPS_Default", "EPS_Default"],
+                                         'EPS_Template': ["OPC_EPS_Template", "OPC_EPS_Template", "OPC_EPS_Template"],
                                          'AP2_Template': ["OPC_AP2_Off", "OPC_AP2_Off", "OPC_AP2_Off"],
                                          'Type1': [1, 1, 1],
                                          'Type2': [2, 2, 2],
                                          'Type3': [2, 2, 2],
-                                         'AP1_Mag': [45000, 45000, 45000],
+                                         'AP1_Mag': [50000, 50000, 50000],
                                          'AP1_AF_Mag': [45000, 45000, 45000],
                                          'AP1_Rot': [0, 0, 0],
                                          'MP1_X': [0, 0, 0],
                                          'MP1_Y': [0, 0, 0],
+                                         'EP_Mag_X': [200000, 200000, 200000],
+                                         'EP_AF_Mag': [200000, 200000, 200000],
                                          'EPS_ID': [1, 2, 3],
                                          'MP1_TargetCD': [3000, 3000, 3000],
                                          'MP1_Direction': ['Y', 'Y', 'Y'],
@@ -182,7 +228,9 @@ class TestEpsData:
         # TODO add MPs ?
 
         # Act
-        result = df_to_eps_data_instance.get_eps_data("X90M_GATE_PH")
+        result = df_to_eps_data_instance.get_eps_data()
+        print(result.columns)
+        print(expected_data_df.columns)
 
         # Assert
         assert isinstance(result, pd.DataFrame)

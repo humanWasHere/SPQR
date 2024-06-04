@@ -1,0 +1,46 @@
+{
+    "P18_FGAT": {
+    "recipe_name": "1808A_FGAT_PH",
+    "output_dir": "",
+    "parser": "",
+    "layout": "/prj/opc/all/users/bigarnen/P18/GDS/1808A_OPCMACRO_OPCF_FGAT.oas",
+    "layers": ["7.0"],
+    "ap1_template": "",
+    "ap1_mag": "",
+    "ep_template": "",
+    "eps_template": "OPC_EPS_Template",
+    "magnification": 200000,
+    "mp_template": "X90M_GATE_PH",
+    "step": "PH",
+    "opcfield_x": 12888.5,
+    "opcfield_y": 16507.5,
+    "step_x": 10,
+    "step_y": 10,
+    "num_step_x": 33,
+    "num_step_y": 93
+    },
+
+    "testcase_elodie": {
+        "recipe_name": "chanelir_test_ODIFF3_elodie_05-24",
+        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/build_env/testcase_elodie",
+        "parser": "/work/opc/all/users/chanelir/semrc-assets/testcases/testcase_elodie/ssfile_test_case_elodie_04-24.txt",
+        "layout": "/prj/opc/all/users/se22/ODIFF/ODIFF3/gds/Frame_deliveries/Z1B_respin/OPCfield_ODIFF3_V3_DFLL.gds",
+        "layers": ["33", "33.31"],
+        "ap1_template": "se22_AP1_Template_16FR_50K_Fast",
+        "ap1_mag": 50000,
+        "ep_template": "se22_EP_Template_64F_TV4X_150K_Fast",
+        "eps_template": "OPC_EPS_Template",
+        "magnification": 120000,
+        "mp_template": {
+            "1D": "OPC_se22_Width_Space_Th80",
+            "2D": "OPC_se22_LE_Th80_N"
+        },
+        "step": ["PH_HR", "ET_HR"],
+        "opcfield_x": "",
+        "opcfield_y": "",
+        "step_x": "",
+        "step_y": "",
+        "num_step_x": "",
+        "num_step_y": ""
+        }
+}

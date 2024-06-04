@@ -20,6 +20,9 @@ class SectionMaker:
         self.idd_cond = df_dict["<IDD_Cond>"]
         self.idd_layer_data = df_dict["<IDD_Layer_Data>"]
         self.image_env = df_dict["<ImageEnv>"]
+        self.recipe = df_dict["<Recipe>"]
+        self.measenv_exec = df_dict["<MeasEnv_Exec>"]
+        self.measenv_measres = df_dict["<MeasEnv_MeasRes>"]
 
     # By default, each section returns the default value from the JSON template
     def make_coordinate_system_section(self) -> pd.DataFrame:
@@ -84,6 +87,24 @@ class SectionMaker:
 
     def make_image_env_section(self) -> pd.DataFrame:
         return self.image_env
+
+    def make_measenv_exec_section(self):
+        return self.measenv_exec
+
+    def make_measenv_measres_section(self):
+        return self.measenv_measres
+
+    def make_recipe_section(self, step) -> pd.DataFrame:
+        #  __________SEMCondNo__________
+        step_to_value = {
+            'PH': 2,
+            'ET': 1,
+            'PH_HR': 11,
+            'ET_HR': 12
+        }
+        # self.recipe["SEMCondNo"] = step_to_value.get(step, ValueError("step is not recognized"))
+        self.recipe["SEMCondNo"] = [step_to_value[step] if step in step_to_value else print('step not expected !!!')]
+        return self.recipe
 
     def make_unit_section(self) -> pd.DataFrame:
         """Set unit section by calculation or definition"""
