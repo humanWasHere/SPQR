@@ -41,6 +41,7 @@ def manage_app_launch():
             else:
                 print(f"Le sous-commande '{subcommand_name}' n'est pas définie pour la commande 'start'.")
                 sys.exit(1)
+        # for prod env : should be cd /dist run semrc.exe
         elif command_name == "build":
             user_config_file = Path(__file__).resolve().parent / "user_config.json"
             user_config = import_json(user_config_file)
@@ -74,7 +75,7 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False):
         parser_instance = OPCfieldReverse(json_conf['opcfield_x'], json_conf['opcfield_y'], json_conf['step_x'],
                                           json_conf['step_y'], json_conf['num_step_x'],
                                           json_conf['num_step_y'])
-        rows = None  # (0, 100)
+        rows = (0, 100)  # None
     else:
         try:
             parser_instance = CalibreXMLParser(json_conf['parser'])

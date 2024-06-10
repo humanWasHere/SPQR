@@ -32,29 +32,28 @@ class HssCreator:
             self.recipe_output_file = self.recipe_output_dir / str(self.json_conf['recipe_name'])
         # TODO add in core_data_validator ! in data_structure.py
         assert re.match(r'^[a-zA-Z0-9_-]{0,37}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
-        self.core_data = core_data
-        # self.eps_data_df = pd.DataFrame()  # faire un self.eps_data_df ??? since core_data != eps_data
+        self.eps_data = DataFrameToEPSData(core_data, self.json_conf).get_eps_data()
+        print(self.eps_data.head())
         self.layout = block.layout_path
         self.topcell = block.topcell
         self.precision = int(float(block.precision))
-        # TODO round number to unit ?
+        # TODO round number to unit ?self.core_data
         self.main_layer = int(self.json_conf['layers'][0].split('.')[0])
         self.step = self.json_conf['step']
         self.constant_sections: dict[str, str] = {}
         self.table_sections: dict[str, pd.DataFrame] = {}
+        self.constant_sections, self.table_sections = JsonParser(self.json_template).json_to_dataframe()
         self.section_maker: SectionMaker
 
-    def load_sections(self):
-        json_template_instance = JsonParser(self.json_template)
-        self.constant_sections, self.table_sections = json_template_instance.json_to_dataframe()
+    # def load_sections(self):
+    #     json_template_instance = JsonParser(self.json_template)
+    #     self.constant_sections, self.table_sections = json_template_instance.json_to_dataframe()
 
     def fill_with_eps_data(self) -> None:
         """Use template header and fill it with columns from the external EPSData dataframe"""
         # external_epsdata_columns.issubset(template_epsdata_columns)
-        EPS_DataFrame = DataFrameToEPSData(self.core_data, self.json_conf)
-        EPS_Data = EPS_DataFrame.get_eps_data()
         template_eps_data_header = pd.DataFrame(columns=self.table_sections["<EPS_Data>"].columns)
-        for column_name, column_values in EPS_Data.items():
+        for column_name, column_values in self.eps_data.items():
             if column_name in template_eps_data_header:
                 # adding of eps_data dataframe values to the template dataframe header
                 template_eps_data_header[column_name] = column_values
@@ -159,7 +158,7 @@ class HssCreator:
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
-        self.load_sections()
+        # self.load_sections()
         self.fill_with_eps_data()
         print('4. other sections creation')
         self.get_set_section()
