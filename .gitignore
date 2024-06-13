@@ -4,6 +4,7 @@ recipe_output/
 
 # Build
 dist/
+setup.py
 
 # Compiled / IDE
 __pycache__/

@@ -33,7 +33,6 @@ class HssCreator:
         # TODO add in core_data_validator ! in data_structure.py
         assert re.match(r'^[a-zA-Z0-9_-]{0,37}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
         self.eps_data = DataFrameToEPSData(core_data, self.json_conf).get_eps_data()
-        print(self.eps_data.head())
         self.layout = block.layout_path
         self.topcell = block.topcell
         self.precision = int(float(block.precision))
@@ -172,3 +171,4 @@ class HssCreator:
         self.recipe_output_file.with_suffix(".csv").write_text(whole_recipe_to_output)
         if self.recipe_output_file.with_suffix(".csv").exists():  # TODO better check + log
             print(f"\tcsv recipe created ! Find it at {self.recipe_output_file}.csv")
+        return f"{self.recipe_output_file}.csv"

@@ -17,9 +17,9 @@ except socket.gaierror:
     DG_HOST = "10.18.125.204"
 DG_TEMLATES = f"upguest@{DG_HOST}:/Designgauge/Template/"  # Templates
 # f"upguest@{DG_HOST}:/Designgauge/Template/AMP/"  # MP templates
-DG_CSVUP = f"upguest@{DG_HOST}:/DGTransferData/DGUpload/"  # upload CSV
+RCPD_UPGUEST = f"upguest@{DG_HOST}:/DGTransferData/DGUpload/"  # upload CSV
 DG_CSVDOWN = f"downguest@{DG_HOST}:/DGTransferData/DGDownload/"  # download CSV
-DG_DESIGNDATA = f"ddguest@{DG_HOST}:/design_data/data/"  # upload GDS
+RCPD_DDGUEST = f"ddguest@{DG_HOST}:/design_data/data/"  # upload GDS
 DG_RECIPE = "/Designgauge/DGData/{techno}/Library/{maskset}/{recipe}"\
     .format(techno="OPC_C028", maskset="2822A", recipe="SJ71_NOSO_2822A_scanmatch_9fields")
 # design_data = lxml.etree.parse(f{DG_RECIPE}/IDD.xml").find("IDD/DesignDataName").text
@@ -29,12 +29,12 @@ DG_RECIPE = "/Designgauge/DGData/{techno}/Library/{maskset}/{recipe}"\
 
 # TODO change to dotenv ?
 def get_pw(dest):
-    import json
-    login = dest.split('@')[0]
-    # load_dotenv()
-    # secrets = os.getenv(dest)
-    secrets = json.loads((Path.home()/".secrets.json").read_text())
-    return secrets[login]
+    # import json
+    # login = dest.split('@')[0]
+    load_dotenv()
+    return os.getenv(dest)
+    # secrets = json.loads((Path.home()/".secrets.json").read_text())
+    # return secrets[login]
 
 
 def dg_transfer(source, destination, password=None):
@@ -56,12 +56,12 @@ def dg_transfer(source, destination, password=None):
 
 # TODO: raise exception if error (eg file not exist)
 def upload_csv(file_path, password=None):
-    _status = dg_transfer(file_path, DG_CSVUP, password)
+    _status = dg_transfer(file_path, RCPD_UPGUEST, password)
     return _status
 
 
 def upload_gds(file_path, password=None):
-    _status = dg_transfer(file_path, DG_DESIGNDATA, password)
+    _status = dg_transfer(file_path, RCPD_DDGUEST, password)
     return _status
 
 

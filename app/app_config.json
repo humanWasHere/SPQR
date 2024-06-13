@@ -1,6 +1,4 @@
 {
-    "name": "SEMRC",
-    "version": "0.1.0",
     "scripts": {
         "start": "python -m app",
         "build": "python -m app",
@@ -34,9 +32,9 @@
     "calibre_rulers": {
         "recipe_name": "test_env_calibre_rulers",
         "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
-        "parser": "/work/opc/all/users/banger/dev/semchef/examples/calibre_rulers.xml",
-        "layout": "",
-        "layers": [""],
+        "parser": "/work/opc/all/users/banger/X90M/GATE/rulers_product.xml",
+        "layout": "/work/opc/all/users/banger/X90M/GATE/466_Product_clips.oas",
+        "layers": ["13.0"],
         "ap1_template": "",
         "ap1_mag": "",
         "ep_template": "",
@@ -56,20 +54,20 @@
         "recipe_name": "test_env_OPCField",
         "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
         "parser": "",
-        "layout": "",
-        "layers": [""],
+        "layout": "/prj/opc/all/users/bigarnen/P18/GDS/1808A_OPCMACRO_OPCF_FGAT.oas",
+        "layers": ["7.0"],
         "ap1_template": "",
         "ap1_mag": "",
         "ep_template": "",
         "eps_template": "",
         "magnification": 200000,
         "mp_template": "X90M_GATE_PH",
-        "step": "",
-        "opcfield_x": "",
-        "opcfield_y": "",
-        "step_x": "",
-        "step_y": "",
-        "num_step_x": "",
-        "num_step_y": ""
+        "step": "PH",
+        "opcfield_x": 12888.5,
+        "opcfield_y": 16507.5,
+        "step_x": 10,
+        "step_y": 10,
+        "num_step_x": 33,
+        "num_step_y": 93
     }
 }

@@ -14,6 +14,15 @@ class CheckConfig:
         self.mp_template = json_conf['mp_template']
         self.step = json_conf['step']
 
+    # si on a l'info de quelle type de recette on traite avant le lancement de l'app
+    # def check_mandatory(self, check_parser):
+    #     list_to_check = [self.layers, self.mag, self.mp_template, self.step]
+    #     opcfield_list_to_check = ["opcfield_x", "opcfield_y", "step_x", "step_y", "num_step_x", "num_step_y"]
+    #     assert self.layout != ".", "One or more path mandatory elements seem empty in your user_config.json."
+    #     assert all(element != "" for element in list_to_check), "One or more string mandatory elements seem empty in your user_config.json."
+    #     assert not check_parser or self.parser != "", "The parser should not be an empty string."
+    #     assert check_parser or all(isinstance(float(self.user_conf[element]), float) and self.user_conf[element] != "" for element in opcfield_list_to_check), "One or more opcfield mandatory elements are not floats or missing."
+
     def check_json(self):
         try:
             isinstance(self.user_conf, dict)
@@ -47,6 +56,7 @@ class CheckConfig:
         return True
 
     def check_config(self):
+        # self.check_mandatory(check_parser)
         self.check_json()
         self.check_str()
         self.check_int()

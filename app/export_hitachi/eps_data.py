@@ -129,7 +129,7 @@ class DataFrameToEPSData:
 
     def set_eps_data_template(self) -> None:
         # from eps_template to ep_template
-        # __________EPS_Template section__________
+        # __________EP_Template section__________
         # self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
         self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32", PH_HR="template_EP_F16_HR",
                                             ET_HR="template_EP_F32_HR")[self.step]

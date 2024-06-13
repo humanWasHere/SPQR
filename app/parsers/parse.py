@@ -1,27 +1,30 @@
-from abc import ABC, abstractmethod
-
+from lxml.etree import XMLSyntaxError
 import numpy as np
 import pandas as pd
 
+from .file_parser import FileParser
+from .ssfile_parser import SSFileParser
+from .xml_parser import CalibreXMLParser
 
-class FileParser(ABC):
-    """Main interface for parser modules."""
-    @property
-    @abstractmethod
-    def unit(self) -> str:
-        """Return coordinate units for conversion"""
 
-    # @DataframeValidator.validate
-    @abstractmethod
-    def parse_data(self) -> pd.DataFrame:
-        """Return a dataframe of gauge name and coordinates in original units
-        Column labels MUST BE: name, x, y. Name must be alphanumeric or underscore."""
+class ParserSelection():
+    """Automatically defines which parser we should use"""
+    def __init__(self, json_conf):
+        self.json_conf = json_conf
 
-    def parse_data_dbu(self, precision):
-        dbu_per_unit = {'dbu': 1, 'nm': precision/1000, 'micron': precision}
-        data = self.parse_data()
-        data[['x', 'y', 'x_ap', 'y_ap']] *= dbu_per_unit[self.unit]
-        return data.astype(int, errors="ignore")
+    def run_parsing_selection(self):
+        # TODO change to better selection logic (must choose between path or empty but not accept to take both)
+        if self.json_conf['parser'] == "":
+            parser_instance = OPCfieldReverse(self.json_conf['opcfield_x'], self.json_conf['opcfield_y'],
+                                              self.json_conf['step_x'], self.json_conf['step_y'],
+                                              self.json_conf['num_step_x'], self.json_conf['num_step_y'])
+        else:
+            try:
+                parser_instance = CalibreXMLParser(self.json_conf['parser'])
+            except (XMLSyntaxError, AttributeError):
+                parser_instance = SSFileParser(self.json_conf['parser'], is_genepy=True)
+                # /!\ only manages genepy ssfile at the moment
+        return parser_instance
 
 
 class OPCfieldReverse(FileParser):
