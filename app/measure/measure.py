@@ -78,7 +78,7 @@ class Measure:
     def run_measure(self) -> pd.DataFrame:
         '''runs Calibre script to automatically measure a layout'''
         measure_tempfile = tempfile.NamedTemporaryFile(
-            dir=Path(__file__).resolve().parents[2] / ".temp")
+            dir=Path.home() / "tmp")
         # TODO where to store tmp files (script + results)
         measure_tempfile_path = measure_tempfile.name
         # measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"

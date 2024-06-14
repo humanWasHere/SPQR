@@ -34,7 +34,7 @@ def cli():
                               help='Runs the recipe inputted if it is matching one in user_config.json. Refer to this file',
                               type=str)
     build_parser.add_argument('-rd', '--recipe_director', required=False,
-                              help='Sends recipe (in .csv) and layout on corresponding RCPD machines.',
+                              help='Sends recipe (in .csv) and layout on corresponding RCPD machines. Must be "True" or "False".',
                               choices=[True, False],
                               type=bool)
     build_parser.add_argument('-l', '--line_selection', required=False,
@@ -82,9 +82,9 @@ def manage_app_launch():
                     print(f"\ncreating recipe {copied_build_env_config['recipe_name']}{recipe_part}/{len(build_env_config['step'])} : {step} pour {copied_build_env_config['step']}")
                     copied_build_env_config['step'] = step
                     copied_build_env_config['recipe_name'] = str(f"{build_env_config['recipe_name']}_p{recipe_part}")
-                    run_recipe_creation_w_measure(copied_build_env_config, args.recipe_director, tuple(args.line_selection))
+                    run_recipe_creation_w_measure(copied_build_env_config, args.recipe_director, tuple(args.line_selection) if args.line_selection is not None else None)
             else:
-                run_recipe_creation_w_measure(build_env_config, args.recipe_director, tuple(args.line_selection))
+                run_recipe_creation_w_measure(build_env_config, args.recipe_director, tuple(args.line_selection) if args.line_selection is not None else None)
         else:
             print(f'no recipe {args.user_recipe} has been found in user_config.json.')
             sys.exit(1)
