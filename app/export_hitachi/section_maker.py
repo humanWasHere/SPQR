@@ -72,6 +72,14 @@ class SectionMaker:
 
     def make_gpa_list_section(self) -> pd.DataFrame:
         """Set GPA_List section by calculation or definition"""
+        # FIXME variabliser -> recette d'elodie
+        # delete all gpa_list
+        self.gpa_list = self.gpa_list.iloc[0:0]
+        self.gpa_list = self.gpa_list.reindex(range(5))
+        # OM
+        self.gpa_list.loc[0:1] = [[1, 2, 3, 1], [2, 9, 4, 1]]
+        # SEM
+        self.gpa_list.loc[2:4] = [[3, 4, 5, 1], [4, 8, 5, 1], [5, 6, 2, 1]]
         return self.gpa_list
 
     def make_idd_cond_section(self, layout: str, topcell: str) -> pd.DataFrame:

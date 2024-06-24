@@ -53,7 +53,7 @@ def cli():
 
 
 def manage_app_launch():
-    '''reads the user command at __main__.py start, then config.json and launches the corresponding command'''
+    """reads the user command at __main__.py start, then config.json and launches the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
     args = cli()
@@ -91,7 +91,7 @@ def manage_app_launch():
 
 
 def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=None):
-    '''this is the real main function which runs the flow with the measure - "prod" function'''
+    """this is the real main function which runs the flow with the measure - "prod" function"""
     block = Block(json_conf['layout'])
     # assert set(json_conf.keys()).issubset({"recipe_name", "parser", "layout", "layers", "magnification", "mp_template", "step", "opcfield_x", "opcfield_y", "step_x", "step_y", "num_step_x", "num_step_y"})
 
@@ -101,7 +101,7 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
     selected_parser = parser_selection_instance.run_parsing_selection()
 
     # measurement
-    measure_instance = Measure(selected_parser, block, json_conf['layers'], row_range=line_selection)
+    measure_instance = Measure(selected_parser, block, json_conf, row_range=line_selection)
     output_measure = measure_instance.run_measure()
     # all recipe's sections creation
     runHssCreation = HssCreator(core_data=output_measure, block=block, json_conf=json_conf)
@@ -109,7 +109,7 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
     if upload:
         rcpd.upload_csv(recipe_path)
         rcpd.upload_gds(json_conf['layout'])
-        print('recipe should be on RCPD machine !')
+        print(f"recipe named {json_conf['recipe_name']} should be on RCPD machine !")
 
 
 if __name__ == "__main__":

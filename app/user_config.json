@@ -18,5 +18,32 @@
         "step_y": 10,
         "num_step_x": 33,
         "num_step_y": 93
+    },
+    "ODIFF3_elodie": {
+        "recipe_name": "se22_recipe_ODIFF3_DFLL_v1",
+        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/",
+        "parser": "/work/opc/all/users/chanelir/semrc-assets/testcases/testcase_elodie/ssfile_test_case_elodie_04-24.txt",
+        "layout": "/prj/opc/all/users/se22/ODIFF/ODIFF3/gds/Z1Brespin_2024/Z1B_respin_DFLL_SEM_11c.oas",
+        "layers": ["33", "33.31"],
+        "ap1_template": "se22_AP1_Template_16FR_50K_Fast",
+        "ap1_mag": 50000,
+        "ep_template": "se22_EP_Template_64F_TV4X_150K_Fast",
+        "eps_template": "OPC_EPS_Template",
+        "magnification": 120000,
+        "mp_template": {
+            "1D": "OPC_se22_Width_Space_Th80",
+            "2D": "OPC_se22_LE_Th80_N"
+        },
+        "step": ["PH_HR", "ET_HR"],
+        "translation": {
+            "x": 23168490,
+            "y": 29493000
+        },
+        "opcfield_x": "",
+        "opcfield_y": "",
+        "step_x": "",
+        "step_y": "",
+        "num_step_x": "",
+        "num_step_y": ""
     }
 }

@@ -13,7 +13,7 @@ from ..parsers.parse import FileParser
 
 
 class Measure:
-    def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
+    def __init__(self, parser_input: FileParser, block: Block, json_conf: dict,
                  tcl_script: str = None, row_range: tuple = None):
         if row_range is None:
             self.parser_df = parser_input.parse_data()
@@ -22,12 +22,19 @@ class Measure:
         self.unit = parser_input.unit  # TODO should work with dbu ?
         self.layout = block.layout_path
         self.precision = int(float(block.precision))
-        self.layers = layers  # target_layers
+        self.json_conf = json_conf
 
         if tcl_script is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
             if not self.tcl_script.exists():
                 raise FileNotFoundError(f"Could not find {self.tcl_script}")
+
+    def convert_to_SEM_coords(self):
+        if self.json_conf["translation"] != "":
+            # translation should be in nm
+            self.parser_df['x'] += self.json_conf['translation']['x']
+            self.parser_df['y'] += self.json_conf['translation']['y']
+            # TODO ask Romain if addressing points change too
 
     def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
@@ -50,7 +57,7 @@ class Measure:
         with (open(self.tcl_script, "r") as template,
               open(tmp_script, "w") as script):
             texte = template.read()
-            texte = texte.replace("FEED_ME_LAYER", ' '.join(self.layers))
+            texte = texte.replace("FEED_ME_LAYER", ' '.join(self.json_conf['layers']))
             texte = texte.replace("FEED_ME_SEARCH_AREA", str(search_area))
             texte = texte.replace("FEED_ME_PRECISION", str(self.precision))
             texte = texte.replace("FEED_ME_CORRECTION", str(correction[self.unit]))
@@ -77,6 +84,7 @@ class Measure:
 
     def run_measure(self) -> pd.DataFrame:
         '''runs Calibre script to automatically measure a layout'''
+        self.convert_to_SEM_coords()
         measure_tempfile = tempfile.NamedTemporaryFile(
             dir=Path.home() / "tmp")
         # TODO where to store tmp files (script + results)
@@ -95,12 +103,12 @@ class Measure:
             pass
         merged_dfs = pd.merge(parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
-        print(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")
+        # print(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")
 
         # DEBUG copy results CSV
         results = Path(measure_tempfile_path).read_text()
         (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
-        measure_tempfile.close()  # remove temporary script
+        measure_tempfile.close()
         # if not merged_dfs.empty:  # more checks + log
         #     print('\tmeasurement done')
         return merged_dfs

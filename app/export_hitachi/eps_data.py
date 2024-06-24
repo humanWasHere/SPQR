@@ -131,8 +131,11 @@ class DataFrameToEPSData:
         # from eps_template to ep_template
         # __________EP_Template section__________
         # self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32")[self.step]
-        self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32", PH_HR="template_EP_F16_HR",
-                                            ET_HR="template_EP_F32_HR")[self.step]
+        if self.json_conf['ep_template'] == "":
+            self.eps_data['EP_Template'] = dict(PH="banger_EP_F16", ET="banger_EP_F32", PH_HR="template_EP_F16_HR",
+                                                ET_HR="template_EP_F32_HR")[self.step]
+        else:
+            self.eps_data['EP_Template'] = self.json_conf['ep_template']
 
     def set_eps_data_ap1_modification(self) -> None:
         # from type to AP1_AST_Mag
