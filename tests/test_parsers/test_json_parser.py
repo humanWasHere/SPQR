@@ -230,7 +230,7 @@ class TestJsonParser:
 
         # Act
         # FIXME dependency
-        json_parser_instance.json_to_dataframe()
+        json_parser_instance.json_to_section_dicts()
 
         # Assert
         # Assert first_level_df

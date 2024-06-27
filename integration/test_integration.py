@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Type
 
 from app.data_structure import Block
-from app.export_hitachi.eps_data import DataFrameToEPSData
+from app.export_hitachi.eps_data import EPSData
 from app.export_hitachi.hss_creator import HssCreator
 from app.interfaces import recipedirector as rcpd
 from app.measure.measure import Measure
@@ -24,7 +24,7 @@ def run_recipe(coord_file: str, parser: Type[FileParser], layout: str, layers: l
     end = time.time()
     output_measure['magnification'] = mag
 
-    EPS_DataFrame = DataFrameToEPSData(output_measure)
+    EPS_DataFrame = EPSData(output_measure)
     EPS_Data = EPS_DataFrame.get_eps_data(mp_template)
 
     mask_layer = int(layers[0].split('.')[0])

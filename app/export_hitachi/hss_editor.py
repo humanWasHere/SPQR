@@ -21,7 +21,7 @@ class RecipeModificator(HssCreator):
             self.imported_json_recipe = Path(json_recipe)
             self.working_recipe_path = Path(json_recipe)
             json_parser_instance = JsonParser(self.imported_json_recipe)
-            self.constant_sections, self.table_sections = json_parser_instance.json_to_dataframe()
+            self.constant_sections, self.table_sections = json_parser_instance.json_to_section_dicts()
             # print(f"here is constant_sections : {self.constant_sections}. Which is {type(self.constant_sections)}")
             # print(f"here is table_sections : {self.table_sections}. Which is {type(self.table_sections)}")
         elif json_recipe is None:

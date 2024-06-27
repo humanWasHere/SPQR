@@ -1,4 +1,24 @@
 {
+    "P18_SIGE": {
+        "recipe_name": "banger_p18_sige",
+        "output_dir": "/work/opc/all/users/banger/P18/semrc_io",
+        "parser": "",
+        "layout": "/work/opc/all/users/banger/P18/clip_opcmacro_sige_nosf.gds",
+        "layers": ["52.111"],
+        "ap1_template": "",
+        "ap1_mag": "",
+        "ep_template": "",
+        "eps_template": "",
+        "magnification": 200000,
+        "mp_template": "Width_Default",
+        "step": "PH",
+        "opcfield_x": 3567.105,
+        "opcfield_y": 14387.5,
+        "step_x": 15,
+        "step_y": 15,
+        "num_step_x": 15,
+        "num_step_y": 14
+    },
     "P18_FGAT": {
         "recipe_name": "chanelir_test_recipe_1808A_FGAT_PH",
         "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/",
@@ -8,7 +28,7 @@
         "ap1_template": "",
         "ap1_mag": "",
         "ep_template": "",
-        "eps_template": "OPC_EPS_Template",
+        "eps_template": "EPS_Template",
         "magnification": 200000,
         "mp_template": "X90M_GATE_PH",
         "step": "PH",

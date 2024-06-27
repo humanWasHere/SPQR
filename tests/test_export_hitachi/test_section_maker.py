@@ -7,7 +7,7 @@ from app.export_hitachi.section_maker import SectionMaker
 class TestSectionMaker:
 
     @pytest.fixture
-    def section_maker(self):
+    def section_maker(self) -> SectionMaker:
         # TODO TEMP !!! since template_to_all_sections.py needs to be implemented
         default_df = pd.DataFrame({
             "col1": [1, 1, 1],
@@ -24,8 +24,9 @@ class TestSectionMaker:
             "CellName": ["OPCFIeld"]
         })
         idd_layer_data_df = pd.DataFrame({
-            "LayerNo": [0, 1],
-            "DataType": [114, 114]
+            "LayerNo": [0, 0],
+            "DataType": [114, 0],
+            "Tone": [-1, -1]
         })
         recipe_df = pd.DataFrame({
             "SEMCondNo": [2]
@@ -114,14 +115,16 @@ class TestSectionMaker:
 
     def test_make_idd_layer_data_section(self, section_maker):
         # Arrange
-        mask_layer_value = 1  # Valeur fictive pour l'exemple
+        mask_layer = 1
+        polarity = 'dark'
         expected_df = pd.DataFrame({
             "LayerNo": [0, 1],
-            "DataType": [114, 114]
+            "DataType": [114, 0],
+            "Tone": [1, 1]
         })
 
         # Act
-        result_df = section_maker.make_idd_layer_data_section(mask_layer_value)
+        result_df = section_maker.make_idd_layer_data_section(mask_layer, polarity)
 
         # Assert
         pd.testing.assert_frame_equal(result_df, expected_df)

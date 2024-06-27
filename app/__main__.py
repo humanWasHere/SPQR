@@ -17,7 +17,7 @@ from .parsers.parse import ParserSelection
 # export recipe to a formatted name -> ex: user_techno_maskset_layers_more
 # check if output_dir+recipe_name.(json/csv).exists -> ask user
 
-def cli():
+def cli() -> argparse.ArgumentParser:
     """defines the command lines actions of the soft"""
     parser = argparse.ArgumentParser(prog='SEM Recipe Creator', description='-----CLI tool for SEM Recipe Creation-----')
     subparsers = parser.add_subparsers(dest='running_mode',
@@ -30,33 +30,27 @@ def cli():
                               type=str)
 
     build_parser = subparsers.add_parser('build', help='Runs the "prod" mode of the app. Meant for end user.')
-    build_parser.add_argument('-ur', '--user_recipe', required=True,
-                              help='Runs the recipe inputted if it is matching one in user_config.json. Refer to this file',
-                              type=str)
-    build_parser.add_argument('-rd', '--recipe_director', required=False,
-                              help='Sends recipe (in .csv) and layout on corresponding RCPD machines. Must be "True" or "False".',
-                              choices=[True, False],
-                              type=bool)
-    build_parser.add_argument('-l', '--line_selection', required=False,
-                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50 60"',
-                              nargs='+',
-                              type=int)
-
-    args = parser.parse_args()
-
-    if not vars(args).get('running_mode'):
-        print("CLI app should be executed as indicated below.\n")
-        parser.print_help()
-        sys.exit(1)
-
-    return args
+    build_parser.add_argument('-c', '--user_config', required=True, type=Path,
+                              help="Path to user JSON config file containing recipe options.")
+    build_parser.add_argument('-r', '--user_recipe',
+                              help='Runs the recipe inputted if it is matching one in user_config.json. Refer to this file')
+    build_parser.add_argument('-u', '--upload_rcpd', action="store_true",
+                              help='Send HSS recipe (.csv) and layout to RecipeDirector machine.')
+    build_parser.add_argument('-l', '--line_selection', required=False, nargs=2, type=int, metavar=('START', 'END'),
+                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50 60"')
+    return parser
 
 
 def manage_app_launch():
     """reads the user command at __main__.py start, then config.json and launches the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
-    args = cli()
+    args = cli().parse_args()
+    if not args.running_mode:
+        print("CLI app should be executed as indicated below.\n")
+        cli().print_help()
+        sys.exit(1)
+
     if args.running_mode == 'start':
         app_config_file = Path(__file__).resolve().parent / "app_config.json"
         app_config = import_json(app_config_file)
@@ -67,8 +61,14 @@ def manage_app_launch():
         config_checker_instance.check_config()
         run_recipe_creation_w_measure(test_env_config)
     elif args.running_mode == 'build':
-        user_config_file = Path(__file__).resolve().parent / "user_config.json"
-        user_config = import_json(user_config_file)
+        # user_config_file = Path(__file__).resolve().parent / "user_config.json"
+        # TODO validate whole JSON
+        user_config = import_json(args.user_config)
+        if len(user_config)==0:
+            raise ValueError("The provided configuration file does not contain any recipe.")
+        if len(user_config)==1 and args.user_recipe is None:
+            # recipe name is optional if there is only one
+            args.user_recipe = next(iter(user_config.keys()))
         if args.user_recipe in user_config:
             # print(f'running recipe {args.user_recipe}')
             build_env_config = user_config.get(args.user_recipe, {})
@@ -82,9 +82,10 @@ def manage_app_launch():
                     print(f"\ncreating recipe {copied_build_env_config['recipe_name']}{recipe_part}/{len(build_env_config['step'])} : {step} pour {copied_build_env_config['step']}")
                     copied_build_env_config['step'] = step
                     copied_build_env_config['recipe_name'] = str(f"{build_env_config['recipe_name']}_p{recipe_part}")
-                    run_recipe_creation_w_measure(copied_build_env_config, args.recipe_director, tuple(args.line_selection) if args.line_selection is not None else None)
+                    run_recipe_creation_w_measure(copied_build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
             else:
-                run_recipe_creation_w_measure(build_env_config, args.recipe_director, tuple(args.line_selection) if args.line_selection is not None else None)
+                run_recipe_creation_w_measure(build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
+
         else:
             print(f'no recipe {args.user_recipe} has been found in user_config.json.')
             sys.exit(1)
@@ -93,7 +94,6 @@ def manage_app_launch():
 def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=None):
     """this is the real main function which runs the flow with the measure - "prod" function"""
     block = Block(json_conf['layout'])
-    # assert set(json_conf.keys()).issubset({"recipe_name", "parser", "layout", "layers", "magnification", "mp_template", "step", "opcfield_x", "opcfield_y", "step_x", "step_y", "num_step_x", "num_step_y"})
 
     print('\n______________________RUNNING RECIPE CREATION______________________\n')
     # parser selection
@@ -101,14 +101,17 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
     selected_parser = parser_selection_instance.run_parsing_selection()
 
     # measurement
-    measure_instance = Measure(selected_parser, block, json_conf, row_range=line_selection)
+    measure_instance = Measure(selected_parser, block, json_conf['layers'],
+                               json_conf.get('translation'), row_range=line_selection)
     output_measure = measure_instance.run_measure()
     # all recipe's sections creation
-    runHssCreation = HssCreator(core_data=output_measure, block=block, json_conf=json_conf)
+    runHssCreation = HssCreator(core_data=output_measure, block=block, json_conf=json_conf,
+                                polarity=json_conf.get('polarity', 'clear').lower())
     recipe_path = runHssCreation.write_in_file()
     if upload:
         rcpd.upload_csv(recipe_path)
         rcpd.upload_gds(json_conf['layout'])
+        # TODO if file already exists on remote, check if new file is changed
         print(f"recipe named {json_conf['recipe_name']} should be on RCPD machine !")
 
 

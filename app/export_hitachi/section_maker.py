@@ -24,37 +24,22 @@ class SectionMaker:
         self.measenv_exec = df_dict["<MeasEnv_Exec>"]
         self.measenv_measres = df_dict["<MeasEnv_MeasRes>"]
 
-    # By default, each section returns the default value from the JSON template
-    def make_coordinate_system_section(self) -> pd.DataFrame:
-        """Set coordinate system section by calculation or definition"""
-        return self.coordinate_system
-
-    def make_epa_list_section(self) -> pd.DataFrame:
-        """Set EPA_List section by calculation or definition"""
-        return self.epa_list
-
-    def make_gp_coordinate_system_section(self) -> pd.DataFrame:
-        """Set gp coordinate system section by calculation or definition"""
-        return self.gp_coordinate_system
-
     def make_gp_data_section(self) -> pd.DataFrame:
         """Set gp data section by calculation or definition"""
         # __________GP_ID section__________
-        # self.gp_data['GP_ID'] = range(1, min(self.corresponding_data.shape[0] + 1, 10))
         # # preventing data to be out of range -> match doc
         # if any(id > 10 for id in self.gp_data['GP_ID']):
         #     raise ValueError("GP_ID values cannot exceed 10")
-        # __________Type section__________
+        # __________Type column checks__________
         if self.gp_data['Type'].ne(1).any():
-            print("<GP_Data>Type should be 1 !!")
-        # __________GP_X section__________
-        # __________GP_Y section__________
-        # __________GP_Template section__________
+            raise ValueError("<GP_Data>Type should be 1")
+
+        # __________GP_Template coolumn checks__________
         # dynamic assignation of GP_Template
         if self.gp_data["GP_Template"].isna().any():
-            raise ValueError("GP_Template is mandatory")
+            raise ValueError("<GP_Data>GP_Template is mandatory")
 
-        # __________GP_MAG section__________
+        # __________GP_Mag column checks__________
         gp_template = self.gp_data["GP_Template"]
         om_template_rows = gp_template.str.contains("OM")
         sem_template_rows = gp_template.str.contains("SEM")
@@ -66,54 +51,52 @@ class SectionMaker:
         # __________GP_ROT section__________
         return self.gp_data
 
-    def make_gp_offset_section(self) -> pd.DataFrame:
-        """Set GP_Offset section by calculation or definition"""
-        return self.gp_offset
-
-    def make_gpa_list_section(self) -> pd.DataFrame:
-        """Set GPA_List section by calculation or definition"""
-        # FIXME variabliser -> recette d'elodie
-        # delete all gpa_list
-        self.gpa_list = self.gpa_list.iloc[0:0]
-        self.gpa_list = self.gpa_list.reindex(range(5))
-        # OM
-        self.gpa_list.loc[0:1] = [[1, 2, 3, 1], [2, 9, 4, 1]]
-        # SEM
-        self.gpa_list.loc[2:4] = [[3, 4, 5, 1], [4, 8, 5, 1], [5, 6, 2, 1]]
-        return self.gpa_list
-
     def make_idd_cond_section(self, layout: str, topcell: str) -> pd.DataFrame:
         self.idd_cond.loc[0, ["DesignData", "CellName"]] = Path(layout).stem, topcell
         return self.idd_cond
 
-    def make_idd_layer_data_section(self, mask_layer: int) -> pd.DataFrame:
+    def make_idd_layer_data_section(self, mask_layer: int, tone: str) -> pd.DataFrame:
         """Set IDD_Layer_Data section for visible layer mapping"""
         # TODO link with step / target layer
-        self.idd_layer_data.loc[0, ["LayerNo", "DataType"]] = 0, 114
-        self.idd_layer_data.loc[1:, "LayerNo"] = mask_layer
+        self.idd_layer_data.loc[0, ['LayerNo', 'DataType']] = 0, 114
+        self.idd_layer_data.loc[1:, 'LayerNo'] = mask_layer
+        self.idd_layer_data.loc[:, 'Tone'] = dict(clear=0, dark=1)[tone]
         return self.idd_layer_data
+
+    def make_recipe_section(self, step: str) -> pd.DataFrame:
+        #  __________SEMCondNo__________
+        step_to_value = dict(PH=2, ET=1, PH_HR=11, ET_HR=13)
+        if step not in step_to_value.keys():
+            raise ValueError(f"Supported steps are {', '.join(step_to_value.keys())}.")
+        self.recipe["SEMCondNo"] = step_to_value[step]
+        return self.recipe
+
+    # By default, each section returns the default value from the JSON template
+
+    def make_coordinate_system_section(self) -> pd.DataFrame:
+        """Set coordinate system section by calculation or definition"""
+        return self.coordinate_system
+
+    def make_epa_list_section(self) -> pd.DataFrame:
+        return self.epa_list
+
+    def make_gp_coordinate_system_section(self) -> pd.DataFrame:
+        return self.gp_coordinate_system
+
+    def make_gp_offset_section(self) -> pd.DataFrame:
+        return self.gp_offset
+
+    def make_gpa_list_section(self) -> pd.DataFrame:
+        return self.gpa_list
 
     def make_image_env_section(self) -> pd.DataFrame:
         return self.image_env
 
-    def make_measenv_exec_section(self):
+    def make_measenv_exec_section(self) -> pd.DataFrame:
         return self.measenv_exec
 
-    def make_measenv_measres_section(self):
+    def make_measenv_measres_section(self) -> pd.DataFrame:
         return self.measenv_measres
 
-    def make_recipe_section(self, step) -> pd.DataFrame:
-        #  __________SEMCondNo__________
-        step_to_value = {
-            'PH': 2,
-            'ET': 1,
-            'PH_HR': 11,
-            'ET_HR': 12
-        }
-        # self.recipe["SEMCondNo"] = step_to_value.get(step, ValueError("step is not recognized"))
-        self.recipe["SEMCondNo"] = [step_to_value[step] if step in step_to_value else print('step not expected !!!')]
-        return self.recipe
-
     def make_unit_section(self) -> pd.DataFrame:
-        """Set unit section by calculation or definition"""
         return self.unit

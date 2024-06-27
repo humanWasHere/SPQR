@@ -137,8 +137,9 @@ class TestHssCreator:
 
         # Act
         # FIXME dependency
-        json_template_instance = JsonParser(TEST_TEMPLATE)
-        hss_instance.constant_sections, hss_instance.table_sections = json_template_instance.json_to_dataframe()
+        json_template_instance = JsonParser(TEST_TEMPLATE).json_to_section_dicts()
+        hss_instance.constant_sections = json_template_instance.constant_sections
+        hss_instance.table_sections = json_template_instance.table_sections
         hss_str = hss_instance.dataframe_to_hss()
 
         # Assert

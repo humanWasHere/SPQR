@@ -5,7 +5,7 @@ import re
 import pandas as pd
 
 from ..data_structure import Block
-from .eps_data import DataFrameToEPSData
+from .eps_data import EPSData
 from .section_maker import SectionMaker
 from ..parsers.json_parser import JsonParser
 
@@ -17,31 +17,31 @@ from ..parsers.json_parser import JsonParser
 
 
 class HssCreator:
-    def __init__(self, core_data: pd.DataFrame, block: Block, json_conf: dict, template=None):
-        self.json_conf = json_conf
+    def __init__(self, core_data: pd.DataFrame, block: Block, json_conf: dict,
+                 polarity: str = 'clear', template=None):
+        self.layout = block.layout_path
+        self.topcell = block.topcell
+        self.precision = block.precision
+        self.polarity = polarity
+        self.main_layer = int(json_conf['layers'][0].split('.')[0])
+        self.step = json_conf['step']
+        if json_conf['output_dir'] == "":
+            self.recipe_output_dir = Path(__file__).resolve().parents[2] / "recipe_output"
+        else:
+            self.recipe_output_dir = Path(json_conf['output_dir'])
+        if json_conf['recipe_name'] == "":
+            self.recipe_output_file = self.recipe_output_dir / "recipe"
+        else:
+            self.recipe_output_file = self.recipe_output_dir / str(json_conf['recipe_name'])
+        assert re.match(r'^[a-zA-Z0-9_-]{0,37}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
         # FIXME add template in user_input ?
         if template is None:
             self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        if self.json_conf['output_dir'] == "":
-            self.recipe_output_dir = Path(__file__).resolve().parents[2] / "recipe_output"
-        else:
-            self.recipe_output_dir = Path(self.json_conf['output_dir'])
-        if self.json_conf['recipe_name'] == "":
-            self.recipe_output_file = self.recipe_output_dir / "recipe"
-        else:
-            self.recipe_output_file = self.recipe_output_dir / str(self.json_conf['recipe_name'])
-        # TODO add in core_data_validator ! in data_structure.py
-        assert re.match(r'^[a-zA-Z0-9_-]{0,37}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
-        self.eps_data = DataFrameToEPSData(core_data, self.json_conf).get_eps_data()
-        self.layout = block.layout_path
-        self.topcell = block.topcell
-        self.precision = int(float(block.precision))
-        # TODO round number to unit ?self.core_data
-        self.main_layer = int(self.json_conf['layers'][0].split('.')[0])
-        self.step = self.json_conf['step']
-        self.constant_sections: dict[str, str] = {}
-        self.table_sections: dict[str, pd.DataFrame] = {}
-        self.constant_sections, self.table_sections = JsonParser(self.json_template).json_to_dataframe()
+        sections = JsonParser(self.json_template).json_to_section_dicts()
+        self.constant_sections: dict[str, str] = sections.constant_sections
+        self.table_sections: dict[str, pd.DataFrame] = sections.table_sections
+        eps_data = EPSData(core_data, json_conf['step'], json_conf, sections.epsdata_section)
+        self.eps_data = eps_data.get_eps_data()
         self.section_maker: SectionMaker
 
     # def load_sections(self):
@@ -51,7 +51,7 @@ class HssCreator:
     def fill_with_eps_data(self) -> None:
         """Use template header and fill it with columns from the external EPSData dataframe"""
         # external_epsdata_columns.issubset(template_epsdata_columns)
-        template_eps_data_header = pd.DataFrame(columns=self.table_sections["<EPS_Data>"].columns)
+        template_eps_data_header = pd.DataFrame(columns=self.table_sections['<EPS_Data>'].columns)
         for column_name, column_values in self.eps_data.items():
             if column_name in template_eps_data_header:
                 # adding of eps_data dataframe values to the template dataframe header
@@ -69,20 +69,19 @@ class HssCreator:
         # Implemented logic
         self.section_maker.make_gp_data_section()  # content validation
         self.section_maker.make_idd_cond_section(self.layout, self.topcell)  # design info
-        self.section_maker.make_idd_layer_data_section(self.main_layer)  # layer mapping
-        self.section_maker.make_recipe_section(self.step)
+        self.section_maker.make_idd_layer_data_section(self.main_layer, self.polarity)  # layer mapping
+        self.section_maker.make_recipe_section(self.step)  # set SEM condition
+
         # Placeholders
         sections['<CoordinateSystem>'] = self.section_maker.make_coordinate_system_section()
         sections['<GPCoordinateSystem>'] = self.section_maker.make_gp_coordinate_system_section()
         sections['<Unit>'] = self.section_maker.make_unit_section()
         sections['<GPA_List>'] = self.section_maker.make_gpa_list_section()
         sections['<GP_Offset>'] = self.section_maker.make_gp_offset_section()
-        # TODO call for eps data creation here ?
-        # [movex_x + 2.6 for movex_x in self.eps_data_df["Move_X"]]
         sections['<EPA_List>'] = self.section_maker.make_epa_list_section()
         sections['<ImageEnv>'] = self.section_maker.make_image_env_section()
-        sections["MeasEnv_Exec"] = self.section_maker.make_measenv_exec_section()
-        sections["MeasEnv_MeasRes"] = self.section_maker.make_measenv_measres_section()
+        sections['<MeasEnv_Exec>'] = self.section_maker.make_measenv_exec_section()
+        sections['<MeasEnv_MeasRes>'] = self.section_maker.make_measenv_measres_section()
 
     # def convert_coord_to_nm(self):
     #     # FIXME should keep data as float ??? -> change test to float checking (not int)

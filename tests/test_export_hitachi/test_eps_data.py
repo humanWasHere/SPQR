@@ -1,13 +1,22 @@
+import json
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
-from app.export_hitachi.eps_data import DataFrameToEPSData
+from app.export_hitachi.eps_data import EPSData
 
 
 class TestEpsData:
 
     @pytest.fixture
-    def df_to_eps_data_instance(self):
+    def eps_data_columns(self) -> dict:
+        test_hss = Path(__file__).resolve().parents[1] / "testfiles" / "test_template.json"
+        hss_template = json.loads(test_hss.read_text())
+        return hss_template.get('<EPS_Data>')
+
+    @pytest.fixture
+    def eps_data_instance(self, eps_data_columns):
         data_instance = pd.DataFrame({'name': ['gauge1', 'gauge2', 'gauge3'],
                                       'x': [10, 20, 30],
                                       'y': [100, 200, 300],
@@ -25,7 +34,7 @@ class TestEpsData:
             "ap1_template": "",
             "ap1_mag": 50000,
             "ep_template": "",
-            "eps_template": "OPC_EPS_Template",
+            "eps_template": "EPS_Template",
             "magnification": 200000,
             "mp_template": "X90M_GATE_PH",
             "step": "PH",
@@ -36,14 +45,15 @@ class TestEpsData:
             "num_step_x": "",
             "num_step_y": ""
         }
-        test_ex_gauge_df = DataFrameToEPSData(core_data=data_instance, user_config_info=test_json_user_config)
+        test_ex_gauge_df = EPSData(core_data=data_instance, user_config_info=test_json_user_config,
+                                   step='PH', template={})
         return test_ex_gauge_df
 
-    def test_add_mp_width(self, df_to_eps_data_instance):
+    def test_add_mp_width(self, eps_data_instance):
         '''checks wether add_mp_width method fills data as expected'''
         # Arrange
-        df_to_eps_data_instance.eps_data['EP_Mag_X'] = [200000, 200000, 200000]  # needed for target_cd definition
-        df_to_eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # indexes the df
+        eps_data_instance.eps_data['EP_Mag_X'] = [200000, 200000, 200000]  # needed for target_cd definition
+        eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # indexes the df
         expected_data = pd.DataFrame({
                                       'EP_Mag_X': [200000, 200000, 200000],
                                       'EPS_ID': [1, 2, 3],
@@ -60,47 +70,48 @@ class TestEpsData:
                                       })
 
         # Act
-        df_to_eps_data_instance.add_mp_width()
+        eps_data_instance.add_mp_width()
 
         # Assert
-        pd.testing.assert_frame_equal(df_to_eps_data_instance.eps_data, expected_data)
+        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_data)
 
-    def test_mapping_from_df(self, df_to_eps_data_instance):
+    def test_mapping_core_data(self, eps_data_instance):
         '''checks wether mapping between 2 dataframe works as expected'''
         # Arrange
         expected_data = pd.DataFrame({'EPS_Name': ['gauge1', 'gauge2', 'gauge3'],
                                       'Move_X': [10, 20, 30],
                                       'Move_Y': [100, 200, 300],
+                                      'EP_AF_X': [10, 20, 30],
+                                      'EP_AF_Y': [30, 20, 10],
                                       'AP1_X': [10, 20, 30],
                                       'AP1_Y': [30, 20, 10],
                                       'AP1_AF_X': [10, 20, 30],
-                                      'AP1_AF_Y': [30, 20, 10]})
+                                      'AP1_AF_Y': [30, 20, 10],
+                                      })
 
         # Act
-        df_to_eps_data_instance.mapping_from_df()
+        eps_data_instance.mapping_core_data()
 
         # Assert
-        pd.testing.assert_frame_equal(
-            df_to_eps_data_instance.eps_data, expected_data)
+        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_data)
 
-    def test_mapping_core_data(self, df_to_eps_data_instance):
+    def test_mapping_user_config(self, eps_data_instance):
         # Arrange
-        df_to_eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # indexes the df
+        eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # indexes the df
         expected_data = pd.DataFrame({'EPS_ID': [1, 2, 3],
-                                      'EPS_Template': ["OPC_EPS_Template", "OPC_EPS_Template", "OPC_EPS_Template"],
+                                      'EPS_Template': ["EPS_Template", "EPS_Template", "EPS_Template"],
                                       'AP1_Mag': [50000, 50000, 50000],
                                       'EP_Mag_X': [200000, 200000, 200000],
                                       'EP_AF_Mag': [200000, 200000, 200000],
                                       })
 
         # Act
-        df_to_eps_data_instance.mapping_core_data()
+        eps_data_instance.mapping_user_config()
 
         # Assert
-        pd.testing.assert_frame_equal(
-            df_to_eps_data_instance.eps_data, expected_data)
+        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_data)
 
-    def test_mapping_from_fix_values(self, df_to_eps_data_instance):
+    def test_mapping_from_fix_values(self, eps_data_instance):
         '''checks wether assigning data from mapping works as expected'''
         # Arrange
         expected_eps_data_df = pd.DataFrame({
@@ -108,55 +119,51 @@ class TestEpsData:
             'Mode': [1, 1, 1],
             'EPS_Template': ['EPS_Default', 'EPS_Default', 'EPS_Default'],
             'AP2_Template': ['OPC_AP2_Off', 'OPC_AP2_Off', 'OPC_AP2_Off'],
-            'Type1': [1, 1, 1],
-            'Type2': [2, 2, 2],
-            'Type3': [2, 2, 2],
             'AP1_Mag': [45000, 45000, 45000],
             'AP1_AF_Mag': [45000, 45000, 45000],
             'AP1_Rot': [0, 0, 0],
-            'MP1_X': [0, 0, 0],
-            'MP1_Y': [0, 0, 0]})
+            })
 
-        df_to_eps_data_instance.eps_data['EPS_Name'] = ['gauge1', 'gauge2', 'gauge3']
+        eps_data_instance.eps_data['EPS_Name'] = ['gauge1', 'gauge2', 'gauge3']
 
         # Act
-        df_to_eps_data_instance.mapping_from_fix_values()
+        eps_data_instance.mapping_from_fix_values()
 
         # Assert
-        for column, value in DataFrameToEPSData.FIXED_VALUES.items():
-            assert (df_to_eps_data_instance.eps_data[column] == value).all(), f"Column {column} does not match fixed value {value}"
-        pd.testing.assert_frame_equal(df_to_eps_data_instance.eps_data, expected_eps_data_df)
+        for column, value in EPSData.FIXED_VALUES.items():
+            assert (eps_data_instance.eps_data[column] == value).all(), f"Column {column} does not match fixed value {value}"
+        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_eps_data_df)
 
-    def test_set_eps_data_id(self, df_to_eps_data_instance):
+    def test_set_eps_data_id(self, eps_data_instance):
         '''checks wether setting EPS_ID data setting iterativelly works'''
         # Arrange
         expected_eps_data_df = pd.DataFrame({'EPS_ID': [1, 2, 3]})
 
         # Act
-        df_to_eps_data_instance.set_eps_data_id()
+        eps_data_instance.set_eps_data_id()
 
         # Assert
         pd.testing.assert_frame_equal(
-            df_to_eps_data_instance.eps_data, expected_eps_data_df)
+            eps_data_instance.eps_data, expected_eps_data_df)
 
     # def test_set_eps_data_eps_modification(self):
     #     pass
 
-    def test_set_eps_data_template(self, df_to_eps_data_instance):
+    def test_set_eps_data_template(self, eps_data_instance):
         '''checks wether EP_Template data setting works as expected'''
         # Arrange
         expected_eps_data_df = pd.DataFrame({
             'EPS_Name': ['gauge1', 'gauge2', 'gauge3'],
             'EP_Template': ["banger_EP_F16", "banger_EP_F16", "banger_EP_F16"]
             })
-        df_to_eps_data_instance.eps_data['EPS_Name'] = ['gauge1', 'gauge2', 'gauge3']
+        eps_data_instance.eps_data['EPS_Name'] = ['gauge1', 'gauge2', 'gauge3']
 
         # Act
-        df_to_eps_data_instance.set_eps_data_template()
+        eps_data_instance.set_eps_data_template()
 
         # Assert
         pd.testing.assert_frame_equal(
-            df_to_eps_data_instance.eps_data, expected_eps_data_df)
+            eps_data_instance.eps_data, expected_eps_data_df)
 
     # def test_set_eps_data_ap1_modification(self):
     #     pass
@@ -164,17 +171,17 @@ class TestEpsData:
     # def test_set_eps_data_ap2_modification(self):
     #     pass
 
-    def test_set_eps_data_ep_modification(self, df_to_eps_data_instance):
+    def test_set_eps_data_ep_modification(self, eps_data_instance):
         '''checks wether EP_Rot data setting works as expected'''
         # Arrange
         expected_eps_data_df = pd.DataFrame({'EP_Rot': [90, 90, 90]})
 
         # Act
-        df_to_eps_data_instance.set_eps_data_ep_modification()
+        eps_data_instance.set_eps_data_ep_modification()
 
         # Assert
         pd.testing.assert_frame_equal(
-            df_to_eps_data_instance.eps_data, expected_eps_data_df)
+            eps_data_instance.eps_data, expected_eps_data_df)
 
     # TODO
     # retrived from test_hss_creator.py
@@ -188,7 +195,7 @@ class TestEpsData:
     #     for i in range(1, 14):
     #         assert f"Type{i}" in hss_instance.table_sections['<EPS_Data>']
 
-    def test_get_eps_data(self, df_to_eps_data_instance):
+    def test_get_eps_data(self, eps_data_instance):
         '''checks wether whole eps_data data setting works as expected'''
         # Arrange
         # FIXME check sa_in with another method
@@ -196,24 +203,23 @@ class TestEpsData:
         expected_data_df = pd.DataFrame({'EPS_Name': ['gauge1', 'gauge2', 'gauge3'],
                                          'Move_X': [10, 20, 30],
                                          'Move_Y': [100, 200, 300],
+                                         'EP_AF_X': [10, 20, 30],
+                                         'EP_AF_Y': [30, 20, 10],
                                          'AP1_X': [10, 20, 30],
                                          'AP1_Y': [30, 20, 10],
                                          'AP1_AF_X': [10, 20, 30],
                                          'AP1_AF_Y': [30, 20, 10],
                                          'Mode': [1, 1, 1],
-                                         'EPS_Template': ["OPC_EPS_Template", "OPC_EPS_Template", "OPC_EPS_Template"],
+                                         'EPS_Template': ["EPS_Template", "EPS_Template", "EPS_Template"],
                                          'AP2_Template': ["OPC_AP2_Off", "OPC_AP2_Off", "OPC_AP2_Off"],
-                                         'Type1': [1, 1, 1],
-                                         'Type2': [2, 2, 2],
-                                         'Type3': [2, 2, 2],
                                          'AP1_Mag': [50000, 50000, 50000],
                                          'AP1_AF_Mag': [45000, 45000, 45000],
                                          'AP1_Rot': [0, 0, 0],
-                                         'MP1_X': [0, 0, 0],
-                                         'MP1_Y': [0, 0, 0],
                                          'EP_Mag_X': [200000, 200000, 200000],
                                          'EP_AF_Mag': [200000, 200000, 200000],
                                          'EPS_ID': [1, 2, 3],
+                                         'MP1_X': [0, 0, 0],
+                                         'MP1_Y': [0, 0, 0],
                                          'MP1_TargetCD': [3000, 3000, 3000],
                                          'MP1_Direction': ['Y', 'Y', 'Y'],
                                          'MP1_Name': ['gauge1', 'gauge2', 'gauge3'],
@@ -228,7 +234,7 @@ class TestEpsData:
         # TODO add MPs ?
 
         # Act
-        result = df_to_eps_data_instance.get_eps_data()
+        result = eps_data_instance.get_eps_data()
         print(result.columns)
         print(expected_data_df.columns)
 

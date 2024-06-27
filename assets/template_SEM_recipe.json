@@ -19,15 +19,15 @@
         "GP_X": [0, 0],
         "GP_Y": [0, 0],
         "GP_Template": ["chef_OM_default", "chef_SEM_default"],
-        "GP_Mag": [210, 12000],
+        "GP_Mag": [210, 10000],
         "GP_Rot": [null, 0],
         "GP_Acceptance": [null, null]
     },
     "<EPS_Data>": {
         "EPS_ID": 1,
         "Type1": 1,
-        "Move_X": -300000000,
-        "Move_Y": -300000000,
+        "Move_X": 0,
+        "Move_Y": 0,
         "Mode": 1,
         "EPS_Name": "chaine",
         "Ref_EPS_ID": 1,
@@ -143,11 +143,11 @@
         "Offset_Y": 0
     },
     "<EPA_List>": {
-        "EPA_No": 1,
-        "Chip_X": 6,
-        "Chip_Y": 4,
-        "EPS_ID": 1,
-        "Move_Mode": 1
+        "EPA_No": null,
+        "Chip_X": null,
+        "Chip_Y": null,
+        "EPS_ID": null,
+        "Move_Mode": null
     },
     "<IDD_Cond>": {
         "DesignData": "",

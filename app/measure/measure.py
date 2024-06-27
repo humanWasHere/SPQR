@@ -13,8 +13,10 @@ from ..parsers.parse import FileParser
 
 
 class Measure:
-    def __init__(self, parser_input: FileParser, block: Block, json_conf: dict,
-                 tcl_script: str = None, row_range: tuple = None):
+    def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
+                 translation: dict = None, tcl_script: str = None, row_range: tuple = None):
+        if translation is None:
+            translation = dict(x=0, y=0)
         if row_range is None:
             self.parser_df = parser_input.parse_data()
         else:
@@ -22,7 +24,8 @@ class Measure:
         self.unit = parser_input.unit  # TODO should work with dbu ?
         self.layout = block.layout_path
         self.precision = int(float(block.precision))
-        self.json_conf = json_conf
+        self.layers = layers
+        self.translation = translation
 
         if tcl_script is None:
             self.tcl_script = Path(__file__).parent / "measure.tcl"
@@ -30,11 +33,9 @@ class Measure:
                 raise FileNotFoundError(f"Could not find {self.tcl_script}")
 
     def convert_to_SEM_coords(self):
-        if self.json_conf["translation"] != "":
-            # translation should be in nm
-            self.parser_df['x'] += self.json_conf['translation']['x']
-            self.parser_df['y'] += self.json_conf['translation']['y']
-            # TODO ask Romain if addressing points change too
+        # translation should be in parser's original unit
+        self.parser_df.loc[:, 'x'] += self.translation['x']
+        self.parser_df.loc[:, 'y'] += self.translation['y']
 
     def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
@@ -57,7 +58,7 @@ class Measure:
         with (open(self.tcl_script, "r") as template,
               open(tmp_script, "w") as script):
             texte = template.read()
-            texte = texte.replace("FEED_ME_LAYER", ' '.join(self.json_conf['layers']))
+            texte = texte.replace("FEED_ME_LAYER", ' '.join(self.layers))
             texte = texte.replace("FEED_ME_SEARCH_AREA", str(search_area))
             texte = texte.replace("FEED_ME_PRECISION", str(self.precision))
             texte = texte.replace("FEED_ME_CORRECTION", str(correction[self.unit]))
