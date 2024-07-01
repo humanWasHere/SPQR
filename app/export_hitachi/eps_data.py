@@ -30,27 +30,27 @@ class EPSData:
     }
 
     # mapper which matches the values of 2 different dataframes
-    MAPPING_USERCONFIG = {
+    MAPPING_TEMPLATES = {
         'EP_Template': "ep_template",
         'EPS_Template': "eps_template",
         'AP1_Template': "ap1_template",
-        'AP1_Mag': "ap1_mag",
-        'EP_Mag_X': "magnification",
-        'EP_AF_Mag': "magnification"
     }
     # FIXME to remove ?
     meas_len = 100
 
-    def __init__(self, core_data: pd.DataFrame, step: str, user_config_info: dict, template: dict):
+    def __init__(self, core_data: pd.DataFrame, step: str, mag: int, ap_mag: int, templates: dict,
+                 columns: dict):
         # TODO: validate data (columns, type, nan...) -> validator -> see when to validate in flow
         self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int},
                                           errors="ignore")
         assert step in {"PH", "ET", "PH_HR", "ET_HR"}
         self.step = step
-        self.json_conf = user_config_info
-        # self.template = template  # {'eps_col': value} similar to FIXED_VALUES mapper -> use it?
-        self.eps_data = pd.DataFrame(columns=template.keys())
-        # or template: DataFrame = table_sections['<EPS_Data>']; columns=template.columns
+        self.mag = mag
+        self.ap_mag = ap_mag
+        self.templates = templates
+        # self.columns = columns  # {'eps_col': value} similar to FIXED_VALUES mapper -> use it?
+        self.eps_data = pd.DataFrame(columns=columns.keys())
+        # or columns: DataFrame = table_sections['<EPS_Data>']; columns=template.columns
 
     def add_mp_width(self, mp_no=1, direction: Optional[str] = None, measleng: int = 100) -> None:
         """Add a width measurement point (line/space depending on MP template) at image center"""
@@ -81,16 +81,16 @@ class EPSData:
         # if not self.eps_data['MP2_X']:
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
         # else: handle if needed
-        # self.eps_data[f'MP{mp_no}_Template'] = template
-        # FIXME right place ? right code ?
         # fonctionnality for the ODIFF3 recipe of élodie.s
-        if isinstance(self.json_conf['mp_template'], str):
-            self.eps_data[f'MP{mp_no}_Template'] = self.json_conf['mp_template']
-        elif isinstance(self.json_conf['mp_template'], dict):
-            self.eps_data[f'MP{mp_no}_Template'] = self.core_data['1D/2D'].apply(lambda x: self.json_conf['mp_template']['1D']
-                                                                                 if x == '1D'
-                                                                                 else (self.json_conf['mp_template']['2D']
-                                                                                       if x == '2D' else ''))
+        # FIXME make it generic with a column spec. 1D/2D is not in core_data spec
+        if isinstance(self.templates['mp_template'], str):
+            template = self.templates['mp_template']
+        elif isinstance(self.templates['mp_template'], dict):
+            template = np.where(
+                self.core_data['1D/2D'] == '1D', self.templates['mp_template']['1D'], np.nan)
+            template = np.where(
+                self.core_data['1D/2D'] == '2D', self.templates['mp_template']['2D'], template)
+        self.eps_data[f'MP{mp_no}_Template'] = template
 
     def mapping_core_data(self) -> None:
         """Map columns from core dataframe to target HSS naming"""
@@ -104,9 +104,11 @@ class EPSData:
 
     def mapping_user_config(self) -> None:
         """Fill columns with user input from JSON config (overwrites fixed values)"""
-        for eps_col, user_col_key in self.MAPPING_USERCONFIG.items():
-            if self.json_conf[user_col_key] != "":
-                self.eps_data[eps_col] = self.json_conf[user_col_key]
+        self.eps_data[['EP_Mag_X', 'EP_AF_Mag']] = self.mag
+        self.eps_data['AP1_Mag'] = self.ap_mag
+        for eps_col, user_col_key in self.MAPPING_TEMPLATES.items():
+            if self.templates[user_col_key] != "":
+                self.eps_data[eps_col] = self.templates[user_col_key]
             elif eps_col in self.FIXED_VALUES:  # not needed if fix_values executed before
                 self.eps_data[eps_col] = self.FIXED_VALUES[eps_col]
             else:
@@ -128,14 +130,14 @@ class EPSData:
     def set_eps_data_template(self) -> None:
         # from eps_template to ep_template
         # __________EP_Template section__________
-        if self.json_conf['ep_template'] == "":
+        if self.templates['ep_template'] == "":
             self.eps_data['EP_Template'] = dict(
                 PH="banger_EP_F16",
                 ET="banger_EP_F32",
                 PH_HR="banger_EP_F16",
                 ET_HR="banger_EP_F32")[self.step]
         else:
-            self.eps_data['EP_Template'] = self.json_conf['ep_template']
+            self.eps_data['EP_Template'] = self.templates['ep_template']
 
     def set_eps_data_ap1_modification(self) -> None:
         # from type to AP1_AST_Mag
@@ -156,12 +158,11 @@ class EPSData:
 
     def fill_type_in_eps_data(self) -> None:
         '''Defines if the Type column needs to be filled by 1s, 2s or empty values'''
-        # FIXME overriding fix values ???
-        for col in self.eps_data:
+        for col in self.eps_data.columns:
             if col == "Type1":
                 self.eps_data[col] = 1
             # FIXME maintenabilité : 11 dépends du nommage et de la place de la colonne Type11 dans le template  # noqa E501
-            elif str(col).startswith("Type") and int(str(col)[4:6]) < 12:
+            elif col.startswith("Type") and int(col[4:6]) < 12:
                 self.eps_data[col] = 2
 
     def get_eps_data(self) -> pd.DataFrame:

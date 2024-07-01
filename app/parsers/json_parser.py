@@ -11,8 +11,8 @@ def import_json(json_file: str | Path) -> dict:
         return json.loads(Path(json_file).read_text())
     except FileNotFoundError:
         raise ValueError(f"The file {json_file} was not found.")
-    except json.JSONDecodeError:
-        raise ValueError(f"The file {json_file} contains invalid JSON.")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"The file {json_file} contains invalid JSON:\n\t{e}.")
 
 
 class JsonParser(FileParser):

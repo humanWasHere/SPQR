@@ -14,28 +14,29 @@ from ..parsers.parse import FileParser
 
 class Measure:
     def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
-                 translation: dict = None, tcl_script: str = None, row_range: tuple = None):
-        if translation is None:
-            translation = dict(x=0, y=0)
+                 offset: dict = None, tcl_script: str = None, row_range: tuple = None):
+        if offset is None:
+            offset = dict(x=0, y=0)
         if row_range is None:
             self.parser_df = parser_input.parse_data()
         else:
             self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
         self.unit = parser_input.unit  # TODO should work with dbu ?
         self.layout = block.layout_path
-        self.precision = int(float(block.precision))
+        self.precision = block.precision
         self.layers = layers
-        self.translation = translation
+        self.offset = offset
 
         if tcl_script is None:
-            self.tcl_script = Path(__file__).parent / "measure.tcl"
-            if not self.tcl_script.exists():
-                raise FileNotFoundError(f"Could not find {self.tcl_script}")
+            tcl_script = Path(__file__).parent / "measure.tcl"
+        if not tcl_script.exists():
+            raise FileNotFoundError(f"Could not find {tcl_script}")
+        self.tcl_script = tcl_script
 
-    def convert_to_SEM_coords(self):
-        # translation should be in parser's original unit
-        self.parser_df.loc[:, 'x'] += self.translation['x']
-        self.parser_df.loc[:, 'y'] += self.translation['y']
+    def apply_offset(self):
+        # workaround if coords are not in same coord as layout. should be in parser's original unit
+        self.parser_df.loc[:, 'x'] += self.offset['x']
+        self.parser_df.loc[:, 'y'] += self.offset['y']
 
     def creation_script_tmp(self, output, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
@@ -85,7 +86,7 @@ class Measure:
 
     def run_measure(self) -> pd.DataFrame:
         '''runs Calibre script to automatically measure a layout'''
-        self.convert_to_SEM_coords()
+        self.apply_offset()
         measure_tempfile = tempfile.NamedTemporaryFile(
             dir=Path.home() / "tmp")
         # TODO where to store tmp files (script + results)
@@ -107,8 +108,8 @@ class Measure:
         # print(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")
 
         # DEBUG copy results CSV
-        results = Path(measure_tempfile_path).read_text()
-        (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
+        # results = Path(measure_tempfile_path).read_text()
+        # (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
         measure_tempfile.close()
         # if not merged_dfs.empty:  # more checks + log
         #     print('\tmeasurement done')

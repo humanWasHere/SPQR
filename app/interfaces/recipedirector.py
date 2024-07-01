@@ -1,13 +1,14 @@
 """
-Interface with DesignGauge station
+Interface with Hitachi DesignGauge RecipeDirector station
 """
+import getpass
 import os
-from pathlib import Path
 import pexpect
 import socket
+from pathlib import Path
 
-from dotenv import load_dotenv
 import lxml.etree
+from dotenv import load_dotenv
 
 
 try:
@@ -17,9 +18,9 @@ except socket.gaierror:
     DG_HOST = "10.18.125.204"
 DG_TEMLATES = f"upguest@{DG_HOST}:/Designgauge/Template/"  # Templates
 # f"upguest@{DG_HOST}:/Designgauge/Template/AMP/"  # MP templates
-RCPD_UPGUEST = f"upguest@{DG_HOST}:/DGTransferData/DGUpload/"  # upload CSV
-DG_CSVDOWN = f"downguest@{DG_HOST}:/DGTransferData/DGDownload/"  # download CSV
-RCPD_DDGUEST = f"ddguest@{DG_HOST}:/design_data/data/"  # upload GDS
+RCPD_CSVUP = f"upguest@{DG_HOST}:/DGTransferData/DGUpload/"  # upload CSV
+RCPD_CSVDOWN = f"downguest@{DG_HOST}:/DGTransferData/DGDownload/"  # download CSV
+RCPD_DESIGNDATA = f"ddguest@{DG_HOST}:/design_data/data/"  # upload GDS
 DG_RECIPE = "/Designgauge/DGData/{techno}/Library/{maskset}/{recipe}"\
     .format(techno="OPC_C028", maskset="2822A", recipe="SJ71_NOSO_2822A_scanmatch_9fields")
 # design_data = lxml.etree.parse(f{DG_RECIPE}/IDD.xml").find("IDD/DesignDataName").text
@@ -27,27 +28,27 @@ DG_RECIPE = "/Designgauge/DGData/{techno}/Library/{maskset}/{recipe}"\
 # f"{DG_DESIGNDATA}/{design_data}.gds"
 
 
-# TODO change to dotenv ?
-def get_pw(dest):
-    # import json
-    # login = dest.split('@')[0]
+def get_username(path: str) -> str:
+    return path.split('@')[0] if '@' in path else None
+
+
+def get_pw(user: str) -> str:
     load_dotenv()
-    return os.getenv(dest)
-    # secrets = json.loads((Path.home()/".secrets.json").read_text())
-    # return secrets[login]
+    return os.getenv(user)
 
 
-def dg_transfer(source, destination, password=None):
+def dg_transfer(source: str, destination: str, password=None):
     # Use rsync to copy with specific permissions
+    user = get_username(destination) or get_username(source)
+    print(user)
     if password is None:
         try:
-            password = get_pw(destination)
+            password = get_pw(user)
         except FileNotFoundError:
             pass
-    user = destination.split('@')[0] or source.split('@')[0]
     child = pexpect.spawn(f"rsync -v -t --perms --chmod=u+r,g+r,o+r {source} {destination}")
     child.expect("password:")
-    child.sendline(password or input(f"{user}'s password: "))
+    child.sendline(password or getpass.getpass(f"{user}'s password: "))
     output = child.read().decode()  # todo: status check
     child.close()
     stdout = output.strip().replace('\r\n', '\n')
@@ -56,20 +57,26 @@ def dg_transfer(source, destination, password=None):
 
 # TODO: raise exception if error (eg file not exist)
 def upload_csv(file_path, password=None):
-    _status = dg_transfer(file_path, RCPD_UPGUEST, password)
+    _status = dg_transfer(file_path, RCPD_CSVUP, password)
     return _status
 
 
 def upload_gds(file_path, password=None):
-    _status = dg_transfer(file_path, RCPD_DDGUEST, password)
+    _status = dg_transfer(file_path, RCPD_DESIGNDATA, password)
     return _status
 
 
-def get_template(template_type, name, password=None, write_to=None):
+def download_csv(name, dest, password=None):
+    source = (Path(RCPD_CSVDOWN) / name).with_suffix('.csv')
+    _status = dg_transfer(str(source), dest, password)
+    return _status
+
+
+def get_template(template_type, name, password=None, write_to=None) -> lxml.etree._Element:
     child = pexpect.spawn(
         f"ssh upguest@{DG_HOST} cat /Designgauge/Template/{template_type}/{name}.xml")
     child.expect("password:")
-    child.sendline(password or input("upguest's password: "))
+    child.sendline(password or getpass.getpass("upguest's password: "))
     xml = child.read().strip()
     child.close()
     template_tree = lxml.etree.fromstring(xml)

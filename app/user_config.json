@@ -16,8 +16,28 @@
         "opcfield_y": 14387.5,
         "step_x": 15,
         "step_y": 15,
-        "num_step_x": 15,
-        "num_step_y": 14
+        "n_cols": 16,
+        "n_rows": 15
+    },
+    "x90m_reuse": {
+        "recipe_name": "banger_X901A",
+        "output_dir": "recipe_output/",
+        "parser": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/SJ71_X901A_GATE_OPCVERIF_FEM_PH2.csv",
+        "layout": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/X901A_FR_TOPRIGHT_ALL_cropped_for_SEM.oas",
+        "layers": ["52.111"],
+        "ap1_template": "",
+        "ap1_mag": "",
+        "ep_template": "",
+        "eps_template": "",
+        "magnification": 200000,
+        "mp_template": "Width_Default",
+        "step": "PH",
+        "opcfield_x": 3567.105,
+        "opcfield_y": 14387.5,
+        "step_x": 15,
+        "step_y": 15,
+        "n_cols": 16,
+        "n_rows": 15
     },
     "P18_FGAT": {
         "recipe_name": "chanelir_test_recipe_1808A_FGAT_PH",
@@ -36,19 +56,19 @@
         "opcfield_y": 16507.5,
         "step_x": 10,
         "step_y": 10,
-        "num_step_x": 33,
-        "num_step_y": 93
+        "n_cols": 34,
+        "n_rows": 94
     },
     "ODIFF3_elodie": {
         "recipe_name": "se22_recipe_ODIFF3_DFLL_v1",
-        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/",
+        "output_dir": "recipe_output/",
         "parser": "/work/opc/all/users/chanelir/semrc-assets/testcases/testcase_elodie/ssfile_test_case_elodie_04-24.txt",
         "layout": "/prj/opc/all/users/se22/ODIFF/ODIFF3/gds/Z1Brespin_2024/Z1B_respin_DFLL_SEM_11c.oas",
         "layers": ["33", "33.31"],
         "ap1_template": "se22_AP1_Template_16FR_50K_Fast",
         "ap1_mag": 50000,
         "ep_template": "se22_EP_Template_64F_TV4X_150K_Fast",
-        "eps_template": "OPC_EPS_Template",
+        "eps_template": "",
         "magnification": 120000,
         "mp_template": {
             "1D": "OPC_se22_Width_Space_Th80",
@@ -63,7 +83,7 @@
         "opcfield_y": "",
         "step_x": "",
         "step_y": "",
-        "num_step_x": "",
-        "num_step_y": ""
+        "n_cols": "",
+        "n_rows": ""
     }
 }

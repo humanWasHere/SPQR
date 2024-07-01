@@ -64,9 +64,9 @@ def manage_app_launch():
         # user_config_file = Path(__file__).resolve().parent / "user_config.json"
         # TODO validate whole JSON
         user_config = import_json(args.user_config)
-        if len(user_config)==0:
+        if len(user_config) == 0:
             raise ValueError("The provided configuration file does not contain any recipe.")
-        if len(user_config)==1 and args.user_recipe is None:
+        if len(user_config) == 1 and args.user_recipe is None:
             # recipe name is optional if there is only one
             args.user_recipe = next(iter(user_config.keys()))
         if args.user_recipe in user_config:
