@@ -48,7 +48,7 @@
         "ap1_template": "",
         "ap1_mag": "",
         "ep_template": "",
-        "eps_template": "EPS_Template",
+        "eps_template": "OPC_EPS_Template",
         "magnification": 200000,
         "mp_template": "X90M_GATE_PH",
         "step": "PH",
