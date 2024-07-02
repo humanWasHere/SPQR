@@ -39,7 +39,7 @@ class EPSData:
     meas_len = 100
 
     def __init__(self, core_data: pd.DataFrame, step: str, mag: int, ap_mag: int, templates: dict,
-                 columns: dict):
+                 eps_columns: dict):
         # TODO: validate data (columns, type, nan...) -> validator -> see when to validate in flow
         self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int},
                                           errors="ignore")
@@ -49,7 +49,7 @@ class EPSData:
         self.ap_mag = ap_mag
         self.templates = templates
         # self.columns = columns  # {'eps_col': value} similar to FIXED_VALUES mapper -> use it?
-        self.eps_data = pd.DataFrame(columns=columns.keys())
+        self.eps_data = pd.DataFrame(columns=eps_columns.keys())
         # or columns: DataFrame = table_sections['<EPS_Data>']; columns=template.columns
 
     def add_mp_width(self, mp_no=1, direction: Optional[str] = None, measleng: int = 100) -> None:

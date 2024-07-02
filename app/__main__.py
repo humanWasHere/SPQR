@@ -7,15 +7,15 @@ from .export_hitachi.hss_creator import HssCreator
 from .interfaces.input_checker import CheckConfig
 from .interfaces import recipedirector as rcpd
 from .measure.measure import Measure
+from .parsers.parse import ParserSelection, OPCfieldReverse
 from .parsers.json_parser import import_json
-from .parsers.parse import ParserSelection
 
 
 # TODO
 # for prod env : should be cd /dist run semrc.exe
 # overlap input data with GUI selection
-# export recipe to a formatted name -> ex: user_techno_maskset_layers_more
 # check if output_dir+recipe_name.(json/csv).exists -> ask user
+
 
 def cli() -> argparse.ArgumentParser:
     """defines the command lines actions of the soft"""
@@ -52,14 +52,17 @@ def manage_app_launch():
         sys.exit(1)
 
     if args.running_mode == 'start':
-        app_config_file = Path(__file__).resolve().parent / "app_config.json"
+        app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
         app_config = import_json(app_config_file)
-        assert app_config != ""  # test it another way
+        assert app_config != ""  # TODO test it another way
         test_env_config = app_config.get(args.recipe_type_selection)
         config_checker_instance = CheckConfig(test_env_config)
         # config_checker_instance.check_config(check_parser=args.recipe_type_selection != "opcfield")  # checks mandatory values
         config_checker_instance.check_config()
-        run_recipe_creation_w_measure(test_env_config)
+        if args.recipe_type_selection != "calibre_rulers":
+            run_recipe_creation_w_measure(test_env_config, line_selection=(100, 110))
+        else:
+            run_recipe_creation_w_measure(test_env_config, line_selection=(10, 20))
     elif args.running_mode == 'build':
         # user_config_file = Path(__file__).resolve().parent / "user_config.json"
         # TODO validate whole JSON
@@ -69,6 +72,9 @@ def manage_app_launch():
         if len(user_config) == 1 and args.user_recipe is None:
             # recipe name is optional if there is only one
             args.user_recipe = next(iter(user_config.keys()))
+        if len(user_config) > 1 and args.user_recipe is None:
+            print("You have more than one recipe in your configuration file. It means you need to select one with the -r attribute.")
+            sys.exit(1)
         if args.user_recipe in user_config:
             # print(f'running recipe {args.user_recipe}')
             build_env_config = user_config.get(args.user_recipe, {})
@@ -85,7 +91,6 @@ def manage_app_launch():
                     run_recipe_creation_w_measure(copied_build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
             else:
                 run_recipe_creation_w_measure(build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
-
         else:
             print(f'no recipe {args.user_recipe} has been found in user_config.json.')
             sys.exit(1)
@@ -98,12 +103,19 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
     print('\n______________________RUNNING RECIPE CREATION______________________\n')
     # parser selection
     parser_selection_instance = ParserSelection(json_conf)
-    selected_parser = parser_selection_instance.run_parsing_selection()
+    parser_data = parser_selection_instance.run_parsing_selection()
 
     # measurement
-    measure_instance = Measure(selected_parser, block, json_conf['layers'],
+    measure_instance = Measure(parser_data, block, json_conf['layers'],
                                json_conf.get('translation'), row_range=line_selection)
     output_measure = measure_instance.run_measure()
+
+    # renaming of measure points
+    if isinstance(parser_data, OPCfieldReverse):
+        output_measure.name = (output_measure["polarity"].str[:2] + output_measure[' min_dimension(nm)'].astype(int).astype(str)
+                               + '_' + 'P' + output_measure[' pitch_of_min_dim(nm)'].astype(int).astype(str)
+                               + '_' + output_measure.name.astype(str))
+
     # all recipe's sections creation
     runHssCreation = HssCreator(core_data=output_measure, block=block, json_conf=json_conf,
                                 polarity=json_conf.get('polarity', 'clear').lower())

@@ -15,14 +15,17 @@ class ParserSelection():
     def run_parsing_selection(self) -> FileParser:
         # TODO change to better selection logic (must choose between path or empty but not accept to take both)
         if self.json_conf['parser'] == "":
+            parser_type = "opcfield"
             parser_instance = OPCfieldReverse(self.json_conf['opcfield_x'], self.json_conf['opcfield_y'],
                                               self.json_conf['step_x'], self.json_conf['step_y'],
                                               self.json_conf['n_cols'], self.json_conf['n_rows'],
                                               self.json_conf['ap1_offset'][0], self.json_conf['ap1_offset'][1])
         else:
             try:
+                parser_type = "calibre_rulers"
                 parser_instance = CalibreXMLParser(self.json_conf['parser'])
             except (XMLSyntaxError, AttributeError):
+                parser_type = "genepy"
                 parser_instance = SSFileParser(self.json_conf['parser'], is_genepy=True)
                 # /!\ only manages genepy ssfile at the moment
         return parser_instance

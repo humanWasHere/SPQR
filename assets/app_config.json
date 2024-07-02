@@ -10,7 +10,7 @@
 
     "genepy": {
         "recipe_name": "test_env_genepy",
-        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+        "output_dir": "recipe_output/test_env/",
         "parser": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
         "layout": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
         "layers": ["1.0"],
@@ -31,7 +31,7 @@
 
     "calibre_rulers": {
         "recipe_name": "test_env_calibre_rulers",
-        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+        "output_dir": "recipe_output/test_env/",
         "parser": "/work/opc/all/users/banger/X90M/GATE/rulers_product.xml",
         "layout": "/work/opc/all/users/banger/X90M/GATE/466_Product_clips.oas",
         "layers": ["13.0"],
@@ -52,7 +52,7 @@
 
     "opcfield": {
         "recipe_name": "test_env_OPCField",
-        "output_dir": "/work/opc/all/users/chanelir/semrc/recipe_output/test_env",
+        "output_dir": "recipe_output/test_env/",
         "parser": "",
         "layout": "/prj/opc/all/users/bigarnen/P18/GDS/1808A_OPCMACRO_OPCF_FGAT.oas",
         "layers": ["7.0"],
@@ -67,7 +67,8 @@
         "opcfield_y": 16507.5,
         "step_x": 10,
         "step_y": 10,
-        "num_step_x": 33,
-        "num_step_y": 93
+        "n_rows": 34,
+        "n_cols": 94,
+        "ap1_offset": [42, 24]
     }
 }

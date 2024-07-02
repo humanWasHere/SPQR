@@ -34,7 +34,7 @@ class HssCreator:
         else:
             self.recipe_output_file = self.recipe_output_dir / str(json_conf['recipe_name'])
         assert re.match(r'^[a-zA-Z0-9_-]{0,37}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
-        # FIXME add template in user_input ?
+        # FIXME add already existing recipe in user_input ? -> parameter in CLI to add
         if template is None:
             self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
         sections = JsonParser(self.json_template).json_to_section_dicts()
@@ -45,10 +45,6 @@ class HssCreator:
                            json_conf['ap1_mag'], templates, sections.epsdata_section)
         self.eps_data = eps_data.get_eps_data()
         self.section_maker: SectionMaker
-
-    # def load_sections(self):
-    #     json_template_instance = JsonParser(self.json_template)
-    #     self.constant_sections, self.table_sections = json_template_instance.json_to_dataframe()
 
     def fill_with_eps_data(self) -> None:
         """Use template header and fill it with columns from the external EPSData dataframe"""
@@ -158,7 +154,6 @@ class HssCreator:
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
-        # self.load_sections()
         self.fill_with_eps_data()
         print('4. other sections creation')
         self.get_set_section()
