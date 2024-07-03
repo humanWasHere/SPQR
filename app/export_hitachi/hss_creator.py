@@ -155,9 +155,9 @@ class HssCreator:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
         self.fill_with_eps_data()
-        print('4. other sections creation')
+        print('4. Other sections creation')
         self.get_set_section()
-        print('\tother sections created')
+        print('\tOther sections created')
         # self.fill_type_in_eps_data()
         # self.convert_coord_to_nm()
         whole_recipe_template = self.dataframe_to_hss()

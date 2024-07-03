@@ -112,7 +112,7 @@ class EPSData:
             elif eps_col in self.FIXED_VALUES:  # not needed if fix_values executed before
                 self.eps_data[eps_col] = self.FIXED_VALUES[eps_col]
             else:
-                print(f"/!\\ {eps_col} is not specified in user_config.json. Make sure there is a default value for this column")
+                print(f"\t/!\\ {eps_col} is not specified in user_config.json. Make sure there is a default value for this column")
 
     # method naming based on Hitachi doc
     def set_eps_data_id(self) -> None:

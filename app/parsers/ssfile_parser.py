@@ -20,11 +20,12 @@ class SSFileParser(FileParser):
     def parse_data(self) -> pd.DataFrame:
         """Call the dedicated parsing logic depending on OPCField type"""
         if self.is_genepy:
+            print("1. Parsing Genepy ssfile")
             self.genepy_to_dataframe()
             self.post_parse()
+            if not self.data.empty:  # TODO add more logic - log
+                print('\tGenepy ssfile parsing done')
             return self.data
-        # if not self.data.empty:  # TODO add more logic - log
-            # print('\tssfile parsing done')
 
     def genepy_to_dataframe(self) -> pd.DataFrame:
         '''converts a genepy ssfile to a formatted parsing'''

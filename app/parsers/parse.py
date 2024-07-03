@@ -77,6 +77,9 @@ class OPCfieldReverse(FileParser):
         return self.data
 
     def parse_data(self) -> pd.DataFrame:
+        print("1. Running OPCField reverse gen")
         self.opcfield_reverse()
         self.data[['x_ap', 'y_ap']] = self.ap_offset
+        if not self.data.empty:  # TODO add more logic - log
+            print('\tOPCField reverse done')
         return self.data

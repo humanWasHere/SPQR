@@ -17,10 +17,14 @@ class Measure:
                  offset: dict = None, tcl_script: str = None, row_range: tuple = None):
         if offset is None:
             offset = dict(x=0, y=0)
-        if row_range is None:
-            self.parser_df = parser_input.parse_data()
-        else:
-            self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
+        self.parser_df = parser_input.parse_data()
+        if row_range is not None:
+            assert row_range[0] > 0, "the range selected is out of bound ! Should not be under 1"
+            assert row_range[1] <= len(self.parser_df), f"the range selected is out of bound ! Should not be above {len(self.parser_df)} for this recipe"
+            # include extremity values for iloc
+            row_range = [row_range[0] - 1, row_range[1] + 1]
+            self.parser_df = self.parser_df.iloc[slice(*row_range)]
+            # self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
         self.unit = parser_input.unit  # TODO should work with dbu ?
         self.layout = block.layout_path
         self.precision = block.precision
@@ -93,7 +97,7 @@ class Measure:
         measure_tempfile_path = measure_tempfile.name
         # measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"
         tmp = self.creation_script_tmp(measure_tempfile_path)
-        # print('2. measurement')  # TODO log
+        print('2. Starting measurement')  # TODO log
         lance_script(tmp, verbose=True)
         meas_df = self.process_results(measure_tempfile_path)
         parser_df = self.parser_df.copy()  # FIXME why copy ?
@@ -111,7 +115,7 @@ class Measure:
         # results = Path(measure_tempfile_path).read_text()
         # (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
         measure_tempfile.close()
-        # if not merged_dfs.empty:  # more checks + log
-        #     print('\tmeasurement done')
+        if not merged_dfs.empty:  # more checks + log
+            print('\tMeasurement done')
         # print(merged_dfs.columns)
         return merged_dfs

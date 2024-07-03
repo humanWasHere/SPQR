@@ -37,7 +37,7 @@ def cli() -> argparse.ArgumentParser:
     build_parser.add_argument('-u', '--upload_rcpd', action="store_true",
                               help='Send HSS recipe (.csv) and layout to RecipeDirector machine.')
     build_parser.add_argument('-l', '--line_selection', required=False, nargs=2, type=int, metavar=('START', 'END'),
-                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50 60"')
+                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50 60" where 50 and 60 are included')
     return parser
 
 
@@ -64,7 +64,8 @@ def manage_app_launch():
         else:
             run_recipe_creation_w_measure(test_env_config, line_selection=(10, 20))
     elif args.running_mode == 'build':
-        # user_config_file = Path(__file__).resolve().parent / "user_config.json"
+        assert args.user_config.exists(), f"Le fichier spécifié n'existe pas: {args.user_config}"
+        assert args.user_config.is_file(), f"Le chemin spécifié n'est pas un fichier: {args.user_config}"
         # TODO validate whole JSON
         user_config = import_json(args.user_config)
         if len(user_config) == 0:
@@ -92,7 +93,7 @@ def manage_app_launch():
             else:
                 run_recipe_creation_w_measure(build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
         else:
-            print(f'no recipe {args.user_recipe} has been found in user_config.json.')
+            print(f'no recipe {args.user_recipe} has been found in your config file .json.')
             sys.exit(1)
 
 

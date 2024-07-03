@@ -43,7 +43,7 @@ class CalibreXMLParser(FileParser):
 
     def parse_data(self):
         """Dispatch content type to row generators and return dataframe of coordinates"""
-        # print('1. calibre ruler parsing')  # TODO log
+        print("1. Parsing calibre rulers")  # TODO log
         if self.type == "rulers":
             rows = self.gen_rows_ruler()
         elif self.type == "clips":
@@ -60,5 +60,5 @@ class CalibreXMLParser(FileParser):
         parsed_data['y_ap'] = np.nan
         # TODO manage default columns
         if not parsed_data.empty:  # TODO add more logic - log
-            print('\tcalibre ruler parsing done')
+            print('\tCalibre rulers parsing done')
         return parsed_data  # .astype({'name': "string"})
