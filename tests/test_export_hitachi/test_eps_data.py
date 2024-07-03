@@ -32,7 +32,7 @@ class TestEpsData:
             "mp_template": "X90M_GATE_PH",
         }
         test_ex_gauge_df = EPSData(core_data=data_instance, step='PH', mag=200000, ap_mag=50000,
-                                   templates=template_config, columns={})
+                                   templates=template_config, eps_columns={})
         return test_ex_gauge_df
 
     def test_mapping_core_data(self, eps_data_instance):

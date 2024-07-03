@@ -6,7 +6,7 @@ from app.parsers.parse import OPCfieldReverse
 
 @pytest.fixture
 def opcfield():
-    return OPCfieldReverse(0, 0, 15, 15, 2, 1, 0, 5, 'B', 2)
+    return OPCfieldReverse(0, 0, 15, 15, 1, 2, 0, 5, 'B', 2)
 
 
 def test_opcfield_reverse_base_dataframe(opcfield):
