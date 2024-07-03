@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .parse import FileParser
+from .file_parser import FileParser
 
 
 class TACRulerParser(FileParser):

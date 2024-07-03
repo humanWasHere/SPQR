@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .hss_creator import HssCreator
 from ..parsers.csv_parser import HSSParser
-from ..parsers.json_parser import JsonParser, import_json
+from ..parsers.json_parser import JSONParser, import_json
 
 # TODO check if HssCreator instance is needed to modify the recipe
 # -> get file recipe that already has been output
@@ -20,7 +20,7 @@ class RecipeModificator(HssCreator):
             self.imported_csv_recipe = None
             self.imported_json_recipe = Path(json_recipe)
             self.working_recipe_path = Path(json_recipe)
-            json_parser_instance = JsonParser(self.imported_json_recipe)
+            json_parser_instance = JSONParser(self.imported_json_recipe)
             self.constant_sections, self.table_sections = json_parser_instance.json_to_section_dicts()
             # print(f"here is constant_sections : {self.constant_sections}. Which is {type(self.constant_sections)}")
             # print(f"here is table_sections : {self.table_sections}. Which is {type(self.table_sections)}")
@@ -53,7 +53,7 @@ class RecipeModificator(HssCreator):
         '''checks wether or not the imported recipe to modificate
         has the columns of the json template
         by dataframe comparison'''
-        json_template_parser_instance = JsonParser(str(self.json_template))
+        json_template_parser_instance = JSONParser(str(self.json_template))
         constant_sections_json_template, table_sections_json_template = json_template_parser_instance.parse_data()
         csv_recipe_parser_instance = HSSParser(str(self.imported_csv_recipe))
         constant_sections_csv_recipe, table_sections_csv_recipe = csv_recipe_parser_instance.parse_data()

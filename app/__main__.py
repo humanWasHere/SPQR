@@ -7,8 +7,9 @@ from .export_hitachi.hss_creator import HssCreator
 from .interfaces.input_checker import CheckConfig
 from .interfaces import recipedirector as rcpd
 from .measure.measure import Measure
-from .parsers.parse import ParserSelection, OPCfieldReverse
+from .parsers.parse import ParserSelection, OPCFieldReverse
 from .parsers.json_parser import import_json
+from .parsers.parse import ParserSelection, get_parser, OPCFieldReverse
 
 
 # TODO
@@ -103,16 +104,25 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
 
     print('\n______________________RUNNING RECIPE CREATION______________________\n')
     # parser selection
-    parser_selection_instance = ParserSelection(json_conf)
-    parser_data = parser_selection_instance.run_parsing_selection()
+    # parser_selection_instance = ParserSelection(json_conf)
+    # selected_parser = parser_selection_instance.run_parsing_selection()
+    parser = get_parser(json_conf['parser'])
+    if issubclass(parser, OPCFieldReverse):
+        selected_parser = parser(
+            json_conf['opcfield_x_y'][0], json_conf['opcfield_x_y'][1],
+            json_conf['step_x_y'][0], json_conf['step_x_y'][1],
+            json_conf['n_rows_cols'][0], json_conf['n_rows_cols'][1],
+            json_conf['ap1_offset'][0], json_conf['ap1_offset'][1])
+    else:
+        selected_parser = parser(json_conf['parser'])
 
     # measurement
-    measure_instance = Measure(parser_data, block, json_conf['layers'],
+    measure_instance = Measure(selected_parser, block, json_conf['layers'],
                                json_conf.get('translation'), row_range=line_selection)
     output_measure = measure_instance.run_measure()
 
     # renaming of measure points
-    if isinstance(parser_data, OPCfieldReverse):
+    if isinstance(selected_parser, OPCFieldReverse):
         output_measure.name = (output_measure["polarity"].str[:2] + output_measure[' min_dimension(nm)'].astype(int).astype(str)
                                + '_' + 'P' + output_measure[' pitch_of_min_dim(nm)'].astype(int).astype(str)
                                + '_' + output_measure.name.astype(str))

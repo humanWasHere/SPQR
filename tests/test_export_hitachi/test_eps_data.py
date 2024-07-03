@@ -173,7 +173,7 @@ class TestEpsData:
         eps_data_instance.eps_data['EP_Mag_X'] = [200000, 200000, 200000]  # needed for target_cd definition
         eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # needed for MP_ID
         eps_data_instance.eps_data[[f'Type{i}' for i in range(1, 15)]] = None
-        
+
         eps_data_instance.fill_type_in_eps_data()
 
         # Assert

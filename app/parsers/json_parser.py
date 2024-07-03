@@ -2,7 +2,7 @@ import pandas as pd
 import json
 from pathlib import Path
 
-from .parse import FileParser
+from .file_parser import FileParser
 
 
 def import_json(json_file: str | Path) -> dict:
@@ -15,7 +15,7 @@ def import_json(json_file: str | Path) -> dict:
         raise ValueError(f"The file {json_file} contains invalid JSON:\n\t{e}.")
 
 
-class JsonParser(FileParser):
+class JSONParser(FileParser):
 
     def __init__(self, json_file_path: str | Path) -> None:
         self.json_content = import_json(json_file_path)
@@ -35,7 +35,7 @@ class JsonParser(FileParser):
         data = self.epsdata_section[['EPS_Name', 'Move_X', 'Move_Y']]
         return data.rename(columns=['name', 'x', 'y'])
 
-    def json_to_section_dicts(self) -> 'JsonParser':
+    def json_to_section_dicts(self) -> 'JSONParser':
         """Parse a valid HSS JSON template into two dictionaries of unique sections:
         - a dict of strings for unique values -> {'section_name': "value"},
         - a dict of dataframes for table content -> {'section_name': pd.DataFrame}."""

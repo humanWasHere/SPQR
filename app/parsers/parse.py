@@ -1,10 +1,57 @@
-from lxml.etree import XMLSyntaxError
+import csv
+import json
+import re
+from pathlib import Path
+from typing import Type
+
 import numpy as np
 import pandas as pd
+from lxml import etree
 
+from .csv_parser import HSSParser, TACRulerParser
 from .file_parser import FileParser
+from .json_parser import JSONParser
 from .ssfile_parser import SSFileParser
 from .xml_parser import CalibreXMLParser
+
+
+def get_parser(value: str) -> Type[FileParser]:
+    if value == "":
+        return OPCFieldReverse
+    if not Path(value).exists():
+        raise FileNotFoundError(f'{value} not found. Check input file path, or leave empty.')
+    # Sample the file to detect content type
+    # CSV
+    with open(value, 'r', encoding='utf-8') as file:
+        sample = file.read(2048)
+    # if re.search(r"<\w+>", sample):  # matches XML
+    if not sample.strip().startswith('{') and re.search("<FileID>", sample):
+        return HSSParser
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=';\t,')
+        header = next(csv.reader(sample.splitlines(), dialect))
+        if {'gauge', 'base_x', 'base_y', 'head_x', 'head_y'}.issubset(header):
+            return TACRulerParser
+        if {'Name', 'X_coord_Pat', 'Y_coord_Pat', 'X_coord_Addr'}.issubset(header):
+            return SSFileParser
+    except csv.Error:
+        pass  # not a CSV or dialect not found
+    # Read all file
+    content = Path(value).read_text()
+    # XML
+    try:
+        root = etree.fromstring(content)
+        # CalibreXMLParser(root.getroottree())
+        return CalibreXMLParser
+    except etree.XMLSyntaxError:
+        pass  # not an XML
+    # JSON
+    try:
+        json.loads(content)
+        return JSONParser
+    except json.JSONDecodeError:
+        pass
+    return None
 
 
 class ParserSelection():
@@ -15,22 +62,22 @@ class ParserSelection():
     def run_parsing_selection(self) -> FileParser:
         # TODO change to better selection logic (must choose between path or empty but not accept to take both)
         if self.json_conf['parser'] == "":
-            parser_instance = OPCfieldReverse(self.json_conf['opcfield_x_y'][0], self.json_conf['opcfield_x_y'][1],
+            parser_instance = OPCFieldReverse(self.json_conf['opcfield_x_y'][0], self.json_conf['opcfield_x_y'][1],
                                               self.json_conf['step_x_y'][0], self.json_conf['step_x_y'][1],
                                               self.json_conf['n_rows_cols'][0], self.json_conf['n_rows_cols'][1],
                                               self.json_conf['ap1_offset'][0], self.json_conf['ap1_offset'][1])
         else:
             try:
                 parser_instance = CalibreXMLParser(self.json_conf['parser'])
-            except (XMLSyntaxError, AttributeError):
+            except (etree.XMLSyntaxError, AttributeError):
                 parser_instance = SSFileParser(self.json_conf['parser'], is_genepy=True)
                 # /!\ only manages genepy ssfile at the moment
         return parser_instance
 
 
-class OPCfieldReverse(FileParser):
+class OPCFieldReverse(FileParser):
 
-    unit = None
+    unit = 'um'
 
     def __init__(self, origin_x: float, origin_y: float, step_x: float, step_y: float,
                  n_rows: int, n_cols: int, ap_x: float, ap_y: float,

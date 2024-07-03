@@ -21,7 +21,7 @@
         "magnification": 200000,
         "mp_template": "X90M_GATE_PH",
         "step": "PH",
-        "opcfield_x_y": "",
+        "origin_x_y": "",
         "step_x_y": "",
         "n_rows_cols": "",
         "ap1_offset": ""
@@ -40,7 +40,7 @@
         "magnification": 200000,
         "mp_template": "X90M_GATE_PH",
         "step": "PH",
-        "opcfield_x_y": "",
+        "origin_x_y": "",
         "step_x_y": "",
         "n_rows_cols": "",
         "ap1_offset": ""
@@ -57,9 +57,9 @@
         "ep_template": "",
         "eps_template": "",
         "magnification": 200000,
-        "mp_template": "X90M_GATE_PH",
+        "mp_template": "Width_Default",
         "step": "PH",
-        "opcfield_x_y": [12888.5, 16507.5],
+        "origin_x_y": [12888.5, 16507.5],
         "step_x_y": [10, 10],
         "n_rows_cols": [93, 33],
         "ap1_offset": [2.75, 0]

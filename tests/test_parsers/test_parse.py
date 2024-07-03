@@ -1,12 +1,17 @@
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
-from app.parsers.parse import OPCfieldReverse
+from app.parsers.parse import OPCFieldReverse, get_parser
+from app.parsers import (CalibreXMLParser, HSSParser, JSONParser, SSFileParser, TACRulerParser)
+
+TESTFILES = Path(__file__).resolve().parents[1] / "testfiles"
 
 
 @pytest.fixture
 def opcfield():
-    return OPCfieldReverse(0, 0, 15, 15, 1, 2, 0, 5, 'B', 2)
+    return OPCFieldReverse(0, 0, 15, 15, 1, 2, 0, 5, 'B', 2)
 
 
 def test_opcfield_reverse_base_dataframe(opcfield):
@@ -25,3 +30,13 @@ def test_opcfield_reverse_with_ap(opcfield):
     }, orient='index')
     pd.testing.assert_frame_equal(opcfield.parse_data(), expected,
                                   check_like=True, obj='parse_data output')
+
+
+def test_get_parser():
+    testfiles = Path('/work/opc/all/users/banger/dev/semchef/examples/')
+    assert get_parser('') is OPCFieldReverse
+    assert get_parser(testfiles / 'banger_MP03K_ACTI_scanmat_PH.csv') is HSSParser
+    assert get_parser(testfiles / 'tacx_rulers.txt') is TACRulerParser
+    assert get_parser(testfiles / 'calibre_rulers.xml') is CalibreXMLParser
+    assert get_parser(TESTFILES / 'test_template.json') is JSONParser
+    assert get_parser(TESTFILES / 'ssfile_proto.txt') is SSFileParser

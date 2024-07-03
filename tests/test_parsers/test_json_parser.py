@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from unittest import mock
 
-from app.parsers.json_parser import JsonParser, import_json
+from app.parsers.json_parser import JSONParser, import_json
 # from app.data_structure import Block
 # from app.export_hitachi.hss_creator import HssCreator
 
@@ -22,7 +22,7 @@ class TestJsonParser:
 
     @pytest.fixture
     def json_parser_instance(self):
-        return JsonParser(TEST_TEMPLATE)
+        return JSONParser(TEST_TEMPLATE)
 
     def test_import_json(self):
         '''checks that the template is correclty imported in memory'''

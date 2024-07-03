@@ -7,7 +7,7 @@ import pandas as pd
 from ..data_structure import Block
 from .eps_data import EPSData
 from .section_maker import SectionMaker
-from ..parsers.json_parser import JsonParser
+from ..parsers.json_parser import JSONParser
 
 # TODO
 # export QCG 5k vs 6k
@@ -37,7 +37,7 @@ class HssCreator:
         # FIXME add already existing recipe in user_input ? -> parameter in CLI to add
         if template is None:
             self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        sections = JsonParser(self.json_template).json_to_section_dicts()
+        sections = JSONParser(self.json_template).json_to_section_dicts()
         self.constant_sections: dict[str, str] = sections.constant_sections
         self.table_sections: dict[str, pd.DataFrame] = sections.table_sections
         templates = {key: json_conf[key] for key in ['ap1_template', 'ep_template', 'eps_template', 'mp_template']}
