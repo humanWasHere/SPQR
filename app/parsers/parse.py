@@ -15,9 +15,9 @@ class ParserSelection():
     def run_parsing_selection(self) -> FileParser:
         # TODO change to better selection logic (must choose between path or empty but not accept to take both)
         if self.json_conf['parser'] == "":
-            parser_instance = OPCfieldReverse(self.json_conf['opcfield_x'], self.json_conf['opcfield_y'],
-                                              self.json_conf['step_x'], self.json_conf['step_y'],
-                                              self.json_conf['n_cols'], self.json_conf['n_rows'],
+            parser_instance = OPCfieldReverse(self.json_conf['opcfield_x_y'][0], self.json_conf['opcfield_x_y'][1],
+                                              self.json_conf['step_x_y'][0], self.json_conf['step_x_y'][1],
+                                              self.json_conf['n_rows_cols'][0], self.json_conf['n_rows_cols'][1],
                                               self.json_conf['ap1_offset'][0], self.json_conf['ap1_offset'][1])
         else:
             try:
@@ -33,7 +33,7 @@ class OPCfieldReverse(FileParser):
     unit = None
 
     def __init__(self, origin_x: float, origin_y: float, step_x: float, step_y: float,
-                 n_cols: int, n_rows: int, ap_x: float, ap_y: float,
+                 n_rows: int, n_cols: int, ap_x: float, ap_y: float,
                  origin_letter="A", origin_number=1) -> None:
         self.origin_x = origin_x
         self.origin_y = origin_y
