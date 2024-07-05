@@ -42,7 +42,7 @@ class HssCreator:
         self.table_sections: dict[str, pd.DataFrame] = sections.table_sections
         templates = {key: json_conf[key] for key in ['ap1_template', 'ep_template', 'eps_template', 'mp_template']}
         eps_data = EPSData(core_data, json_conf['step'], json_conf['magnification'],
-                           json_conf['ap1_mag'], templates, sections.epsdata_section)
+                           json_conf['ap1_mag'], templates, sections.table_sections['<EPS_Data>'])
         self.eps_data = eps_data.get_eps_data()
         self.section_maker: SectionMaker
 
@@ -142,6 +142,7 @@ class HssCreator:
             if not section_series.empty:
                 section_dict = section_series.to_dict(orient='records')[0]
                 json_content[section_keys] = section_dict
+                # json_content[section_keys] = {col: section_series[col].tolist() for col in section_series}
             else:
                 # TODO raise an error ?
                 print(f"\t{section_keys} has its series empty")

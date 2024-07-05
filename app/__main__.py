@@ -64,6 +64,7 @@ def manage_app_launch():
             run_recipe_creation_w_measure(test_env_config, line_selection=(100, 110))
         else:
             run_recipe_creation_w_measure(test_env_config, line_selection=(10, 20))
+        # TODO for loop to run all test dev recipes with arg -a
     elif args.running_mode == 'build':
         assert args.user_config.exists(), f"Le fichier spécifié n'existe pas: {args.user_config}"
         assert args.user_config.is_file(), f"Le chemin spécifié n'est pas un fichier: {args.user_config}"
@@ -109,7 +110,7 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
     parser = get_parser(json_conf['parser'])
     if issubclass(parser, OPCFieldReverse):
         selected_parser = parser(
-            json_conf['opcfield_x_y'][0], json_conf['opcfield_x_y'][1],
+            json_conf['origin_x_y'][0], json_conf['origin_x_y'][1],
             json_conf['step_x_y'][0], json_conf['step_x_y'][1],
             json_conf['n_rows_cols'][0], json_conf['n_rows_cols'][1],
             json_conf['ap1_offset'][0], json_conf['ap1_offset'][1])
@@ -123,9 +124,13 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
 
     # renaming of measure points
     if isinstance(selected_parser, OPCFieldReverse):
-        output_measure.name = (output_measure["polarity"].str[:2] + output_measure[' min_dimension(nm)'].astype(int).astype(str)
-                               + '_' + 'P' + output_measure[' pitch_of_min_dim(nm)'].astype(int).astype(str)
-                               + '_' + output_measure.name.astype(str))
+        # rm measurement lines rendering 'Pitch non symetrical' in
+        indices_to_remove = output_measure[output_measure[' pitch_of_min_dim(nm)'].astype(str).str.contains('Pitch non symetrical')].index
+        output_measure.drop(indices_to_remove, inplace=True)
+        output_measure.name = (output_measure["polarity"].str[:2]
+                               + output_measure[' min_dimension(nm)'].astype(float).astype(int).astype(str) + '_' + 'P'
+                               + output_measure[' pitch_of_min_dim(nm)'].astype(float).astype(int).astype(str) + '_'
+                               + output_measure.name.astype(str))
 
     # all recipe's sections creation
     runHssCreation = HssCreator(core_data=output_measure, block=block, json_conf=json_conf,

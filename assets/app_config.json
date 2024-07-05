@@ -11,8 +11,8 @@
     "genepy": {
         "recipe_name": "test_env_genepy",
         "output_dir": "recipe_output/test_env/",
-        "parser": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
-        "layout": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
+        "parser": "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/ssfile_proto.txt",
+        "layout": "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
         "layers": ["1.0"],
         "ap1_template": "",
         "ap1_mag": "",

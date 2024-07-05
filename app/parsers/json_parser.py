@@ -22,7 +22,7 @@ class JSONParser(FileParser):
         # TODO schema validation
         self.constant_sections: dict[str, str] = {}
         self.table_sections: dict[str, pd.DataFrame] = {}
-        self.epsdata_section: dict = {}
+        self.epsdata_section: pd.DataFrame
         self._unit = "nm"  # HSS default
 
     @property
@@ -30,17 +30,20 @@ class JSONParser(FileParser):
         return self._unit
 
     def parse_data(self):
+        print("1. Parsing JSON")
         self.json_to_section_dicts()
         # TODO: reverse core data from EPS_Data content
-        data = self.epsdata_section[['EPS_Name', 'Move_X', 'Move_Y']]
-        return data.rename(columns=['name', 'x', 'y'])
+        self.epsdata_section = self.table_sections['<EPS_Data>'].loc[
+            :, ['EPS_Name', 'Move_X', 'Move_Y', 'AP1_X', 'AP1_Y']].copy()
+        self.epsdata_section.columns = ['name', 'x', 'y', 'x_ap', 'y_ap']
+        if not self.epsdata_section.empty:  # TODO add more logic - log
+            print('\tJSON parsing done')
+        return self.epsdata_section
 
     def json_to_section_dicts(self) -> 'JSONParser':
         """Parse a valid HSS JSON template into two dictionaries of unique sections:
         - a dict of strings for unique values -> {'section_name': "value"},
         - a dict of dataframes for table content -> {'section_name': pd.DataFrame}."""
-
-        self.epsdata_section = self.json_content.get('<EPS_Data>')  # pop?
         # Split other sections
         for section_name, content in self.json_content.items():
             if isinstance(content, dict):

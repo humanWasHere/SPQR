@@ -23,6 +23,7 @@ class Measure:
             assert row_range[1] <= len(self.parser_df), f"the range selected is out of bound ! Should not be above {len(self.parser_df)} for this recipe"
             # include extremity values for iloc
             row_range = [row_range[0] - 1, row_range[1] + 1]
+            # faire un for qui concat tous les intervales pour avoir que les mesures des différents intervales
             self.parser_df = self.parser_df.iloc[slice(*row_range)]
             # self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
         self.unit = parser_input.unit  # TODO should work with dbu ?
