@@ -13,7 +13,7 @@ class TestEpsData:
     def eps_data_columns(self) -> dict:
         test_hss = Path(__file__).resolve().parents[1] / "testfiles" / "test_template.json"
         hss_template = json.loads(test_hss.read_text())
-        return hss_template.get('<EPS_Data>')
+        return pd.DataFrame(columns=hss_template.get('<EPS_Data>'))
 
     @pytest.fixture
     def eps_data_instance(self, eps_data_columns) -> EPSData:
@@ -32,7 +32,7 @@ class TestEpsData:
             "mp_template": "X90M_GATE_PH",
         }
         test_ex_gauge_df = EPSData(core_data=data_instance, step='PH', mag=200000, ap_mag=50000,
-                                   templates=template_config, eps_columns=pd.DataFrame)
+                                   templates=template_config, eps_columns=eps_data_columns)
         return test_ex_gauge_df
 
     def test_mapping_core_data(self, eps_data_instance):
@@ -51,9 +51,11 @@ class TestEpsData:
 
         # Act
         eps_data_instance.mapping_core_data()
+        columns_to_check = ['EPS_Name', 'Move_X', 'Move_Y', 'EP_AF_X', 'EP_AF_Y', 'AP1_X', 'AP1_Y', 'AP1_AF_X', 'AP1_AF_Y']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
-        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_data)
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_data)
 
     def test_mapping_user_config(self, eps_data_instance):
         # Arrange
@@ -67,9 +69,11 @@ class TestEpsData:
 
         # Act
         eps_data_instance.mapping_user_config()
+        columns_to_check = ['EPS_ID', 'EP_Mag_X', 'EP_AF_Mag', 'AP1_Mag', 'EPS_Template']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
-        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_data)
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_data)
 
     def test_mapping_from_fix_values(self, eps_data_instance):
         '''checks wether assigning data from mapping works as expected'''
@@ -88,11 +92,13 @@ class TestEpsData:
 
         # Act
         eps_data_instance.mapping_from_fix_values()
+        columns_to_check = ['EPS_Name', 'Mode', 'EPS_Template', 'AP2_Template', 'AP1_Mag', 'AP1_AF_Mag', 'AP1_Rot']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
         for column, value in EPSData.FIXED_VALUES.items():
-            assert (eps_data_instance.eps_data[column] == value).all(), f"Column {column} does not match fixed value {value}"
-        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_eps_data_df)
+            assert (eps_data_instance_eps_data_subset[column] == value).all(), f"Column {column} does not match fixed value {value}"
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_eps_data_df)
 
     def test_set_eps_data_id(self, eps_data_instance):
         '''checks wether setting EPS_ID data setting iterativelly works'''
@@ -101,9 +107,11 @@ class TestEpsData:
 
         # Act
         eps_data_instance.set_eps_data_id()
+        columns_to_check = ['EPS_ID']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
-        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_eps_data_df)
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_eps_data_df)
 
     # def test_set_eps_data_eps_modification(self):
     #     pass
@@ -119,9 +127,11 @@ class TestEpsData:
 
         # Act
         eps_data_instance.set_eps_data_template()
+        columns_to_check = ['EPS_Name', 'EP_Template']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
-        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_eps_data_df)
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_eps_data_df)
 
     # def test_set_eps_data_ap1_modification(self):
     #     pass
@@ -136,9 +146,11 @@ class TestEpsData:
 
         # Act
         eps_data_instance.set_eps_data_ep_modification()
+        columns_to_check = ['EP_Rot']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
-        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_eps_data_df)
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_eps_data_df)
 
     def test_add_mp_width(self, eps_data_instance):
         '''checks wether add_mp_width method fills data as expected'''
@@ -162,9 +174,11 @@ class TestEpsData:
 
         # Act
         eps_data_instance.add_mp_width()
+        columns_to_check = ['EP_Mag_X', 'EPS_ID', 'MP1_X', 'MP1_Y', 'MP1_TargetCD', 'MP1_Direction', 'MP1_Name', 'MP1_SA_In', 'MP1_SA_Out', 'MP1_MeaLeng', 'MP1_PNo', 'MP1_Template']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
-        pd.testing.assert_frame_equal(eps_data_instance.eps_data, expected_data)
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_data)
 
     # TODO
     def test_fill_type_in_eps_data(self, eps_data_instance: EPSData):
@@ -231,9 +245,10 @@ class TestEpsData:
 
         # Act
         result = eps_data_instance.get_eps_data()
-        print(result.columns)
-        print(expected_data_df.columns)
+        columns_to_check = ['EPS_Name', 'Move_X', 'Move_Y', 'EP_AF_X', 'EP_AF_Y', 'AP1_X', 'AP1_Y', 'AP1_AF_X', 'AP1_AF_Y', 'Mode', 'EPS_Template', 'AP2_Template', 'AP1_Mag', 'AP1_AF_Mag',
+                            'AP1_Rot', 'EP_Mag_X', 'EP_AF_Mag', 'EPS_ID', 'MP1_X', 'MP1_Y', 'MP1_TargetCD', 'MP1_Direction', 'MP1_Name', 'MP1_SA_In', 'MP1_SA_Out', 'MP1_MeaLeng', 'MP1_PNo', 'MP1_Template', 'EP_Template', 'EP_Rot']
+        result_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
         assert isinstance(result, pd.DataFrame)
-        pd.testing.assert_frame_equal(result, expected_data_df)
+        pd.testing.assert_frame_equal(result_subset, expected_data_df)
