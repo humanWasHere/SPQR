@@ -2,12 +2,13 @@ import argparse
 import sys
 from pathlib import Path
 
+import numpy as np
+
 from .data_structure import Block
 from .export_hitachi.hss_creator import HssCreator
 from .interfaces.input_checker import CheckConfig
 from .interfaces import recipedirector as rcpd
 from .measure.measure import Measure
-from .parsers.parse import ParserSelection, OPCFieldReverse
 from .parsers.json_parser import import_json
 from .parsers.parse import ParserSelection, get_parser, OPCFieldReverse
 
@@ -20,7 +21,7 @@ from .parsers.parse import ParserSelection, get_parser, OPCFieldReverse
 
 def cli() -> argparse.ArgumentParser:
     """defines the command lines actions of the soft"""
-    parser = argparse.ArgumentParser(prog='SEM Recipe Creator', description='-----CLI tool for SEM Recipe Creation-----')
+    parser = argparse.ArgumentParser(prog='spqr', description='-----CLI tool for SEM Recipe Creation-----')
     subparsers = parser.add_subparsers(dest='running_mode',
                                        help='Selects the running mode of the app (start or build). End user should use build.')
 
@@ -47,10 +48,13 @@ def manage_app_launch():
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
     args = cli().parse_args()
+    # Post process args
     if not args.running_mode:
         print("CLI app should be executed as indicated below.\n")
         cli().print_help()
         sys.exit(1)
+    if args.line_selection is not None:
+        args.line_selection = tuple(args.line_selection)
 
     if args.running_mode == 'start':
         app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
@@ -80,20 +84,20 @@ def manage_app_launch():
             sys.exit(1)
         if args.user_recipe in user_config:
             # print(f'running recipe {args.user_recipe}')
-            build_env_config = user_config.get(args.user_recipe, {})
-            config_checker_instance = CheckConfig(build_env_config)
+            build_config = user_config.get(args.user_recipe, {})
+            config_checker_instance = CheckConfig(build_config)
             config_checker_instance.check_config()
-            if isinstance(build_env_config['step'], list):
-                recipe_part = 0
-                for step in build_env_config['step']:
-                    copied_build_env_config = {key: value for key, value in build_env_config.items()}
-                    recipe_part += 1
-                    print(f"\ncreating recipe {copied_build_env_config['recipe_name']}{recipe_part}/{len(build_env_config['step'])} : {step} pour {copied_build_env_config['step']}")
-                    copied_build_env_config['step'] = step
-                    copied_build_env_config['recipe_name'] = str(f"{build_env_config['recipe_name']}_p{recipe_part}")
-                    run_recipe_creation_w_measure(copied_build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
+            if isinstance(build_config['step'], list):
+                steps = build_config['step']
+                for part, step in enumerate(steps):
+                    print(f"\ncreating recipe {build_config['recipe_name']} "
+                          f"{part+1}/{len(steps)}: {step} from {steps}")
+                    copied_config = build_config.copy()
+                    copied_config['step'] = step
+                    copied_config['recipe_name'] = str(f"{build_config['recipe_name']}_{step}")
+                    run_recipe_creation_w_measure(copied_config, args.upload_rcpd, args.line_selection)
             else:
-                run_recipe_creation_w_measure(build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
+                run_recipe_creation_w_measure(build_config, args.upload_rcpd, args.line_selection)
         else:
             print(f'no recipe {args.user_recipe} has been found in your config file .json.')
             sys.exit(1)
@@ -124,13 +128,10 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
 
     # renaming of measure points
     if isinstance(selected_parser, OPCFieldReverse):
-        # rm measurement lines rendering 'Pitch non symetrical' in
-        indices_to_remove = output_measure[output_measure[' pitch_of_min_dim(nm)'].astype(str).str.contains('Pitch non symetrical')].index
-        output_measure.drop(indices_to_remove, inplace=True)
-        output_measure.name = (output_measure["polarity"].str[:2]
-                               + output_measure[' min_dimension(nm)'].astype(float).astype(int).astype(str) + '_' + 'P'
-                               + output_measure[' pitch_of_min_dim(nm)'].astype(float).astype(int).astype(str) + '_'
-                               + output_measure.name.astype(str))
+        cd_space = output_measure["polarity"].str[:2] + output_measure[' min_dimension(nm)'].astype(int).astype(str)
+        iso = output_measure[' pitch_of_min_dim(nm)'] == output_measure[' min_dimension(nm)']
+        pitch = np.where(iso, "ISO", 'P' + output_measure[' pitch_of_min_dim(nm)'].astype(int).astype(str))
+        output_measure.name = cd_space + '_' + pitch + '_' + output_measure.name.astype(str)
 
     # all recipe's sections creation
     runHssCreation = HssCreator(core_data=output_measure, block=block, json_conf=json_conf,
