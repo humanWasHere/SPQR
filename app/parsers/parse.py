@@ -15,6 +15,7 @@ from .ssfile_parser import SSFileParser
 from .xml_parser import CalibreXMLParser
 
 
+# TODO delete the one unused
 def get_parser(value: str) -> Type[FileParser]:
     if value == "":
         return OPCFieldReverse

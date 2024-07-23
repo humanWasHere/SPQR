@@ -76,6 +76,17 @@ class TestHssCreator:
     #     tmp_file.write_text(content)
     #     return tmp_file
 
+    def test_fill_with_eps_data(self, hss_instance):
+        '''tests that dataframe_to_eps_data.py to check if it returns a dataframes'''
+        # TODO test très impertinent -> il check l'init de la fonction
+        # Act
+        hss_instance.fill_with_eps_data()
+
+        # Assert
+        # We test that it still returns a dataframed
+        # EPS_Data is already test covered in its own
+        assert isinstance(hss_instance.table_sections["<EPS_Data>"], pd.DataFrame)
+
     def test_get_set_section(self, hss_instance):
         """Tests the calls to SectionMaker. SectionMaker is tested separately"""
         # Arrange
@@ -87,17 +98,6 @@ class TestHssCreator:
         # We test that it still returns a dataframe
         for section in hss_instance.table_sections.values():
             assert isinstance(section, pd.DataFrame)
-
-    def test_fill_with_eps_data(self, hss_instance):
-        '''tests that dataframe_to_eps_data.py to check if it returns a dataframes'''
-        # TODO test très impertinent -> il check l'init de la fonction
-        # Act
-        hss_instance.fill_with_eps_data()
-
-        # Assert
-        # We test that it still returns a dataframed
-        # EPS_Data is already test covered in its own
-        assert isinstance(hss_instance.table_sections["<EPS_Data>"], pd.DataFrame)
 
     # def test_convert_to_nm(self, block_instance):
     #     # TODO
@@ -198,11 +198,21 @@ class TestHssCreator:
             '<Version>': 6,
             '<Revision>': 0,
             '<CoordinateSystem>': {
-                'Type': 1,
-                'ACD_Type': 1},
+                'Type': [
+                    1
+                ],
+                'ACD_Type': [
+                    1
+                ]
+            },
             '<Unit>': {
-                'Coordinate': 1,
-                'MP_Box': 1}
+                'Coordinate': [
+                    1
+                ],
+                'MP_Box': [
+                    1
+                ]
+            }
         }
         expected_json_str = json.dumps(expected_json_content, indent=4)
 

@@ -34,6 +34,34 @@ class TestEpsData:
         test_ex_gauge_df = EPSData(core_data=data_instance, step='PH', mag=200000, ap_mag=50000,
                                    templates=template_config, eps_columns=eps_data_columns)
         return test_ex_gauge_df
+    
+    def test_add_mp_width(self, eps_data_instance):
+        '''checks wether add_mp_width method fills data as expected'''
+        # Arrange
+        eps_data_instance.eps_data['EP_Mag_X'] = [200000, 200000, 200000]  # needed for target_cd definition
+        eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # needed for MP_ID
+        expected_data = pd.DataFrame({
+                                      'EP_Mag_X': [200000, 200000, 200000],
+                                      'EPS_ID': [1, 2, 3],
+                                      'MP1_X': [0, 0, 0],
+                                      'MP1_Y': [0, 0, 0],
+                                      'MP1_TargetCD': [3000, 3000, 3000],
+                                      'MP1_Direction': ['Y', 'Y', 'Y'],
+                                      'MP1_Name': ['gauge1', 'gauge2', 'gauge3'],
+                                      'MP1_SA_In': [30, 30, 30],
+                                      'MP1_SA_Out': [30, 30, 30],
+                                      'MP1_MeaLeng': [100, 100, 100],
+                                      'MP1_PNo': [1, 2, 3],
+                                      'MP1_Template': ["X90M_GATE_PH", "X90M_GATE_PH", "X90M_GATE_PH"],
+                                      })
+
+        # Act
+        eps_data_instance.add_mp_width()
+        columns_to_check = ['EP_Mag_X', 'EPS_ID', 'MP1_X', 'MP1_Y', 'MP1_TargetCD', 'MP1_Direction', 'MP1_Name', 'MP1_SA_In', 'MP1_SA_Out', 'MP1_MeaLeng', 'MP1_PNo', 'MP1_Template']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
+
+        # Assert
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_data)
 
     def test_mapping_core_data(self, eps_data_instance):
         '''checks wether mapping between 2 dataframe works as expected'''
@@ -52,24 +80,6 @@ class TestEpsData:
         # Act
         eps_data_instance.mapping_core_data()
         columns_to_check = ['EPS_Name', 'Move_X', 'Move_Y', 'EP_AF_X', 'EP_AF_Y', 'AP1_X', 'AP1_Y', 'AP1_AF_X', 'AP1_AF_Y']
-        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
-
-        # Assert
-        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_data)
-
-    def test_mapping_user_config(self, eps_data_instance):
-        # Arrange
-        eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # indexes the df
-        expected_data = pd.DataFrame({'EPS_ID': [1, 2, 3],
-                                      'EP_Mag_X': [200000, 200000, 200000],
-                                      'EP_AF_Mag': [200000, 200000, 200000],
-                                      'AP1_Mag': [50000, 50000, 50000],
-                                      'EPS_Template': ["EPS_Template", "EPS_Template", "EPS_Template"],
-                                      })
-
-        # Act
-        eps_data_instance.mapping_user_config()
-        columns_to_check = ['EPS_ID', 'EP_Mag_X', 'EP_AF_Mag', 'AP1_Mag', 'EPS_Template']
         eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
 
         # Assert
@@ -99,6 +109,24 @@ class TestEpsData:
         for column, value in EPSData.FIXED_VALUES.items():
             assert (eps_data_instance_eps_data_subset[column] == value).all(), f"Column {column} does not match fixed value {value}"
         pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_eps_data_df)
+
+    def test_mapping_user_config(self, eps_data_instance):
+        # Arrange
+        eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # indexes the df
+        expected_data = pd.DataFrame({'EPS_ID': [1, 2, 3],
+                                      'EP_Mag_X': [200000, 200000, 200000],
+                                      'EP_AF_Mag': [200000, 200000, 200000],
+                                      'AP1_Mag': [50000, 50000, 50000],
+                                      'EPS_Template': ["EPS_Template", "EPS_Template", "EPS_Template"],
+                                      })
+
+        # Act
+        eps_data_instance.mapping_user_config()
+        columns_to_check = ['EPS_ID', 'EP_Mag_X', 'EP_AF_Mag', 'AP1_Mag', 'EPS_Template']
+        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
+
+        # Assert
+        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_data)
 
     def test_set_eps_data_id(self, eps_data_instance):
         '''checks wether setting EPS_ID data setting iterativelly works'''
@@ -151,34 +179,6 @@ class TestEpsData:
 
         # Assert
         pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_eps_data_df)
-
-    def test_add_mp_width(self, eps_data_instance):
-        '''checks wether add_mp_width method fills data as expected'''
-        # Arrange
-        eps_data_instance.eps_data['EP_Mag_X'] = [200000, 200000, 200000]  # needed for target_cd definition
-        eps_data_instance.eps_data['EPS_ID'] = [1, 2, 3]  # needed for MP_ID
-        expected_data = pd.DataFrame({
-                                      'EP_Mag_X': [200000, 200000, 200000],
-                                      'EPS_ID': [1, 2, 3],
-                                      'MP1_X': [0, 0, 0],
-                                      'MP1_Y': [0, 0, 0],
-                                      'MP1_TargetCD': [3000, 3000, 3000],
-                                      'MP1_Direction': ['Y', 'Y', 'Y'],
-                                      'MP1_Name': ['gauge1', 'gauge2', 'gauge3'],
-                                      'MP1_SA_In': [30, 30, 30],
-                                      'MP1_SA_Out': [30, 30, 30],
-                                      'MP1_MeaLeng': [100, 100, 100],
-                                      'MP1_PNo': [1, 2, 3],
-                                      'MP1_Template': ["X90M_GATE_PH", "X90M_GATE_PH", "X90M_GATE_PH"],
-                                      })
-
-        # Act
-        eps_data_instance.add_mp_width()
-        columns_to_check = ['EP_Mag_X', 'EPS_ID', 'MP1_X', 'MP1_Y', 'MP1_TargetCD', 'MP1_Direction', 'MP1_Name', 'MP1_SA_In', 'MP1_SA_Out', 'MP1_MeaLeng', 'MP1_PNo', 'MP1_Template']
-        eps_data_instance_eps_data_subset = eps_data_instance.eps_data[columns_to_check]
-
-        # Assert
-        pd.testing.assert_frame_equal(eps_data_instance_eps_data_subset, expected_data)
 
     # TODO
     def test_fill_type_in_eps_data(self, eps_data_instance: EPSData):

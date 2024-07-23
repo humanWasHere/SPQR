@@ -25,7 +25,7 @@ class CalibreXMLParser(FileParser):
         for ruler in self.tree.findall('ruler'):
             # unit = ruler.findtext('units')
             # formatting for display only, data is stored in dbu
-            name = ruler.findtext('comment')
+            name = ruler.findtext('comment') or "default_value"
             x_range = [int(float(coord.text)) for coord in ruler.findall('points/point/x')]
             y_range = [int(float(coord.text)) for coord in ruler.findall('points/point/y')]
             x = sum(x_range) / 2

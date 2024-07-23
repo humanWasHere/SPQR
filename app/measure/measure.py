@@ -2,6 +2,7 @@ from pathlib import Path
 import tempfile
 
 import pandas as pd
+import numpy as np
 
 from ..interfaces.calibre_python import lance_script
 from ..data_structure import Block
@@ -14,29 +15,31 @@ from ..parsers.parse import FileParser
 
 class Measure:
     def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
-                 offset: dict = None, tcl_script: str = None, row_range: tuple = None):
+                 offset: dict = None, tcl_script: str = None, row_range: list = None):
         if offset is None:
             offset = dict(x=0, y=0)
         self.parser_df = parser_input.parse_data()
-        if row_range is not None:
-            assert row_range[0] > 0, "the range selected is out of bound ! Should not be under 1"
-            assert row_range[1] <= len(self.parser_df), f"the range selected is out of bound ! Should not be above {len(self.parser_df)} for this recipe"
-            # include extremity values for iloc
-            row_range = [row_range[0] - 1, row_range[1] + 1]
-            # faire un for qui concat tous les intervales pour avoir que les mesures des différents intervales
-            self.parser_df = self.parser_df.iloc[slice(*row_range)]
-            # self.parser_df = parser_input.parse_data().iloc[slice(*row_range)]
+        self.get_all_intervals(row_range)
         self.unit = parser_input.unit  # TODO should work with dbu ?
         self.layout = block.layout_path
         self.precision = block.precision
         self.layers = layers
         self.offset = offset
-
         if tcl_script is None:
             tcl_script = Path(__file__).parent / "measure.tcl"
         if not tcl_script.exists():
             raise FileNotFoundError(f"Could not find {tcl_script}")
         self.tcl_script = tcl_script
+
+    def get_all_intervals(self, interval_range) -> None:
+        '''modifies self.parser_df to select some intervals of data'''
+        if interval_range:
+            combined_indices = []
+            for interval in interval_range:
+                assert interval[0] > 0, "the range selected is out of bound ! Should not be under 1"
+                assert interval[1] <= len(self.parser_df), f"the range selected is out of bound ! Should not be above {len(self.parser_df)} for this recipe"
+                combined_indices.extend(range(interval[0] - 1, interval[1]))
+            self.parser_df = self.parser_df.iloc[combined_indices, :]
 
     def apply_offset(self):
         # workaround if coords are not in same coord as layout. should be in parser's original unit
@@ -108,6 +111,7 @@ class Measure:
             parser_df[["x_ap", "y_ap"]] *= int(float(nm_per_unit[self.unit]))
         except ValueError:
             pass
+        parser_df = parser_df.drop_duplicates(subset=['name'])
         merged_dfs = pd.merge(parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
         # print(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")

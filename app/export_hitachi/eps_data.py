@@ -81,9 +81,14 @@ class EPSData:
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
         # else: handle if needed
         # fonctionnality for the ODIFF3 recipe of élodie.s
-        # FIXME make it generic with a column spec. 1D/2D is not in core_data spec
-        if isinstance(self.templates['mp_template'], str):
+        # MP_Template according to CD/SPACE in self.core_data
+        if self.templates['mp_template'] == "":
+            template = self.core_data['polarity'].apply(lambda x: "Width_Default" if x == 'CD' else "MP_Template_SPACE")
+        # mp_template according to string
+        elif isinstance(self.templates['mp_template'], str):
             template = self.templates['mp_template']
+        # FIXME 1D/2D is not in core_data spec
+        # mp_template according to 1D/2D
         elif isinstance(self.templates['mp_template'], dict):
             template = np.where(
                 self.core_data['1D/2D'] == '1D', self.templates['mp_template']['1D'], np.nan)

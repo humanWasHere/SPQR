@@ -87,16 +87,7 @@ class TestSectionMaker:
         with pytest.raises(ValueError) as excinfo:
             section_maker.make_gp_data_section()
         assert "GP_Template is mandatory" in str(excinfo.value)
-
-    # def test_make_gpa_list_section(self):
-    #     pass
-
-    # def test_make_gp_offset_section(self):
-    #     pass
-
-    # def test_make_epa_list_section(self):
-    #     pass
-
+        
     def test_make_idd_cond_section(self, section_maker):
         # Arrange
         test_layout_stem = "COMPLETED_TEMPLATE"
@@ -144,3 +135,48 @@ class TestSectionMaker:
 
         # Assert
         pd.testing.assert_frame_equal(result_df, expected_df)
+
+    # def test_make_coordinate_system_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_epa_list_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_gp_coordinate_system_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_gp_offset_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_gpa_list_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_image_env_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_measenv_exec_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_measenv_measres_section(self):
+        # Arrange
+        # Act
+        # Assert
+
+    # def test_make_unit_section(self):
+        # Arrange
+        # Act
+        # Assert

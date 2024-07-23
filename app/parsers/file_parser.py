@@ -15,6 +15,8 @@ class FileParser(ABC):
         """Return a dataframe of gauge name and coordinates in original units
         Column labels MUST BE: name, x, y. Name must be alphanumeric or underscore."""
 
+    # not a class method
+    # @staticmethod
     def parse_data_dbu(self, precision):
         dbu_per_unit = {'dbu': 1, 'nm': precision/1000, 'micron': precision}
         data = self.parse_data()

@@ -141,8 +141,8 @@ class HssCreator:
         for section_keys, section_series in self.table_sections.items():
             if not section_series.empty:
                 section_dict = section_series.to_dict(orient='records')[0]
-                json_content[section_keys] = section_dict
-                # json_content[section_keys] = {col: section_series[col].tolist() for col in section_series}
+                # json_content[section_keys] = section_dict
+                json_content[section_keys] = {col: section_series[col].tolist() for col in section_series}
             else:
                 # TODO raise an error ?
                 print(f"\t{section_keys} has its series empty")
@@ -168,4 +168,6 @@ class HssCreator:
         self.recipe_output_file.with_suffix(".csv").write_text(whole_recipe_to_output)
         if self.recipe_output_file.with_suffix(".csv").exists():  # TODO better check + log
             print(f"\tcsv recipe created ! Find it at {self.recipe_output_file}.csv")
+        if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():
+            print("VENI VEDI VICI")
         return f"{self.recipe_output_file}.csv"

@@ -18,13 +18,21 @@ def genepy_file(tmp_path):
     return tmp_file
 
 
-def test_coord_to_relative():
-    relative_coords = pd.DataFrame(dict(x=[55000], y=[-945000], x_ap=[0], y_ap=[35000]))
+def test_parse_data(genepy_file):
+    expected_data = pd.DataFrame(dict(
+        UNIT_COORD=["DBU", "DBU"],
+        x=[55000, 110000],
+        y=[-945000, -945000],
+        x_ap=[0, 0],
+        y_ap=[35000, 35000],
+        Location=["A7", "B7"],
+        name=["CDvP_CD50_P310_V", "CDvP_CD70_P310_V"]
+    ))
 
-    absolute_coords = pd.DataFrame(dict(x=[55000], y=[-945000], x_ap=[55000], y_ap=[-910000]))
-    actual_data = SSFileParser.change_coord_to_relative(absolute_coords)
+    parser = SSFileParser(genepy_file, is_genepy=True)
+    parser.parse_data()
 
-    pd.testing.assert_frame_equal(actual_data, relative_coords)
+    pd.testing.assert_frame_equal(parser.data, expected_data)
 
 
 def test_genepy_to_dataframe(genepy_file):
@@ -71,18 +79,10 @@ def test_post_parse(genepy_file):
     pd.testing.assert_frame_equal(parser.data, expected_data)
 
 
-def test_parse_data(genepy_file):
-    expected_data = pd.DataFrame(dict(
-        UNIT_COORD=["DBU", "DBU"],
-        x=[55000, 110000],
-        y=[-945000, -945000],
-        x_ap=[0, 0],
-        y_ap=[35000, 35000],
-        Location=["A7", "B7"],
-        name=["CDvP_CD50_P310_V", "CDvP_CD70_P310_V"]
-    ))
+def test_coord_to_relative():
+    relative_coords = pd.DataFrame(dict(x=[55000], y=[-945000], x_ap=[0], y_ap=[35000]))
 
-    parser = SSFileParser(genepy_file, is_genepy=True)
-    parser.parse_data()
+    absolute_coords = pd.DataFrame(dict(x=[55000], y=[-945000], x_ap=[55000], y_ap=[-910000]))
+    actual_data = SSFileParser.change_coord_to_relative(absolute_coords)
 
-    pd.testing.assert_frame_equal(parser.data, expected_data)
+    pd.testing.assert_frame_equal(actual_data, relative_coords)
