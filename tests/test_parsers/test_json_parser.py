@@ -223,28 +223,42 @@ class TestJsonParser:
         assert actual_json_output == expected_output
         # assert is_file_json == (dict, list)
 
-    def test_json_to_dataframe(self, json_parser_instance):
-        '''tests that the template is correctly generated in several dataframes'''
+    def test_parse_data(self, json_parser_instance):
         # Arrange
-        # hss_creator = HssCreator(pd.DataFrame(), layers=1, precision=1000)
+        expected_epsdata_section = pd.DataFrame({
+            'name': ["chaine"],
+            'x': [-300000000],
+            'y': [-300000000],
+            'x_ap': [-300000000],
+            'y_ap': [-300000000]
+        })
 
         # Act
-        # FIXME dependency
-        json_parser_instance.json_to_section_dicts()
+        result = json_parser_instance.parse_data()
 
         # Assert
-        # Assert first_level_df
+        assert isinstance(result, pd.DataFrame)
+        pd.testing.assert_frame_equal(result, expected_epsdata_section)
+
+    def test_json_to_section_dicts(self, json_parser_instance):
+        '''tests that the template is correctly generated in several dataframes'''
+        # Arrange
         expected_first_level_df = {
             "<FileID>": "LIDP00",
             "<Version>": 6,
             "<Revision>": 0
         }
         expected_coordinate_system = pd.DataFrame({"Type": [1], "ACD_Type": [1]})
-        assert json_parser_instance.constant_sections == expected_first_level_df
 
-        # Assert that all sections have been set as pd.DataFrame
+        # Act
+        result = json_parser_instance.json_to_section_dicts()
+
+
+        print(result)
+        print(expected_first_level_df)
+        print(expected_coordinate_system)
+        # Assert
         for section in json_parser_instance.table_sections.values():
             assert isinstance(section, pd.DataFrame)
-        # Assert <CoordinateSystem>
-        pd.testing.assert_frame_equal(
-            json_parser_instance.table_sections["<CoordinateSystem>"], expected_coordinate_system)
+        assert result.constant_sections == expected_first_level_df
+        pd.testing.assert_frame_equal(result.table_sections["<CoordinateSystem>"], expected_coordinate_system)

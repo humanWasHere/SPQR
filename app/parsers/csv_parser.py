@@ -49,15 +49,17 @@ class HSSParser(FileParser):
         self.table_sections: dict[str, pd.DataFrame] = {}
 
     def parse_data(self) -> pd.DataFrame:
+        print("1. Parsing csv recipe")
         self.parse_hss()
         data = self.table_sections['<EPS_Data>'].loc[
             :, ['EPS_Name', 'Move_X', 'Move_Y', 'AP1_X', 'AP1_Y']].copy()
         data.columns = ['name', 'x', 'y', 'x_ap', 'y_ap']
+        if not data.empty:  # TODO add more logic - log
+            print('\tGenepy ssfile parsing done')
         return data
 
     def parse_hss(self) -> tuple[dict, dict]:
         """Parse HSS file. Do not handle exceptions yet"""
-        # TODO check 'Type' columns before parsing ?
 
         def parse_csv(content: str, name: str) -> pd.DataFrame | None:
             try:

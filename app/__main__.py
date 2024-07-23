@@ -1,10 +1,11 @@
 import argparse
 import sys
 from pathlib import Path
+import json
 
 from .data_structure import Block
 from .export_hitachi.hss_creator import HssCreator
-from .interfaces.input_checker import CheckConfig
+from .interfaces.input_checker import CheckConfig, CheckConfigPydantic
 from .interfaces import recipedirector as rcpd
 from .measure.measure import Measure
 from .parsers.parse import ParserSelection, OPCFieldReverse
@@ -18,6 +19,21 @@ from .parsers.parse import ParserSelection, get_parser, OPCFieldReverse
 # check if output_dir+recipe_name.(json/csv).exists -> ask user
 
 
+def parse_intervals(values):
+    list_of_lists = []
+    for value in values:
+        try:
+            # Vérifier que la valeur contient un tiret
+            if '-' not in value:
+                raise ValueError("Separator must be a hyphen")
+            # Diviser chaque paire par le tiret et convertir en entiers
+            start, end = map(int, value.split('-'))
+            list_of_lists.append([start, end])
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f"Each range must be in the format 'start-end'. Error: {e}")
+    return list_of_lists
+
+
 def cli() -> argparse.ArgumentParser:
     """defines the command lines actions of the soft"""
     parser = argparse.ArgumentParser(prog='SEM Recipe Creator', description='-----CLI tool for SEM Recipe Creation-----')
@@ -27,7 +43,7 @@ def cli() -> argparse.ArgumentParser:
     start_parser = subparsers.add_parser('start', help='Runs the "testing" mode of the app. Meant for app developers.')
     start_parser.add_argument('-r', '--recipe_type_selection', required=True,
                               help='Runs the recipe inputted (genepy, calibre_rulers or opcifield) in testing mode. Refer to app_config.json.',
-                              choices=['genepy', 'calibre_rulers', 'opcfield'],
+                              choices=['genepy', 'calibre_rulers', 'opcfield', 'csv', 'json'],
                               type=str)
 
     build_parser = subparsers.add_parser('build', help='Runs the "prod" mode of the app. Meant for end user.')
@@ -37,8 +53,8 @@ def cli() -> argparse.ArgumentParser:
                               help='Runs the recipe inputted if it is matching one in user_config.json. Refer to this file')
     build_parser.add_argument('-u', '--upload_rcpd', action="store_true",
                               help='Send HSS recipe (.csv) and layout to RecipeDirector machine.')
-    build_parser.add_argument('-l', '--line_selection', required=False, nargs=2, type=int, metavar=('START', 'END'),
-                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50 60" where 50 and 60 are included')
+    build_parser.add_argument('-l', '--line_selection', required=False, nargs='+', type=str,
+                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50 60 150 160" where 50 and 60 are included as well as 150 and 160')
     return parser
 
 
@@ -57,13 +73,17 @@ def manage_app_launch():
         app_config = import_json(app_config_file)
         assert app_config != ""  # TODO test it another way
         test_env_config = app_config.get(args.recipe_type_selection)
-        config_checker_instance = CheckConfig(test_env_config)
-        # config_checker_instance.check_config(check_parser=args.recipe_type_selection != "opcfield")  # checks mandatory values
-        config_checker_instance.check_config()
-        if args.recipe_type_selection != "calibre_rulers":
-            run_recipe_creation_w_measure(test_env_config, line_selection=(100, 110))
+        pydantic_config_checker_instance = CheckConfigPydantic
+        pydantic_config_checker_instance.validate_json_file(app_config, recipe_type_start=args.recipe_type_selection, user_recipe_build=None)
+        if args.recipe_type_selection != "opcfield":
+            config_checker_instance = CheckConfig(test_env_config)
+            config_checker_instance.check_config(check_parser=args.recipe_type_selection)  # checks mandatory values
+        if args.recipe_type_selection != "calibre_rulers" and "json":
+            run_recipe_creation_w_measure(test_env_config, line_selection=[[100, 110]])
+        elif args.recipe_type_selection == 'json':
+            run_recipe_creation_w_measure(test_env_config, line_selection=[[100, 110]])
         else:
-            run_recipe_creation_w_measure(test_env_config, line_selection=(10, 20))
+            run_recipe_creation_w_measure(test_env_config, line_selection=[[10, 20]])
         # TODO for loop to run all test dev recipes with arg -a
     elif args.running_mode == 'build':
         assert args.user_config.exists(), f"Le fichier spécifié n'existe pas: {args.user_config}"
@@ -72,30 +92,30 @@ def manage_app_launch():
         user_config = import_json(args.user_config)
         if len(user_config) == 0:
             raise ValueError("The provided configuration file does not contain any recipe.")
-        if len(user_config) == 1 and args.user_recipe is None:
+        elif len(user_config) == 1 and args.user_recipe is None:
             # recipe name is optional if there is only one
             args.user_recipe = next(iter(user_config.keys()))
-        if len(user_config) > 1 and args.user_recipe is None:
+        elif len(user_config) > 1 and args.user_recipe is None:
             print("You have more than one recipe in your configuration file. It means you need to select one with the -r attribute.")
             sys.exit(1)
         if args.user_recipe in user_config:
             # print(f'running recipe {args.user_recipe}')
             build_env_config = user_config.get(args.user_recipe, {})
-            config_checker_instance = CheckConfig(build_env_config)
-            config_checker_instance.check_config()
+            config_checker_instance_pydantic = CheckConfigPydantic
+            config_checker_instance_pydantic.validate_json_file(user_config, recipe_type_start=None, user_recipe_build=args.user_recipe)
             if isinstance(build_env_config['step'], list):
                 recipe_part = 0
                 for step in build_env_config['step']:
                     copied_build_env_config = {key: value for key, value in build_env_config.items()}
                     recipe_part += 1
-                    print(f"\ncreating recipe {copied_build_env_config['recipe_name']}{recipe_part}/{len(build_env_config['step'])} : {step} pour {copied_build_env_config['step']}")
+                    print(f"\ncreating recipe {copied_build_env_config['recipe_name']} {recipe_part}/{len(build_env_config['step'])} : {step} pour {copied_build_env_config['step']}")
                     copied_build_env_config['step'] = step
-                    copied_build_env_config['recipe_name'] = str(f"{build_env_config['recipe_name']}_p{recipe_part}")
-                    run_recipe_creation_w_measure(copied_build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
+                    copied_build_env_config['recipe_name'] = str(f"{build_env_config['recipe_name']}_{step}")
+                    run_recipe_creation_w_measure(copied_build_env_config, args.upload_rcpd, parse_intervals(args.line_selection) if args.line_selection is not None else None)
             else:
-                run_recipe_creation_w_measure(build_env_config, args.upload_rcpd, tuple(args.line_selection) if args.line_selection is not None else None)
+                run_recipe_creation_w_measure(build_env_config, args.upload_rcpd, parse_intervals(args.line_selection) if args.line_selection is not None else None)
         else:
-            print(f'no recipe {args.user_recipe} has been found in your config file .json.')
+            print(f'TU QUOQUE FILI !? no recipe {args.user_recipe} has been found in your config file .json.')
             sys.exit(1)
 
 
@@ -118,6 +138,7 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
         selected_parser = parser(json_conf['parser'])
 
     # measurement
+    # FIXME no translation 
     measure_instance = Measure(selected_parser, block, json_conf['layers'],
                                json_conf.get('translation'), row_range=line_selection)
     output_measure = measure_instance.run_measure()

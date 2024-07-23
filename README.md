@@ -1,8 +1,9 @@
-# SEMRC project
+# SPQR project
 SEM Professional Quick Recipe - software for OPC applications
 
 ## Table of matters
-1. [General informations](#semrc's-purpose-)
+0. [Quick start](#quick-start)
+1. [General informations](#spqr's-purpose-)
 2. [Features](#features-)
 3. [Inputs & outputs](#inputs&outputs-)
 4. [Installation](#installation-)
@@ -11,40 +12,50 @@ SEM Professional Quick Recipe - software for OPC applications
 7. [Developers](#developers-)
 8. [Legal](#legal-)
 
-## SEMRC's purpose :
-The SEMRC project finds its root in a highly qualified team which is the RET team.
+## Quick start
+Command to launch the deployed app : 
+```bash
+/work/retprod/src/deploy/semrc/build --help
+```
+
+## SPQR's purpose :
+The SPQR project finds its root in a highly qualified team which is the RET team.
 This project is led by Romain Bange and developed by Romain Chaneliere.
 
 It is meant to automatically make SEM recipes in order to ease user interactions with Recipe Director.
 
 ### Features :
 At the moment, this tool processes the following actions :  
-* gets coordinates sources (by parsing a ssfile or getting first coordinate in a matrix)
-* runs measure
+* gets coordinates sources (by parsing a different coordinate sources)
+* runs measure  
 * calculates and define the sections and values of the recipe  
 * generates a .csv and .json file  
-* exports data on QCG 5k
+* exports .csv recipe and layout on QCG 5k is needed  
 
 ### inputs&outputs :
 To use this software, you will need to enter the following informations :
 * Coordinate source (like Genepy ssfile, calibre rulers or first coordinates of an OPCField matrix)
 * layout
 * layer(s) (at least the main layer of interest)
-* mag
-* MP_Template
-* Step (post litho ou post etch)
+* magnification
+* MP_Template (prefered)
+* Step (post litho or post etch)
 
 This software will :
 * return a SEM recipe in .csv format (matching the Hitachi requirements)
 * return a SEM recipe in .json format (in order to be reused later)
-* export the .csv recipe on the QCG5k (if specified)
+* export the .csv recipe and the layout on the QCG5k (if specified)
 <!-- * some documentation (made with sphinx) -->
 <!-- * some template in .json format (that should be stored in a DB in order to reuse the created recipe afterwards) -->
 
 ## Installation :
-Create a folder on your local machine (Unix) : 
+Move to a directory in which you want the project to be stored : 
 ```bash
 cd <your_folder_name>
+```
+Make sure you have a SSH key exchange to codex. Else, follow the documentation below :  
+```
+https://stmicroelectronics.sharepoint.com/:w:/r/sites/RETCROLLES/Projects%20development/SEM%20Recipe%20Creator/doc/SPQR%27s_user_documentation.docx?d=wd4248d7530144c1d8102960288b790c6&csf=1&web=1&e=UBjYLU
 ```
 Clone from the folder repository
 ```bash
@@ -52,7 +63,7 @@ git clone ssh://gitolite@codex.cro.st.com/retdev/semrc.git
 ```
 Change folder to access content of the app  
 ```
-cd semrc
+cd spqr
 ```
 Download the libraries used in the app
 ```bash
@@ -62,11 +73,11 @@ Then run __main__.py with the following command (runs as package)
 ```bash
 python -m app
 ```
-Enjoy your free time ! SEMRC is cooking a recipe for you !
+Enjoy your free time ! SPQR is cooking a recipe for you !
 
 ### Tree structure :
 ```
-semrc - project root
+spqr - project root
 ├── app
 │   ├── data_structure.py
 │   ├── .env
@@ -75,7 +86,6 @@ semrc - project root
 │   │   ├── hss_creator.py
 │   │   ├── hss_editor.py
 │   │   ├── __init__.py
-│   │   ├── __pycache__
 │   │   └── section_maker.py
 │   ├── __init__.py
 │   ├── interfaces
@@ -83,33 +93,47 @@ semrc - project root
 │   │   ├── __init__.py
 │   │   ├── input_checker.py
 │   │   ├── mask_db.py
-│   │   ├── __pycache__
 │   │   └── recipedirector.py
 │   ├── __main__.py
 │   ├── measure
+│   │   ├── __init__.py
 │   │   ├── measure.py
 │   │   ├── measure.tcl
-│   │   └── __pycache__
-│   └── parsers
-│       ├── csv_parser.py
-│       ├── __init__.py
-│       ├── json_parser.py
-│       ├── parse.py
-│       ├── __pycache__
-│       ├── ssfile_parser.py
-│       └── xml_parser.py
+│   ├── parsers
+│   │   ├── csv_parser.py
+│   │   ├── file_parser.py
+│   │   ├── __init__.py
+│   │   ├── json_parser.py
+│   │   ├── parse.py
+│   │   ├── ssfile_parser.py
+│   │   ├── tacx_parser.py
+│   │   └── xml_parser.py
+│   └── setup.py
 ├── assets
+│   ├── app_config.json
 │   └── template_SEM_recipe.json
 ├── ci_pipeline.csh
 ├── .coverage
-├── .coveragerc
 ├── .flake8
 ├── .git
+│   └── ...
 ├── .gitignore
 ├── htmlcov
-├── pytest.ini
+│   └── coverage_lib...
+├── integration
+│   ├── __init__.py
+│   └── test_integration.py
+├── poetry.lock
+├── pyproject.toml
 ├── README.md
+├── recipe_output
+│   ├── recipes_outputed...
+│   └── test_env
+│       └── test_env_recipes_outputed...
 ├── requirements.txt
+├── sourceme.csh
+├── sphinx
+│   └── auto_doc_lib...
 └── tests
     ├── __init__.py
     ├── test_export_hitachi
@@ -119,14 +143,18 @@ semrc - project root
     │   └── test_section_maker.py
     ├── testfiles
     │   ├── COMPLETED_TEMPLATE.gds
+    │   ├── .COMPLETED_TEMPLATE.gds.20240506-172141.pyratImplementation.GTCheck
     │   ├── ssfile_proto.txt
     │   └── test_template.json
     ├── test_measure.py
     ├── test_output
     │   └── recipe.json
-    └── test_parsers
-        ├── test_ssfile_parser.py
-        └── test_xml_parser.py
+    ├── test_parsers
+    │   ├── test_json_parser.py
+    │   ├── test_parse.py
+    │   ├── test_ssfile_parser.py
+    │   └── test_xml_parser.py
+    └── tmp
 ```
 
 ### Modules :
