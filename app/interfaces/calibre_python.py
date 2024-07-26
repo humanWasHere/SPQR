@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
 import subprocess
 
 from pyter.calibre import DesignControlerRet
 # from pyrat.DesignControler import DesignControler
 # from pyratImplementation.GTCheck.GTCheckService import GTcheckError
+
+logger = logging.getLogger(__name__)
 
 
 def find_host() -> str:
@@ -16,7 +19,8 @@ def find_host() -> str:
             ['perl', '-e', cmd], stdout=subprocess.PIPE, check=True)
         host = choose_host.stdout.decode()
     except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to run Perl script: {e}") from e
+        logger.warning(f"Failed to run Perl script: {e}")
+        # raise RuntimeError(f"Failed to run Perl script: {e}") from e
     return host
 
 
@@ -59,5 +63,6 @@ def lance_script(script, debug="/dev/null", verbose=True) -> str:
             print(line.strip())
     outs, errs = process.communicate()
     if errs:
+        logger.error(f"ChildProcessError: {errs}")
         raise ChildProcessError(errs)
     return host

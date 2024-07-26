@@ -30,6 +30,7 @@ class Measure:
         if tcl_script is None:
             tcl_script = Path(__file__).parent / "measure.tcl"
         if not tcl_script.exists():
+            logger.error(f"FileNotFoundError: Could not find {tcl_script}")
             raise FileNotFoundError(f"Could not find {tcl_script}")
         self.tcl_script = tcl_script
 
@@ -112,6 +113,7 @@ class Measure:
         try:
             parser_df[["x_ap", "y_ap"]] *= int(float(nm_per_unit[self.unit]))
         except ValueError:
+            logger.warning("ValueError: ?")
             pass
         parser_df = parser_df.drop_duplicates(subset=['name'])
         merged_dfs = pd.merge(parser_df, meas_df, on="name")

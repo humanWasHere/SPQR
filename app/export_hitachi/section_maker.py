@@ -1,6 +1,9 @@
+import logging
 from pathlib import Path
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class SectionMaker:
@@ -32,12 +35,14 @@ class SectionMaker:
         #     raise ValueError("GP_ID values cannot exceed 10")
         # __________Type column checks__________
         if self.gp_data['Type'].ne(1).any():
-            raise ValueError("<GP_Data>Type should be 1")
+            logger.warning(f"ValueError: <GP_Data>Type should be 1")
+            # raise ValueError("<GP_Data>Type should be 1")
 
         # __________GP_Template coolumn checks__________
         # dynamic assignation of GP_Template
         if self.gp_data["GP_Template"].isna().any():
-            raise ValueError("<GP_Data>GP_Template is mandatory")
+            logger.warning(f"ValueError: <GP_Data>GP_Template is mandatory")
+            # raise ValueError("<GP_Data>GP_Template is mandatory")
 
         # __________GP_Mag column checks__________
         gp_template = self.gp_data["GP_Template"]
@@ -67,7 +72,8 @@ class SectionMaker:
         #  __________SEMCondNo__________
         step_to_value = dict(PH=2, ET=1, PH_HR=11, ET_HR=13)
         if step not in step_to_value.keys():
-            raise ValueError(f"Supported steps are {', '.join(step_to_value.keys())}.")
+            logger.warning(f"ValueError: Step not in {', '.join(step_to_value.keys())}.")
+            # raise ValueError(f"Supported steps are {', '.join(step_to_value.keys())}.")
         self.recipe["SEMCondNo"] = step_to_value[step]
         return self.recipe
 

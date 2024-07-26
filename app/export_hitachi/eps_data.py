@@ -125,7 +125,8 @@ class EPSData:
         # __________EPS_ID section__________
         self.eps_data['EPS_ID'] = range(1, min(len(self.core_data) + 1, 9999))
         if any(id > 9999 for id in self.eps_data['EPS_ID']):
-            raise ValueError("EPS_ID values cannot exceed 9999")
+            logger.warning(f"ValueError: EPS_ID values cannot exceed 9999")
+            # raise ValueError("EPS_ID values cannot exceed 9999")
 
     def set_eps_data_eps_modification(self) -> None:
         # from eps_name to fer_eps_id

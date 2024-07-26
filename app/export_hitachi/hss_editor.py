@@ -36,6 +36,7 @@ class RecipeModificator(HssCreator):
             # logger.debug(f"here is constant_sections : {self.constant_sections}. Which is {type(self.constant_sections)}")
             # logger.debug(f"here is table_sections : {self.table_sections}. Which is {type(self.table_sections)}")
         elif (json_recipe is None and csv_recipe is None):
+            logger.error(f"ImportError: no recipe was given")
             raise ImportError("no recipe was given")
         self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
 

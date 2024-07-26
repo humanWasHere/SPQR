@@ -58,7 +58,8 @@ class HssCreator:
                 # adding of eps_data dataframe values to the template dataframe header
                 template_eps_data_header[column_name] = column_values
             else:
-                raise ValueError(f"{column_name} is not in the template's EPS_Data header")
+                logger.warning(f"ValueError: {column_name} is not in the template's EPS_Data header")
+                # raise ValueError(f"{column_name} is not in the template's EPS_Data header")
         self.table_sections["<EPS_Data>"] = template_eps_data_header
 
     def get_set_section(self) -> None:

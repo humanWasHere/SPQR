@@ -3,7 +3,9 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
-def logger_init(log_file=Path(__file__).resolve().parents[2] / "spqr.log", log_level=logging.INFO, max_bytes=2500, backup_count=0):
+def logger_init(log_file=Path(__file__).resolve().parents[2] / "spqr.log", log_level=logging.INFO, max_bytes=2000, backup_count=0):
+    # TODO max_bytes seems not to work
+    # strange fix : https://stackoverflow.com/questions/24505145/how-to-limit-log-file-size-in-python
     """
     Initialise et configure le logger de l'application.
 

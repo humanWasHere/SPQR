@@ -44,7 +44,6 @@ class CalibreXMLParser(FileParser):
 
     def parse_data(self):
         """Dispatch content type to row generators and return dataframe of coordinates"""
-        
         logger = logging.getLogger(__name__)
         logger.info("1. Parsing calibre rulers")
         if self.type == "rulers":
@@ -52,6 +51,7 @@ class CalibreXMLParser(FileParser):
         elif self.type == "clips":
             rows = self.gen_rows_clip()
         else:
+            logger.warning(f"ValueError: Unknown XML type")
             raise ValueError("Unknown XML type")
         # TODO: name as index? / enforce format?
         parsed_data = pd.DataFrame(rows, columns=['name', 'x', 'y'])

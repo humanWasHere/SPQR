@@ -11,7 +11,7 @@ logger_init()
 
 from .data_structure import Block
 from .export_hitachi.hss_creator import HssCreator
-from .interfaces.input_checker import CheckConfig, CheckConfigPydantic
+from .interfaces.input_checker import CheckConfigPydantic
 from .interfaces import recipedirector as rcpd
 from .measure.measure import Measure
 from .parsers.json_parser import import_json
@@ -25,10 +25,12 @@ def parse_intervals(values: list[str]) -> list[list[int]]:
     for value in values:
         try:
             if '-' not in value:
+                logger.error(f"ValueError: Separator must be a hyphen")
                 raise ValueError("Separator must be a hyphen")
             start, end = map(int, value.split('-'))
             list_of_lists.append([start, end])
         except ValueError as e:
+            logger.error(f"Each range must be in the format 'start-end'. Error: {e}")
             raise argparse.ArgumentTypeError(f"Each range must be in the format 'start-end'. Error: {e}")
     return list_of_lists
 
@@ -78,15 +80,19 @@ def manage_app_launch():
 
     if args.running_mode == 'start':
         app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
-        assert app_config_file.stat().st_size != 0, f"Le fichier {app_config_file.name} est vide."
+        # if not app_config_file.exists() or app_config_file.stat().st_size == 0:
+        #     logger.error(f"Le fichier {app_config_file.name} est vide ou n'existe pas.")
+        #     sys.exit(1)
         app_config = import_json(app_config_file)
-        assert app_config != ""  # TODO test it another way
+        if not app_config:
+            logger.error(f"Le fichier {app_config_file.name} est vide ou n'existe pas.")
+            sys.exit(1)
         test_env_config = app_config.get(args.recipe_type_selection)
         pydantic_config_checker_instance = CheckConfigPydantic
         pydantic_config_checker_instance.validate_json_file(app_config, recipe_type_start=args.recipe_type_selection, user_recipe_build=None)
-        if args.recipe_type_selection != "opcfield":
-            config_checker_instance = CheckConfig(test_env_config)
-            config_checker_instance.check_config(check_parser=args.recipe_type_selection)  # checks mandatory values
+        # if args.recipe_type_selection != "opcfield":
+            # config_checker_instance = CheckConfig(test_env_config)
+            # config_checker_instance.check_config(check_parser=args.recipe_type_selection)  # checks mandatory values
         if args.recipe_type_selection != "calibre_rulers" and "json":
             run_recipe_creation_w_measure(test_env_config, line_selection=[[100, 110]])
         elif args.recipe_type_selection == 'json':
@@ -95,12 +101,13 @@ def manage_app_launch():
             run_recipe_creation_w_measure(test_env_config, line_selection=[[10, 20]])
         # TODO for loop to run all test dev recipes with arg -a
     elif args.running_mode == 'build':
-        assert args.user_config.exists(), f"Le fichier spécifié n'existe pas: {args.user_config}"
-        assert args.user_config.is_file(), f"Le chemin spécifié n'est pas un fichier: {args.user_config}"
-        assert args.user_config.stat().st_size != 0, f"Le fichier {args.user_config.name} est vide."
+        if not args.user_config.exists() or not args.user_config.is_file() or args.user_config.stat().st_size == 0:
+            logger.error(f"Le fichier spécifié n'existe pas, n'est pas un fichier ou est vide: {args.user_config}")
+            sys.exit(1)
         user_config = import_json(args.user_config)
         if len(user_config) == 0:
-            raise ValueError("The provided configuration file does not contain any recipe.")
+            logger.error("The provided configuration file does not contain any recipe.")
+            sys.exit(1)
         elif len(user_config) == 1 and args.user_recipe is None:
             # recipe name is optional if there is only one
             args.user_recipe = next(iter(user_config.keys()))
@@ -114,7 +121,7 @@ def manage_app_launch():
             if isinstance(build_config['step'], list):
                 steps = build_config['step']
                 for part, step in enumerate(steps):
-                    logger.info(f"\ncreating recipe {build_config['recipe_name']} "
+                    logger.info(f"creating recipe {build_config['recipe_name']} "
                           f"{part+1}/{len(steps)}: {step} from {steps}")
                     copied_config = build_config.copy()
                     copied_config['step'] = step
@@ -134,7 +141,9 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
     logger.info(f"###CREATING RECIPE### : {json_conf['recipe_name']}")
     # parser selection
     parser = get_parser(json_conf['parser'])
-    assert parser is not None, "your coordinate source may not be in a valid format"
+    if parser is None:
+        logger.error("Your coordinate source may not be in a valid format")
+        sys.exit(1)
     if issubclass(parser, OPCFieldReverse):
         selected_parser = parser(
             json_conf['origin_x_y'][0], json_conf['origin_x_y'][1],

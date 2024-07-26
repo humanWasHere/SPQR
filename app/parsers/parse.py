@@ -15,11 +15,14 @@ from .json_parser import JSONParser
 from .ssfile_parser import SSFileParser
 from .xml_parser import CalibreXMLParser
 
+logger = logging.getLogger(__name__)
+
 
 def get_parser(value: str) -> Type[FileParser]:
     if value == "":
         return OPCFieldReverse
     if not Path(value).exists():
+        logger.error(f"FileNotFoundError: {value} not found. Check input file path, or leave empty.")
         raise FileNotFoundError(f'{value} not found. Check input file path, or leave empty.')
     # Sample the file to detect content type
     # CSV
@@ -36,6 +39,7 @@ def get_parser(value: str) -> Type[FileParser]:
         if {'Name', 'X_coord_Pat', 'Y_coord_Pat', 'X_coord_Addr'}.issubset(header):
             return SSFileParser
     except csv.Error:
+        logger.debug("csv.Error: ?")
         pass  # not a CSV or dialect not found
     # Read all file
     content = Path(value).read_text()
@@ -45,12 +49,14 @@ def get_parser(value: str) -> Type[FileParser]:
         # CalibreXMLParser(root.getroottree())
         return CalibreXMLParser
     except etree.XMLSyntaxError:
+        logger.debug("etree.XMLSyntaxError: ?")
         pass  # not an XML
     # JSON
     try:
         json.loads(content)
         return JSONParser
     except json.JSONDecodeError:
+        logger.debug("json.JSONDecodeError: ?")
         pass
     return None
 
@@ -104,7 +110,6 @@ class OPCFieldReverse(FileParser):
         return self.data
 
     def parse_data(self) -> pd.DataFrame:
-        logger = logging.getLogger(__name__)
         logger.info("1. Running OPCField reverse gen")
         self.opcfield_reverse()
         self.data[['x_ap', 'y_ap']] = self.ap_offset
