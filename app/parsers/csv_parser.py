@@ -1,5 +1,6 @@
 import re
 from io import StringIO
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -39,6 +40,9 @@ class TACRulerParser(FileParser):
         self.data['name'] = self.data['name'].apply(lambda s: re.sub(r'\W+', '', s))
 
 
+logger = logging.getLogger(__name__)
+
+
 class HSSParser(FileParser):
     '''parse existing hss recipe'''
     unit = 'nm'
@@ -49,13 +53,13 @@ class HSSParser(FileParser):
         self.table_sections: dict[str, pd.DataFrame] = {}
 
     def parse_data(self) -> pd.DataFrame:
-        print("1. Parsing csv recipe")
+        logger.info("1. Parsing csv recipe")
         self.parse_hss()
         data = self.table_sections['<EPS_Data>'].loc[
             :, ['EPS_Name', 'Move_X', 'Move_Y', 'AP1_X', 'AP1_Y']].copy()
         data.columns = ['name', 'x', 'y', 'x_ap', 'y_ap']
-        if not data.empty:  # TODO add more logic - log
-            print('\tGenepy ssfile parsing done')
+        if not data.empty:
+            logger.info('Genepy ssfile parsing done')
         return data
 
     def parse_hss(self) -> tuple[dict, dict]:
@@ -65,7 +69,7 @@ class HSSParser(FileParser):
             try:
                 return pd.read_csv(StringIO(content))
             except pd.errors.ParserError:
-                print(f'Error parsing CSV data from {name}, skipping.')
+                logger.error(f'Error parsing CSV data from {name}, skipping.')
                 return None
 
         hss_sections: list[tuple[str, str]] = re.findall(r"(<\w+>),*([^<]*)",

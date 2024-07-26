@@ -1,6 +1,8 @@
-import pandas as pd
 import json
+import logging
 from pathlib import Path
+
+import pandas as pd
 
 from .file_parser import FileParser
 
@@ -30,14 +32,15 @@ class JSONParser(FileParser):
         return self._unit
 
     def parse_data(self):
-        print("1. Parsing JSON")
+        logger = logging.getLogger(__name__)
+        logger.info("1. Parsing JSON")
         self.json_to_section_dicts()
         # TODO: reverse core data from EPS_Data content
         self.epsdata_section = self.table_sections['<EPS_Data>'].loc[
             :, ['EPS_Name', 'Move_X', 'Move_Y', 'AP1_X', 'AP1_Y']].copy()
         self.epsdata_section.columns = ['name', 'x', 'y', 'x_ap', 'y_ap']
-        if not self.epsdata_section.empty:  # TODO add more logic - log
-            print('\tJSON parsing done')
+        if not self.epsdata_section.empty:
+            logger.info('JSON parsing done')
         return self.epsdata_section
 
     def json_to_section_dicts(self) -> 'JSONParser':

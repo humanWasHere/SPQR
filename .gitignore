@@ -32,3 +32,9 @@ venv/
 # Other
 *.png
 .*.GTCheck
+
+# may be temp
+web/
+
+# logging
+*.log

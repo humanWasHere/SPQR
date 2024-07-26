@@ -1,5 +1,6 @@
 import csv
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Type
@@ -15,7 +16,6 @@ from .ssfile_parser import SSFileParser
 from .xml_parser import CalibreXMLParser
 
 
-# TODO delete the one unused
 def get_parser(value: str) -> Type[FileParser]:
     if value == "":
         return OPCFieldReverse
@@ -53,27 +53,6 @@ def get_parser(value: str) -> Type[FileParser]:
     except json.JSONDecodeError:
         pass
     return None
-
-
-class ParserSelection():
-    """Automatically defines which parser we should use"""
-    def __init__(self, json_conf):
-        self.json_conf = json_conf
-
-    def run_parsing_selection(self) -> FileParser:
-        # TODO change to better selection logic (must choose between path or empty but not accept to take both)
-        if self.json_conf['parser'] == "":
-            parser_instance = OPCFieldReverse(self.json_conf['opcfield_x_y'][0], self.json_conf['opcfield_x_y'][1],
-                                              self.json_conf['step_x_y'][0], self.json_conf['step_x_y'][1],
-                                              self.json_conf['n_rows_cols'][0], self.json_conf['n_rows_cols'][1],
-                                              self.json_conf['ap1_offset'][0], self.json_conf['ap1_offset'][1])
-        else:
-            try:
-                parser_instance = CalibreXMLParser(self.json_conf['parser'])
-            except (etree.XMLSyntaxError, AttributeError):
-                parser_instance = SSFileParser(self.json_conf['parser'], is_genepy=True)
-                # /!\ only manages genepy ssfile at the moment
-        return parser_instance
 
 
 class OPCFieldReverse(FileParser):
@@ -125,9 +104,10 @@ class OPCFieldReverse(FileParser):
         return self.data
 
     def parse_data(self) -> pd.DataFrame:
-        print("1. Running OPCField reverse gen")
+        logger = logging.getLogger(__name__)
+        logger.info("1. Running OPCField reverse gen")
         self.opcfield_reverse()
         self.data[['x_ap', 'y_ap']] = self.ap_offset
-        if not self.data.empty:  # TODO add more logic - log
-            print('\tOPCField reverse done')
+        if not self.data.empty:
+            logger.info('OPCField reverse done')
         return self.data

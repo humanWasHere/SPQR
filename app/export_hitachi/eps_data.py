@@ -1,7 +1,9 @@
 from typing import Optional
-
+import logging
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class EPSData:
@@ -116,7 +118,7 @@ class EPSData:
             elif eps_col in self.FIXED_VALUES:  # not needed if fix_values executed before
                 self.eps_data[eps_col] = self.FIXED_VALUES[eps_col]
             else:
-                print(f"\t/!\\ {eps_col} is not specified in user_config.json. Make sure there is a default value for this column")
+                logger.warning(f"{eps_col} is not specified in user_config.json. Make sure there is a default value for this column")
 
     # method naming based on Hitachi doc
     def set_eps_data_id(self) -> None:
@@ -171,7 +173,7 @@ class EPSData:
 
     def get_eps_data(self) -> pd.DataFrame:
         '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
-        print('3. <EPS_Data> section creation')  # to log
+        logger.info('3. <EPS_Data> section creation')
         # Do not change order, EPS_ID/EPS_Name should be initialized first
         self.mapping_core_data()
         self.mapping_from_fix_values()
@@ -184,6 +186,6 @@ class EPSData:
         self.set_eps_data_ap2_modification()
         self.set_eps_data_ep_modification()
         self.fill_type_in_eps_data()
-        if not self.eps_data.empty:  # better check + log
-            print('\t<EPS_Data> created')
+        if not self.eps_data.empty:
+            logger.info('<EPS_Data> created')
         return self.eps_data

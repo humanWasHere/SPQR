@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import tempfile
 
@@ -8,6 +9,7 @@ from ..interfaces.calibre_python import lance_script
 from ..data_structure import Block
 from ..parsers.parse import FileParser
 
+logger = logging.getLogger(__name__)
 
 # TODO change path access if code is running on prod serv
 # does it closes the temp file ?
@@ -101,10 +103,10 @@ class Measure:
         measure_tempfile_path = measure_tempfile.name
         # measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"
         tmp = self.creation_script_tmp(measure_tempfile_path)
-        print('2. Starting measurement')  # TODO log
+        logger.info('2. Starting measurement')
         lance_script(tmp, verbose=True)
         meas_df = self.process_results(measure_tempfile_path)
-        parser_df = self.parser_df.copy()  # FIXME why copy ?
+        parser_df = self.parser_df.copy()
         nm_per_unit = {'dbu': 1000/self.precision, 'nm': 1, 'um': 1000}
         parser_df[["x", "y"]] *= nm_per_unit[self.unit]
         try:
@@ -114,13 +116,13 @@ class Measure:
         parser_df = parser_df.drop_duplicates(subset=['name'])
         merged_dfs = pd.merge(parser_df, meas_df, on="name")
         # TODO: cleanup columns in merged df
-        # print(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")
+        # logger.debug(f"debug cleanup columns measure.py : {merged_dfs.columns.tolist()}")
 
         # DEBUG copy results CSV
         # results = Path(measure_tempfile_path).read_text()
         # (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
         measure_tempfile.close()
-        if not merged_dfs.empty:  # more checks + log
-            print('\tMeasurement done')
-        # print(merged_dfs.columns)
+        if not merged_dfs.empty:
+            logger.info('Measurement done')
+        # logger.debug(merged_dfs.columns)
         return merged_dfs

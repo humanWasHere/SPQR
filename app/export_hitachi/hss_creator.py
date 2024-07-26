@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 import re
 
@@ -14,6 +15,8 @@ from ..parsers.json_parser import JSONParser
 # faire un checker de nom (EPS_Name) -> match requirements de Hitachi -> validator
 # -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
 # faire un checker pour csv ET hss -> intégrer le tool d'alex -> recipe checker
+
+logger = logging.getLogger(__name__)
 
 
 class HssCreator:
@@ -145,20 +148,20 @@ class HssCreator:
                 json_content[section_keys] = {col: section_series[col].tolist() for col in section_series}
             else:
                 # TODO raise an error ?
-                print(f"\t{section_keys} has its series empty")
+                logger.error(f"{section_keys} has its series empty")
         json_str = json.dumps(json_content, indent=4)
         json_str = re.sub(r'NaN', r'""', json_str)
         self.recipe_output_file.with_suffix(".json").write_text(json_str)
-        if self.recipe_output_file.with_suffix(".json").exists():  # TODO better check + log
-            print(f"\tjson recipe created !  Find it at {str(self.recipe_output_file)}.json")
+        if self.recipe_output_file.with_suffix(".json").exists():
+            logger.info(f"json recipe created !  Find it at {str(self.recipe_output_file)}.json")
 
     def write_in_file(self) -> None:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
         self.fill_with_eps_data()
-        print('4. Other sections creation')
+        logger.info('4. Other sections creation')
         self.get_set_section()
-        print('\tOther sections created')
+        logger.info('Other sections created')
         # self.fill_type_in_eps_data()
         # self.convert_coord_to_nm()
         whole_recipe_template = self.dataframe_to_hss()
@@ -166,8 +169,8 @@ class HssCreator:
         whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)
         self.output_dataframe_to_json()
         self.recipe_output_file.with_suffix(".csv").write_text(whole_recipe_to_output)
-        if self.recipe_output_file.with_suffix(".csv").exists():  # TODO better check + log
-            print(f"\tcsv recipe created ! Find it at {self.recipe_output_file}.csv")
-        if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():
-            print("VENI VEDI VICI")
+        if self.recipe_output_file.with_suffix(".csv").exists():
+            logger.info(f"csv recipe created ! Find it at {self.recipe_output_file}.csv")
+        # if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():
+        #     logger.info("VENI VEDI VICI")
         return f"{self.recipe_output_file}.csv"

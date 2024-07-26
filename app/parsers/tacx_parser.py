@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import logging
 import pandas as pd
 
 from .parse import FileParser
@@ -20,11 +21,12 @@ class TACXParser(FileParser):
 
     def parse_data(self) -> pd.DataFrame:
         """Call the dedicated parsing logic depending on OPCField type"""
-        print("1. Parsing TACX reports")
+        logger = logging.getLogger(__name__)
+        logger.info("1. Parsing TACX reports")
         # parse
         # convert columns name to internal column names
-        if not self.data.empty:  # TODO add more logic - log
-            print('\TACX report parsing done')
+        if not self.data.empty:
+            logger.info('TACX report parsing done')
         return self.data
 
     def parse_tac_x(self):

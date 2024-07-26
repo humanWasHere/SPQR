@@ -1,8 +1,13 @@
 import argparse
-import sys
 from pathlib import Path
+import sys
 
 import numpy as np
+
+from .interfaces.logger import logger_init
+import logging
+
+logger_init()
 
 from .data_structure import Block
 from .export_hitachi.hss_creator import HssCreator
@@ -10,13 +15,7 @@ from .interfaces.input_checker import CheckConfig, CheckConfigPydantic
 from .interfaces import recipedirector as rcpd
 from .measure.measure import Measure
 from .parsers.json_parser import import_json
-from .parsers.parse import ParserSelection, get_parser, OPCFieldReverse
-
-
-# TODO
-# for prod env : should be cd /dist run semrc.exe
-# overlap input data with GUI selection
-# check if output_dir+recipe_name.(json/csv).exists -> ask user
+from .parsers.parse import get_parser, OPCFieldReverse
 
 
 def parse_intervals(values: list[str]) -> list[list[int]]:
@@ -25,16 +24,17 @@ def parse_intervals(values: list[str]) -> list[list[int]]:
     list_of_lists = []
     for value in values:
         try:
-            # Vérifier que la valeur contient un tiret
             if '-' not in value:
                 raise ValueError("Separator must be a hyphen")
-            # Diviser chaque paire par le tiret et convertir en entiers
             start, end = map(int, value.split('-'))
             list_of_lists.append([start, end])
         except ValueError as e:
             raise argparse.ArgumentTypeError(f"Each range must be in the format 'start-end'. Error: {e}")
     return list_of_lists
 
+
+
+logger = logging.getLogger(__name__)
 
 def cli() -> argparse.ArgumentParser:
     """defines the command lines actions of the soft"""
@@ -64,17 +64,21 @@ def manage_app_launch():
     """reads the user command at __main__.py start, then config.json and launches the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
-    args = cli().parse_args()
-    # Post process args
+    try:
+        args = cli().parse_args()
+    except SystemExit as e:
+        logger.error("Argument parsing failed. Exiting.")
+        sys.exit(e.code)
     if not args.running_mode:
-        print("CLI app should be executed as indicated below.\n")
+        logger.warning("CLI app arguments should be executed as indicated in the helper.")
         cli().print_help()
         sys.exit(1)
-    if args.line_selection is not None:
-        args.line_selection = tuple(args.line_selection)
+    # if args.line_selection is not None:
+    #     args.line_selection = tuple(args.line_selection)
 
     if args.running_mode == 'start':
         app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
+        assert app_config_file.stat().st_size != 0, f"Le fichier {app_config_file.name} est vide."
         app_config = import_json(app_config_file)
         assert app_config != ""  # TODO test it another way
         test_env_config = app_config.get(args.recipe_type_selection)
@@ -93,7 +97,7 @@ def manage_app_launch():
     elif args.running_mode == 'build':
         assert args.user_config.exists(), f"Le fichier spécifié n'existe pas: {args.user_config}"
         assert args.user_config.is_file(), f"Le chemin spécifié n'est pas un fichier: {args.user_config}"
-        # TODO validate whole JSON
+        assert args.user_config.stat().st_size != 0, f"Le fichier {args.user_config.name} est vide."
         user_config = import_json(args.user_config)
         if len(user_config) == 0:
             raise ValueError("The provided configuration file does not contain any recipe.")
@@ -101,17 +105,16 @@ def manage_app_launch():
             # recipe name is optional if there is only one
             args.user_recipe = next(iter(user_config.keys()))
         elif len(user_config) > 1 and args.user_recipe is None:
-            print("You have more than one recipe in your configuration file. It means you need to select one with the -r attribute.")
+            logger.warning("You have more than one recipe in your configuration file. It means you need to select one with the -r attribute.")
             sys.exit(1)
         if args.user_recipe in user_config:
-            # print(f'running recipe {args.user_recipe}')
             build_config = user_config.get(args.user_recipe, {})
             config_checker_instance_pydantic = CheckConfigPydantic
             config_checker_instance_pydantic.validate_json_file(user_config, recipe_type_start=None, user_recipe_build=args.user_recipe)
             if isinstance(build_config['step'], list):
                 steps = build_config['step']
                 for part, step in enumerate(steps):
-                    print(f"\ncreating recipe {build_config['recipe_name']} "
+                    logger.info(f"\ncreating recipe {build_config['recipe_name']} "
                           f"{part+1}/{len(steps)}: {step} from {steps}")
                     copied_config = build_config.copy()
                     copied_config['step'] = step
@@ -120,7 +123,7 @@ def manage_app_launch():
             else:
                 run_recipe_creation_w_measure(build_config, args.upload_rcpd, parse_intervals(args.line_selection))
         else:
-            print(f'TU QUOQUE FILI !? no recipe {args.user_recipe} has been found in your config file .json.')
+            logger.error(f'TU QUOQUE FILI !? no recipe {args.user_recipe} has been found in your config file .json.')
             sys.exit(1)
 
 
@@ -128,11 +131,10 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
     """this is the real main function which runs the flow with the measure - "prod" function"""
     block = Block(json_conf['layout'])
 
-    print('\n______________________RUNNING RECIPE CREATION______________________\n')
+    logger.info(f"###CREATING RECIPE### : {json_conf['recipe_name']}")
     # parser selection
-    # parser_selection_instance = ParserSelection(json_conf)
-    # selected_parser = parser_selection_instance.run_parsing_selection()
     parser = get_parser(json_conf['parser'])
+    assert parser is not None, "your coordinate source may not be in a valid format"
     if issubclass(parser, OPCFieldReverse):
         selected_parser = parser(
             json_conf['origin_x_y'][0], json_conf['origin_x_y'][1],
@@ -163,7 +165,8 @@ def run_recipe_creation_w_measure(json_conf: dict, upload=False, line_selection=
         rcpd.upload_csv(recipe_path)
         rcpd.upload_gds(json_conf['layout'])
         # TODO if file already exists on remote, check if new file is changed
-        print(f"recipe named {json_conf['recipe_name']} should be on RCPD machine !")
+        logger.info(f"recipe named {json_conf['recipe_name']} should be on RCPD machine !")
+    logger.info("###END RECIPE CREATION###")
 
 
 if __name__ == "__main__":

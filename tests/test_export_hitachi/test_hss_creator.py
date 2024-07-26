@@ -228,22 +228,12 @@ class TestHssCreator:
 
     def test_write_in_file(self, hss_instance):
         '''checks for file writing and content written'''
-        # TODO must test the correct execution of several method
-        # -> method are already tested / output is a way to validate it
 
         # Arrange
         print(self.test_json_user_config['output_dir'])
         output_recipe_file_path = Path(self.test_json_user_config['output_dir'] / (self.test_json_user_config['recipe_name'] + ".csv"))
         output_json_file_path = Path(self.test_json_user_config['output_dir'] / (self.test_json_user_config['recipe_name'] + ".json"))
-        # example_test_df_genepy_gauge = pd.DataFrame({
-        #     'EPS_Name': ['isoRectArea_CD100_Area6000_V', 'isoRectArea_CD200_Area6000_V', 'isoRectArea_CD300_Area6000_V', 'isoRectArea_CD400_Area6000_V', 'isoRectArea_CD500_Area6000_V', 'isoRectArea_CD600_Area6000_V', 'isoRectArea_CD700_Area6000_V', 'isoRectArea_CD800_Area6000_V', 'isoRectArea_CD900_Area6000_V', 'isoRectArea_CD1000_Area6000_V'],  # noqa E501
-        #     'Move_X': [55000, 110000, 165000, 220000, 275000, 330000, 385000, 440000, 495000, 550000],  # noqa E501
-        #     'Move_Y': [-455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000, -455000],  # noqa E501
-        #     'EPS_ID': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        #     })
 
-        # hss_creator = HssCreator(example_test_df_genepy_gauge, block=block_instance, json_conf=self.test_json_user_config)
-        # hss_creator.get_set_section()  # debug
         # Act
         hss_instance.write_in_file()
 

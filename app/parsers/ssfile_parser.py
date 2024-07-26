@@ -4,6 +4,8 @@ import pandas as pd
 
 from .parse import FileParser
 
+import logging
+
 # TODO checker de présence des colonnes 'name', 'coord x', 'coord y' 'unit' ?
 
 
@@ -19,17 +21,17 @@ class SSFileParser(FileParser):
 
     def parse_data(self) -> pd.DataFrame:
         """Call the dedicated parsing logic depending on OPCField type"""
+        logger = logging.getLogger(__name__)
         if self.is_genepy:
-            print("1. Parsing Genepy ssfile")
+            logger.info('1. Parsing Genepy ssfile')
             self.genepy_to_dataframe()
             self.post_parse()
-            if not self.data.empty:  # TODO add more logic - log
-                print('\tGenepy ssfile parsing done')
+            if not self.data.empty:
+                logger.info('Genepy ssfile parsing done')
             return self.data
 
     def genepy_to_dataframe(self) -> pd.DataFrame:
         '''converts a genepy ssfile to a formatted parsing'''
-        # print('1. genepy ssfile parsing')  # TODO log
         self.data = pd.read_csv(self.ssfile, sep='\t', on_bad_lines='warn')
         if 'UNIT_COORD' not in self.data and 'Name' in self.data:
             # genepat testcase workaround

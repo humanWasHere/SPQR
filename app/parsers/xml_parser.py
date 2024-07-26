@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+import logging
 import lxml.etree as ET
 import numpy as np
 import pandas as pd
@@ -43,7 +44,9 @@ class CalibreXMLParser(FileParser):
 
     def parse_data(self):
         """Dispatch content type to row generators and return dataframe of coordinates"""
-        print("1. Parsing calibre rulers")  # TODO log
+        
+        logger = logging.getLogger(__name__)
+        logger.info("1. Parsing calibre rulers")
         if self.type == "rulers":
             rows = self.gen_rows_ruler()
         elif self.type == "clips":
@@ -59,6 +62,6 @@ class CalibreXMLParser(FileParser):
         parsed_data['x_ap'] = np.nan
         parsed_data['y_ap'] = np.nan
         # TODO manage default columns
-        if not parsed_data.empty:  # TODO add more logic - log
-            print('\tCalibre rulers parsing done')
+        if not parsed_data.empty:
+            logger.info('Calibre rulers parsing done')
         return parsed_data  # .astype({'name': "string"})

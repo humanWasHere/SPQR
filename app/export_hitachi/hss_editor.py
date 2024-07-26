@@ -1,3 +1,4 @@
+import logging
 import re
 from pathlib import Path
 
@@ -8,6 +9,8 @@ from ..parsers.json_parser import JSONParser, import_json
 # TODO check if HssCreator instance is needed to modify the recipe
 # -> get file recipe that already has been output
 # uses json_parser.py -> import HssCreator heritage in RecipeModificator or in JsonParser
+
+logger = logging.getLogger(__name__)
 
 
 class RecipeModificator(HssCreator):
@@ -22,16 +25,16 @@ class RecipeModificator(HssCreator):
             self.working_recipe_path = Path(json_recipe)
             json_parser_instance = JSONParser(self.imported_json_recipe)
             self.constant_sections, self.table_sections = json_parser_instance.json_to_section_dicts()
-            # print(f"here is constant_sections : {self.constant_sections}. Which is {type(self.constant_sections)}")
-            # print(f"here is table_sections : {self.table_sections}. Which is {type(self.table_sections)}")
+            # logger.debug(f"here is constant_sections : {self.constant_sections}. Which is {type(self.constant_sections)}")
+            # logger.debug(f"here is table_sections : {self.table_sections}. Which is {type(self.table_sections)}")
         elif json_recipe is None:
             self.imported_json_recipe = None
             self.imported_csv_recipe = Path(csv_recipe)
             self.working_recipe_path = Path(csv_recipe)
             hss_parser_instance = HSSParser(self.imported_csv_recipe)
             self.constant_sections, self.table_sections = hss_parser_instance.parse_data()
-            # print(f"here is constant_sections : {self.constant_sections}. Which is {type(self.constant_sections)}")
-            # print(f"here is table_sections : {self.table_sections}. Which is {type(self.table_sections)}")
+            # logger.debug(f"here is constant_sections : {self.constant_sections}. Which is {type(self.constant_sections)}")
+            # logger.debug(f"here is table_sections : {self.table_sections}. Which is {type(self.table_sections)}")
         elif (json_recipe is None and csv_recipe is None):
             raise ImportError("no recipe was given")
         self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
@@ -44,7 +47,7 @@ class RecipeModificator(HssCreator):
         keys_json_template = list(import_json(self.json_template).keys())
         keys_json_recipe = list(import_json(self.imported_json_recipe).keys())
         if keys_json_template != keys_json_recipe:
-            print(f"imported recipe is not valid compared to template\n{keys_json_template}\n{keys_json_recipe}")
+            logger.error(f"imported recipe is not valid compared to template\n{keys_json_template}\n{keys_json_recipe}")
             return False
         else:
             return True
@@ -86,9 +89,9 @@ class RecipeModificator(HssCreator):
                     else:
                         self.table_sections[section_to_modify][subsection_to_modify] = modified_value
                 else:
-                    print(f"{subsection_to_modify} apparently not in df")
+                    logger.error(f"{subsection_to_modify} apparently not in df")
         else:
-            print(f"section {section_to_modify} apparently not in any dict")
+            logger.error(f"section {section_to_modify} apparently not in any dict")
 
     def rename_recipe(self) -> str:
         '''renames the recipe in order to be recognized as modified'''
@@ -102,7 +105,7 @@ class RecipeModificator(HssCreator):
             new_recipe_name = str(self.working_recipe_path.stem) + "_1" + self.working_recipe_path.suffix
             return new_recipe_name
         else:
-            print("recipe name is not formatted as expected")
+            logger.warning("recipe name is not formatted as expected")
 
     def run_recipe_modification(self):
         if self.imported_json_recipe:
@@ -124,4 +127,4 @@ class RecipeModificator(HssCreator):
                 super().recipe_name = self.rename_recipe()
                 super().output_dataframe_to_json()
         # else:
-        #     print("no recipe has been given")
+        #     logger.warning("no recipe has been given")
