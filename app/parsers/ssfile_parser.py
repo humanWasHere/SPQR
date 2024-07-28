@@ -1,10 +1,10 @@
+import logging
 from pathlib import Path
 
 import pandas as pd
 
 from .parse import FileParser
 
-import logging
 
 # TODO checker de présence des colonnes 'name', 'coord x', 'coord y' 'unit' ?
 
@@ -12,7 +12,7 @@ import logging
 class SSFileParser(FileParser):
     """Parse OPCField descriptor "ss" files in Genepy format or legacy (undefined) format"""
 
-    unit = None
+    unit = ''
 
     def __init__(self, file_to_parse: str | Path, is_genepy: bool = True):
         self.ssfile = Path(file_to_parse)
@@ -29,6 +29,7 @@ class SSFileParser(FileParser):
             if not self.data.empty:
                 logger.info('Genepy ssfile parsing done')
             return self.data
+        return pd.DataFrame()
 
     def genepy_to_dataframe(self) -> pd.DataFrame:
         '''converts a genepy ssfile to a formatted parsing'''

@@ -1,12 +1,9 @@
 from .csv_parser import HSSParser, TACRulerParser
 from .file_parser import FileParser
 from .json_parser import JSONParser
-from .parse import OPCFieldReverse
+from .parse import get_parser, OPCFieldReverse
 from .ssfile_parser import SSFileParser
 from .xml_parser import CalibreXMLParser
-from .csv_parser import HSSParser
-from .file_parser import FileParser
 
-__all__ = ['FileParser', 'HSSParser', 'TACRulerParser', 'OPCFieldReverse',
-           'JSONParser',
-           'SSFileParser', 'CalibreXMLParser']
+__all__ = ['HSSParser', 'TACRulerParser', 'FileParser', 'JSONParser', 'get_parser',
+           'OPCFieldReverse', 'SSFileParser', 'CalibreXMLParser']

@@ -3,8 +3,6 @@ from pathlib import Path
 
 import pandas as pd
 
-logger = logging.getLogger(__name__)
-
 
 class SectionMaker:
     """
@@ -35,14 +33,14 @@ class SectionMaker:
         #     raise ValueError("GP_ID values cannot exceed 10")
         # __________Type column checks__________
         if self.gp_data['Type'].ne(1).any():
-            logger.warning(f"ValueError: <GP_Data>Type should be 1")
+            logging.warning("<GP_Data>Type should be 1")
             # raise ValueError("<GP_Data>Type should be 1")
 
         # __________GP_Template coolumn checks__________
         # dynamic assignation of GP_Template
         if self.gp_data["GP_Template"].isna().any():
-            logger.warning(f"ValueError: <GP_Data>GP_Template is mandatory")
-            # raise ValueError("<GP_Data>GP_Template is mandatory")
+            logging.warning("<GP_Data>GP_Template is mandatory")
+            raise ValueError("<GP_Data>GP_Template is mandatory")
 
         # __________GP_Mag column checks__________
         gp_template = self.gp_data["GP_Template"]
@@ -56,14 +54,14 @@ class SectionMaker:
         # __________GP_ROT section__________
         return self.gp_data
 
-    def make_idd_cond_section(self, layout: str, topcell: str) -> pd.DataFrame:
-        self.idd_cond.loc[0, ["DesignData", "CellName"]] = Path(layout).stem, topcell
+    def make_idd_cond_section(self, layout: str | Path, topcell: str) -> pd.DataFrame:
+        self.idd_cond.loc[0, ["DesignData", "CellName"]] = [Path(layout).stem, topcell]
         return self.idd_cond
 
     def make_idd_layer_data_section(self, mask_layer: int, tone: str) -> pd.DataFrame:
         """Set IDD_Layer_Data section for visible layer mapping"""
         # TODO link with step / target layer
-        self.idd_layer_data.loc[0, ['LayerNo', 'DataType']] = 0, 114
+        self.idd_layer_data.loc[0, ['LayerNo', 'DataType']] = [0, 114]
         self.idd_layer_data.loc[1:, 'LayerNo'] = mask_layer
         self.idd_layer_data.loc[:, 'Tone'] = dict(clear=0, dark=1)[tone]
         return self.idd_layer_data
@@ -72,8 +70,7 @@ class SectionMaker:
         #  __________SEMCondNo__________
         step_to_value = dict(PH=2, ET=1, PH_HR=11, ET_HR=13)
         if step not in step_to_value.keys():
-            logger.warning(f"ValueError: Step not in {', '.join(step_to_value.keys())}.")
-            # raise ValueError(f"Supported steps are {', '.join(step_to_value.keys())}.")
+            raise ValueError(f"Supported steps are {', '.join(step_to_value.keys())}.")
         self.recipe["SEMCondNo"] = step_to_value[step]
         return self.recipe
 

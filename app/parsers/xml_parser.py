@@ -1,7 +1,8 @@
-from pathlib import Path
-import re
-
 import logging
+import re
+from pathlib import Path
+from typing import Iterator
+
 import lxml.etree as ET
 import numpy as np
 import pandas as pd
@@ -11,30 +12,36 @@ from .parse import FileParser
 
 class CalibreXMLParser(FileParser):
     """Single entry point for parsing of Calibre Ruler and Clip files"""
-    unit = None
 
     def __init__(self, tree: str | Path | ET._ElementTree):
         if not isinstance(tree, ET._ElementTree):
             tree = ET.parse(tree)
-        self.tree = tree
-        self.type = tree.getroot().tag
-        self.unit = tree.findtext('units') or 'dbu'
-        # clips: units are defined in XML root / rulers: findtext -> None
+        self.tree: ET._ElementTree = tree
+        self.type: str = tree.getroot().tag
+        self._unit: str = tree.findtext('units') or 'dbu'
+        # clips: units are defined in XML root. rulers: findtext -> None
 
-    def gen_rows_ruler(self):
-        """Generate ruler name and center row by row from Calibre ruler XML"""
-        for ruler in self.tree.findall('ruler'):
+    @property
+    def unit(self) -> str:
+        return self._unit
+
+    def gen_rows_ruler(self) -> Iterator[tuple[str | None, float, float]]:
+        """Generate rows of ruler name and center coordinates from Calibre ruler file (XML)"""
+        for idx, ruler in enumerate(self.tree.findall('ruler')):
             # unit = ruler.findtext('units')
-            # formatting for display only, data is stored in dbu
-            name = ruler.findtext('comment') or "default_value"
-            x_range = [int(float(coord.text)) for coord in ruler.findall('points/point/x')]
-            y_range = [int(float(coord.text)) for coord in ruler.findall('points/point/y')]
+            # 'ruler/units' field is formatting for display only, data is stored in dbu
+            # TODO lxml.objectify?
+            name = ruler.findtext('comment') or f'Ruler{idx+1}'
+            x_range = [int(float(coord.text)) for coord in ruler.findall('points/point/x')
+                       if coord.text is not None]
+            y_range = [int(float(coord.text)) for coord in ruler.findall('points/point/y')
+                       if coord.text is not None]
             x = sum(x_range) / 2
             y = sum(y_range) / 2
             yield name, x, y
 
-    def gen_rows_clip(self):
-        """Generate clip name and center row by row from Calibre clip XML."""
+    def gen_rows_clip(self) -> Iterator[tuple[str | None, float, float]]:
+        """Generate rows of clip name and center coordinates from Calibre clip file (XML)."""
         for clip in self.tree.findall('clip'):
             name = clip.findtext('name')
             box = {key: float(clip.findtext(key)) for key in ['x', 'y', 'width', 'height']}
@@ -42,8 +49,9 @@ class CalibreXMLParser(FileParser):
             y = box['y'] + box['height'] / 2
             yield name, x, y
 
-    def parse_data(self):
+    def parse_data(self) -> pd.DataFrame:
         """Dispatch content type to row generators and return dataframe of coordinates"""
+
         logger = logging.getLogger(__name__)
         logger.info("1. Parsing calibre rulers")
         if self.type == "rulers":
@@ -51,9 +59,7 @@ class CalibreXMLParser(FileParser):
         elif self.type == "clips":
             rows = self.gen_rows_clip()
         else:
-            logger.warning(f"ValueError: Unknown XML type")
             raise ValueError("Unknown XML type")
-        # TODO: name as index? / enforce format?
         parsed_data = pd.DataFrame(rows, columns=['name', 'x', 'y'])
         # Normalize name - keep alphanumeric only
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r' ', '_', s))

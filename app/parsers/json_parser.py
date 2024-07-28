@@ -6,19 +6,15 @@ import pandas as pd
 
 from .file_parser import FileParser
 
-logger = logging.getLogger(__name__)
-
 
 def import_json(json_file: str | Path) -> dict:
     """Parse generic JSON file"""
     try:
         return json.loads(Path(json_file).read_text())
     except FileNotFoundError:
-        logger.warning(f"ValueError: The file {json_file} was not found.")
         raise ValueError(f"The file {json_file} was not found.")
     except json.JSONDecodeError as e:
-        logger.error(f"ValueError: The file {json_file} contains invalid JSON: {e}.")
-        raise ValueError(f"The file {json_file} contains invalid JSON: {e}.")
+        raise ValueError(f"The file {json_file} contains invalid JSON:\n\t{e}.")
 
 
 class JSONParser(FileParser):

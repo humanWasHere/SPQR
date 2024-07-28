@@ -1,23 +1,20 @@
 import logging
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 import pandas as pd
-import numpy as np
 
-from ..interfaces.calibre_python import lance_script
 from ..data_structure import Block
+from ..interfaces.calibre_python import lance_script
 from ..parsers.parse import FileParser
-
 logger = logging.getLogger(__name__)
 
 # TODO change path access if code is running on prod serv
-# does it closes the temp file ?
 
 
 class Measure:
     def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
-                 offset: dict = None, tcl_script: str = None, row_range: list = None):
+                 offset: dict | None = None, tcl_script: str = None, row_range: list = None):
         if offset is None:
             offset = dict(x=0, y=0)
         self.parser_df = parser_input.parse_data()
@@ -30,7 +27,6 @@ class Measure:
         if tcl_script is None:
             tcl_script = Path(__file__).parent / "measure.tcl"
         if not tcl_script.exists():
-            logger.error(f"FileNotFoundError: Could not find {tcl_script}")
             raise FileNotFoundError(f"Could not find {tcl_script}")
         self.tcl_script = tcl_script
 
@@ -39,17 +35,17 @@ class Measure:
         if interval_range:
             combined_indices = []
             for interval in interval_range:
-                assert interval[0] > 0, "the range selected is out of bound ! Should not be under 1"
+                assert interval[0] > 0, "the range selected is out of bound! Should not be under 1"
                 assert interval[1] <= len(self.parser_df), f"the range selected is out of bound ! Should not be above {len(self.parser_df)} for this recipe"
                 combined_indices.extend(range(interval[0] - 1, interval[1]))
             self.parser_df = self.parser_df.iloc[combined_indices, :]
 
-    def apply_offset(self):
+    def apply_offset(self) -> None:
         # workaround if coords are not in same coord as layout. should be in parser's original unit
         self.parser_df.loc[:, 'x'] += self.offset['x']
         self.parser_df.loc[:, 'y'] += self.offset['y']
 
-    def creation_script_tmp(self, output, search_area=5) -> Path:
+    def creation_script_tmp(self, output: str | Path, search_area=5) -> Path:
         '''this method creates a temporary script using a TCL script template and input data'''
         # TODO this method must close temp file ?
         # TODO rationnaliser l'emplacement des fichiers temporaires
@@ -76,11 +72,11 @@ class Measure:
             texte = texte.replace("FEED_ME_CORRECTION", str(correction[self.unit]))
             texte = texte.replace("FEED_ME_COORDINATES", '\n'.join(coordonnees))
             texte = texte.replace("FEED_ME_GDS", str(self.layout))
-            texte = texte.replace("FEED_ME_OUTPUT", output)
+            texte = texte.replace("FEED_ME_OUTPUT", str(output))
             script.write(texte)
         return tmp_script
 
-    def process_results(self, output_path) -> pd.DataFrame:
+    def process_results(self, output_path: str) -> pd.DataFrame:
         meas_df = pd.read_csv(output_path, index_col=False, na_values="unknown")
         # TODO : traiter les "Pitch non symetrical" -> minimum?
         # Drop invalid rows
@@ -91,8 +87,7 @@ class Measure:
                                 'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
                        inplace=True)
         # FIXME measure out of range? -> modify tcl to handle empty measurement
-        meas_df.loc[meas_df.x_dim == 0, "x_dim"] = 3000
-        meas_df.replace({'y_dim': {0: 3000}}, inplace=True)
+        meas_df.replace({'x_dim': {0: 3000}, 'y_dim': {0: 3000}}, inplace=True)
         return meas_df
 
     def run_measure(self) -> pd.DataFrame:
@@ -101,19 +96,17 @@ class Measure:
         measure_tempfile = tempfile.NamedTemporaryFile(
             dir=Path.home() / "tmp")
         # TODO where to store tmp files (script + results)
-        measure_tempfile_path = measure_tempfile.name
-        # measure_tempfile_path = "/work/opc/all/users/chanelir/semrc-outputs/measure_output.csv"
-        tmp = self.creation_script_tmp(measure_tempfile_path)
-        logger.info('2. Starting measurement')
+
+        tmp = self.creation_script_tmp(measure_tempfile.name)
+        logger.info('2. measurement')
         lance_script(tmp, verbose=True)
-        meas_df = self.process_results(measure_tempfile_path)
+        meas_df = self.process_results(measure_tempfile.name)
         parser_df = self.parser_df.copy()
         nm_per_unit = {'dbu': 1000/self.precision, 'nm': 1, 'um': 1000}
         parser_df[["x", "y"]] *= nm_per_unit[self.unit]
         try:
             parser_df[["x_ap", "y_ap"]] *= int(float(nm_per_unit[self.unit]))
         except ValueError:
-            logger.warning("ValueError: ?")
             pass
         parser_df = parser_df.drop_duplicates(subset=['name'])
         merged_dfs = pd.merge(parser_df, meas_df, on="name")
@@ -123,7 +116,7 @@ class Measure:
         # DEBUG copy results CSV
         # results = Path(measure_tempfile_path).read_text()
         # (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
-        measure_tempfile.close()
+        measure_tempfile.close()  # remove temporary script
         if not merged_dfs.empty:
             logger.info('Measurement done')
         # logger.debug(merged_dfs.columns)

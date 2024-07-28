@@ -1,6 +1,6 @@
 import re
-from io import StringIO
 import logging
+from io import StringIO
 from pathlib import Path
 
 import pandas as pd
@@ -9,13 +9,12 @@ from .file_parser import FileParser
 
 
 class TACRulerParser(FileParser):
-    '''this class is used to parse TAC rulers'''
-
+    """Parse ruler files exported from TACX GUI"""
     unit = "nm"
 
     def __init__(self, file: str):
         self.file = file
-        self.data: pd.DataFrame        
+        self.data: pd.DataFrame
 
     def parse_data(self) -> pd.DataFrame:
         """Dispatch content to corresponding column mapping and return dataframe of coordinates"""
@@ -44,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 class HSSParser(FileParser):
-    '''parse existing hss recipe'''
+    """Parse existing HSS recipe"""
     unit = 'nm'
 
     def __init__(self, csv_recipe_path) -> None:

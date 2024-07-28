@@ -2,7 +2,6 @@
 Interface with Hitachi DesignGauge RecipeDirector station
 """
 import getpass
-import logging
 import os
 import pexpect
 import socket
@@ -10,8 +9,6 @@ from pathlib import Path
 
 import lxml.etree
 from dotenv import load_dotenv
-
-logger = logging.getLogger(__name__)
 
 
 try:
@@ -48,7 +45,6 @@ def dg_transfer(source: str, destination: str, password=None):
         try:
             password = get_pw(user)
         except FileNotFoundError:
-            logger.warning("FileNotFoundError: ?")
             pass
     child = pexpect.spawn(f"rsync -v -t --perms --chmod=u+r,g+r,o+r {source} {destination}")
     child.expect("password:")
@@ -87,7 +83,6 @@ def get_template(template_type, name, password=None, write_to=None) -> lxml.etre
     # do some diffs ...
     if write_to is not None:
         if os.path.isfile(write_to):
-            logger.warning(f"FileExistsError: ?")
             raise FileExistsError
         with open(write_to, 'w') as f:
             f.write(lxml.etree.tostring(template_tree, encoding="unicode", pretty_print=True))

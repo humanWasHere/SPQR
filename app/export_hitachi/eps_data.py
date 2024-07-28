@@ -1,5 +1,6 @@
-from typing import Optional
 import logging
+from typing import Literal, Optional
+
 import numpy as np
 import pandas as pd
 
@@ -53,7 +54,8 @@ class EPSData:
         # self.columns = columns  # {'eps_col': value} similar to FIXED_VALUES mapper -> use it?
         self.eps_data = pd.DataFrame(columns=eps_columns.columns)
 
-    def add_mp_width(self, mp_no=1, direction: Optional[str] = None, measleng: int = 100) -> None:
+    def add_mp_width(self, mp_no=1, direction: Optional[Literal['X', 'Y']] = None,
+                     template: str = "", measleng: int = 100) -> None:
         """Add a width measurement point (line/space depending on MP template) at image center"""
         # FIXME doesn't add more than 1 mp ?
         # TODO -> convert to nm -> MP1_X/Y ? -> at the end in hss_creator.write_in_file ?
@@ -73,19 +75,19 @@ class EPSData:
             self.eps_data[f'MP{mp_no}_Name'] = (self.core_data.name + "_" + self.eps_data[f'MP{mp_no}_Direction'])
 
         # Compute MP width/length (from SEM procedure)
-        target_cd_pixel = self.eps_data[f'MP{mp_no}_TargetCD'] * self.eps_data.EP_Mag_X * 512 / 1000 / 135000
+        target_cd_pixel = (self.eps_data[f'MP{mp_no}_TargetCD']
+                           * self.eps_data.EP_Mag_X * 512 / 1000 / 135000)
         # Limit search area to 30 pixels
         # TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
         self.eps_data[f'MP{mp_no}_SA_In'] = (target_cd_pixel / 3).fillna(500).astype(int).clip(upper=30)
         self.eps_data[f'MP{mp_no}_SA_Out'] = self.eps_data[f'MP{mp_no}_SA_In']
-        self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.meas_len  # TODO: compute vs height  # FIXME same value = 100 ???
-        # if not self.eps_data['MP2_X']:
+        self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.meas_len
+        # TODO: compute measlen vs height  # FIXME same value = 100 ???
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
-        # else: handle if needed
-        # fonctionnality for the ODIFF3 recipe of élodie.s
+
         # MP_Template according to CD/SPACE in self.core_data
         if self.templates['mp_template'] == "":
-            template = self.core_data['polarity'].apply(lambda x: "Width_Default" if x == 'CD' else "MP_Template_SPACE")
+            template = np.where(self.core_data['polarity'] == 'CD', 'Width_Default', 'Space_Default')
         # mp_template according to string
         elif isinstance(self.templates['mp_template'], str):
             template = self.templates['mp_template']
@@ -118,15 +120,15 @@ class EPSData:
             elif eps_col in self.FIXED_VALUES:  # not needed if fix_values executed before
                 self.eps_data[eps_col] = self.FIXED_VALUES[eps_col]
             else:
-                logger.warning(f"{eps_col} is not specified in user_config.json. Make sure there is a default value for this column")
+                logger.warning(f"{eps_col} is not specified in user_config.json. "
+                               "Make sure there is a default value for this column")
 
     # method naming based on Hitachi doc
     def set_eps_data_id(self) -> None:
         # __________EPS_ID section__________
         self.eps_data['EPS_ID'] = range(1, min(len(self.core_data) + 1, 9999))
         if any(id > 9999 for id in self.eps_data['EPS_ID']):
-            logger.warning(f"ValueError: EPS_ID values cannot exceed 9999")
-            # raise ValueError("EPS_ID values cannot exceed 9999")
+            raise ValueError("EPS_ID values cannot exceed 9999")
 
     def set_eps_data_eps_modification(self) -> None:
         # from eps_name to fer_eps_id
@@ -168,12 +170,12 @@ class EPSData:
         for col in self.eps_data.columns:
             if col == "Type1":
                 self.eps_data[col] = 1
-            # FIXME maintenabilité : 11 dépends du nommage et de la place de la colonne Type11 dans le template  # noqa E501
+            # FIXME rework for dynamic MPs
             elif col.startswith("Type") and int(col[4:6]) < 12:
                 self.eps_data[col] = 2
 
     def get_eps_data(self) -> pd.DataFrame:
-        '''callable method (destination HssCreator) which returns the EPS_Data dataframe containing the values'''
+        """Return the EPS_Data dataframe in HSS format for HSScreator"""
         logger.info('3. <EPS_Data> section creation')
         # Do not change order, EPS_ID/EPS_Name should be initialized first
         self.mapping_core_data()

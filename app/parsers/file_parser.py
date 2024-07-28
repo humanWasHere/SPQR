@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+# from typing import Protocol
 import pandas as pd
 
 
@@ -9,13 +10,11 @@ class FileParser(ABC):
     def unit(self) -> str:
         """Return coordinate units for conversion"""
 
-    # @DataframeValidator.validate
     @abstractmethod
     def parse_data(self) -> pd.DataFrame:
         """Return a dataframe of gauge name and coordinates in original units
         Column labels MUST BE: name, x, y. Name must be alphanumeric or underscore."""
 
-    # not a class method
     # @staticmethod
     def parse_data_dbu(self, precision):
         dbu_per_unit = {'dbu': 1, 'nm': precision/1000, 'micron': precision}

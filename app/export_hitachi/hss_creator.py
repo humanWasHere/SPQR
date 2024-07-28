@@ -58,8 +58,7 @@ class HssCreator:
                 # adding of eps_data dataframe values to the template dataframe header
                 template_eps_data_header[column_name] = column_values
             else:
-                logger.warning(f"ValueError: {column_name} is not in the template's EPS_Data header")
-                # raise ValueError(f"{column_name} is not in the template's EPS_Data header")
+                raise ValueError(f"{column_name} is not in the template's EPS_Data header")
         self.table_sections["<EPS_Data>"] = template_eps_data_header
 
     def get_set_section(self) -> None:
@@ -84,14 +83,6 @@ class HssCreator:
         sections['<ImageEnv>'] = self.section_maker.make_image_env_section()
         sections['<MeasEnv_Exec>'] = self.section_maker.make_measenv_exec_section()
         sections['<MeasEnv_MeasRes>'] = self.section_maker.make_measenv_measres_section()
-
-    # def convert_coord_to_nm(self):
-    #     # FIXME should keep data as float ??? -> change test to float checking (not int)
-    #     # FIXME not here
-    #     self.table_sections["<EPS_Data>"]["Move_X"] = (
-    #         self.table_sections["<EPS_Data>"]["Move_X"] * 1000 / self.precision).astype('int64')
-    #     self.table_sections["<EPS_Data>"]["Move_Y"] = (
-    #         self.table_sections["<EPS_Data>"]["Move_Y"] * 1000 / self.precision).astype('int64')
 
     def dataframe_to_hss(self) -> str:
         """Converts internal dictionaries into a HSS format as raw text.
@@ -144,7 +135,7 @@ class HssCreator:
         json_content = self.constant_sections
         for section_keys, section_series in self.table_sections.items():
             if not section_series.empty:
-                section_dict = section_series.to_dict(orient='records')[0]
+                # section_dict = section_series.to_dict(orient='records')[0]
                 # json_content[section_keys] = section_dict
                 json_content[section_keys] = {col: section_series[col].tolist() for col in section_series}
             else:
@@ -156,7 +147,7 @@ class HssCreator:
         if self.recipe_output_file.with_suffix(".json").exists():
             logger.info(f"json recipe created !  Find it at {str(self.recipe_output_file)}.json")
 
-    def write_in_file(self) -> None:
+    def write_in_file(self) -> str:
         '''this method executes the flow of writing the whole recipe'''
         # beware to not modify order
         self.fill_with_eps_data()

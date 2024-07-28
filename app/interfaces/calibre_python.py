@@ -1,12 +1,9 @@
-import logging
 from pathlib import Path
 import subprocess
 
 from pyter.calibre import DesignControlerRet
 # from pyrat.DesignControler import DesignControler
 # from pyratImplementation.GTCheck.GTCheckService import GTcheckError
-
-logger = logging.getLogger(__name__)
 
 
 def find_host() -> str:
@@ -19,17 +16,18 @@ def find_host() -> str:
             ['perl', '-e', cmd], stdout=subprocess.PIPE, check=True)
         host = choose_host.stdout.decode()
     except subprocess.CalledProcessError as e:
-        logger.warning(f"Failed to run Perl script: {e}")
-        # raise RuntimeError(f"Failed to run Perl script: {e}") from e
+        raise RuntimeError(f"Failed to run Perl script: {e}") from e
     return host
 
 
-def layout_peek(layout, *options) -> bytes:
-    '''runs command "layout peek" in Calibre, in ssh, on a defined machine by find_host() in order to extract result'''
-    options = ['-'+opt if not opt.startswith('-') else opt for opt in options]  # add dash if needed
+def layout_peek(layout, *options: str) -> str:
+    """Run Calibre DRV layout peek through SSH using find_host (fastlinux)"""
+    # Add dash to options if needed
+    options = tuple('-'+opt if not opt.startswith('-') else opt for opt in options)
     # assert set(options).issubset({"-precision", "-topcell", "-layers", "-bbox"})
     host = find_host()
-    peek_cmd = f"setcalibre rec >/dev/null; calibredrv -a puts [layout peek {layout} {' '.join(options)}]"
+    peek_cmd = ("setcalibre rec >/dev/null;"
+                f"calibredrv -a puts [layout peek {layout} {' '.join(options)}]")
     peek = subprocess.run(["ssh", host, peek_cmd], stdout=subprocess.PIPE, text=True)
     return peek.stdout.splitlines()[-1].strip()
 
@@ -58,11 +56,10 @@ def lance_script(script, debug="/dev/null", verbose=True) -> str:
                                             debug)  # 2.2 s ± 48.9 ms
     process = subprocess.Popen(["ssh", host, cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                bufsize=1, text=True)
-    if verbose:
+    if verbose and process.stdout is not None:
         for line in process.stdout:  # .readlines()  # TODO: tqdm
             print(line.strip())
     outs, errs = process.communicate()
     if errs:
-        logger.error(f"ChildProcessError: {errs}")
         raise ChildProcessError(errs)
     return host
