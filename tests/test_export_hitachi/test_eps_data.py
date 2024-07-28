@@ -208,8 +208,6 @@ class TestEpsData:
     def test_get_eps_data(self, eps_data_instance):
         '''checks wether whole eps_data data setting works as expected'''
         # Arrange
-        # FIXME check sa_in with another method
-
         expected_data_df = pd.DataFrame({'EPS_Name': ['gauge1', 'gauge2', 'gauge3'],
                                          'Move_X': [10, 20, 30],
                                          'Move_Y': [100, 200, 300],

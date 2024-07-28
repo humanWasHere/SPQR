@@ -61,8 +61,6 @@ class SSFileParser(FileParser):
     @staticmethod
     def change_coord_to_relative(dataframe: pd.DataFrame) -> pd.DataFrame:
         """Modify the AP coordinates in-place from absolute to relative."""
-        # FIXME is good ?
         dataframe.x_ap -= dataframe.x
         dataframe.y_ap -= dataframe.y
-        # TODO add relative_coord_x/y columns in dataframe ? replace data ? return columns ?
         return dataframe

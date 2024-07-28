@@ -1,21 +1,20 @@
 import argparse
+import logging
 import sys
 from pathlib import Path
 
 import numpy as np
 
-from .interfaces.logger import logger_init
-import logging
-
-logger_init()
-
 from .data_structure import Block
 from .export_hitachi.hss_creator import HssCreator
-from .interfaces.input_checker import CheckConfigPydantic
 from .interfaces import recipedirector as rcpd
+from .interfaces.input_checker import get_config_checker
+from .interfaces.logger import logger_init
 from .measure.measure import Measure
 from .parsers import FileParser, get_parser, OPCFieldReverse
 from .parsers.json_parser import import_json
+
+logger_init()
 
 
 def parse_intervals(values: list[str]) -> list[list[int]]:
@@ -72,22 +71,24 @@ def build_mode(args: argparse.Namespace) -> None:
 
     # TODO validate whole JSON
     user_config = import_json(args.user_config)
+
+    # Recipe selection
     if len(user_config) == 0:
         raise ValueError("The provided configuration file does not contain any recipe.")
     elif len(user_config) == 1 and args.user_recipe is None:
         # recipe name is optional if there is only one
         args.user_recipe = next(iter(user_config.keys()))
     elif len(user_config) > 1 and args.user_recipe is None:
-        logger.warning("You have more than one recipe in your configuration file. It means you need to select one with the -r attribute.")
+        logger.warning("More than one recipe found in the configuration file. Please select one with the -r option.")
         sys.exit(1)
     if args.user_recipe not in user_config:
-        logger.error(f'TU QUOQUE FILI !? no recipe {args.user_recipe} has been found in your config file .json.')
+        logger.error(f'TU QUOQUE FILI !? Recipe {args.user_recipe} not found in the JSON config file.')
         sys.exit(1)
 
     # print(f'running recipe {args.user_recipe}')
     build_config = user_config.get(args.user_recipe, {})
-    config_checker_instance_pydantic = CheckConfigPydantic
-    config_checker_instance_pydantic.validate_json_file(user_config, recipe_type_start=None, user_recipe_build=args.user_recipe)
+    get_config_checker(build_config)  # TODO use return value
+
     if isinstance(build_config['step'], list):
         steps = build_config['step']
         for part, step in enumerate(steps):
@@ -108,18 +109,16 @@ def start_mode(args: argparse.Namespace) -> None:
         raise ValueError(f"File {app_config_file.name} does not exist or is empty.")
 
     test_env_config = app_config.get(args.recipe)
-    pydantic_config_checker_instance = CheckConfigPydantic
-    pydantic_config_checker_instance.validate_json_file(app_config, recipe_type_start=args.recipe, user_recipe_build=None)
-    # if args.recipe != "opcfield":
-    #     config_checker_instance = CheckConfig(test_env_config)
-    #     config_checker_instance.check_config(check_parser=args.recipe)  # checks mandatory values
-    if args.recipe != "calibre_rulers" and "json":
-        create_recipe(test_env_config, line_selection=[[100, 110]])
-    elif args.recipe == 'json':
-        create_recipe(test_env_config, line_selection=[[100, 110]])
-    else:
+    get_config_checker(test_env_config)
+
+    if args.recipe == "calibre_rulers":
         create_recipe(test_env_config, line_selection=[[10, 20]])
+    else:
+        create_recipe(test_env_config, line_selection=[[100, 110]])
     # TODO for loop to run all test dev recipes with arg -a
+    # Draft auto mode (override args and use build)
+    # build_mode(cli().parse_args(
+    #     ['build', '-c', str(app_config_file), '-r', 'calibre_rulers', '-l', '10-20']))
 
 
 def manage_app_launch():
@@ -148,6 +147,7 @@ def manage_app_launch():
         logger.error('Interrupted by user')
     except Exception as e:
         logger.exception(f'{e.__class__.__name__}')
+
 
 def create_recipe(json_conf: dict, upload=False, line_selection=None):
     """this is the real main function which runs the flow with the measure - "prod" function"""

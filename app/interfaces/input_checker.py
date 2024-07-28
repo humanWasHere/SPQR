@@ -1,72 +1,60 @@
-import logging
 from pathlib import Path
-from pydantic import BaseModel, ValidationError
-from typing import List, Union, Dict, Optional
+from typing import Literal, Optional
 
-logger = logging.getLogger(__name__)
+from pydantic import BaseModel, field_validator  # model_validator, ValidationError
+
+StepType = Literal["PH", "ET", "PH_HR", "ET_HR"]
 
 
-class CheckConfigPydantic:
-    # Modèle de base pour les paramètres communs
-    class BaseRecipe(BaseModel):
-        recipe_name: Optional[str] = None
-        output_dir: Optional[str] = None
-        layout: Path
-        layers: List[Union[int, float]]
-        magnification: int
-        step: str | List[str]
+def validate_path(value: Path) -> Path:
+    if not value.exists():
+        raise ValueError(f"Path does not exist: {value}")
+    return value
 
-        @classmethod
-        def validate_step(cls, value):
-            valid_steps = {"PH", "ET", "PH_HR", "ET_HR"}
-            if value not in valid_steps:
-                logger.warning(f"ValueError: Invalid step value: {value}. Must be one of {valid_steps}")
-                # raise ValueError(f"Invalid step value: {value}. Must be one of {valid_steps}")
-            return value
 
-    # Modèle pour OPCfield
-    class OPCfield(BaseRecipe):
-        parser: Optional[str] = None
-        ap1_template: Optional[str] = None
-        ap1_mag: Optional[int] = None
-        ep_template: Optional[str] = None
-        eps_template: Optional[str] = None
-        mp_template: Optional[Union[str, Dict[str, str]]] = None
-        origin_x_y: List[float]
-        step_x_y: List[int]
-        n_rows_cols: List[int]
-        ap1_offset: List[float]
+class BaseRecipe(BaseModel):
+    recipe_name: Optional[str] = None
+    output_dir: Optional[Path] = Path.cwd()
+    layout: Path
+    layers: list[str]
+    step: StepType | list[StepType]
+    magnification: int
+    ap1_mag: Optional[int] = None
+    ap1_offset: Optional[list[float]] = None
+    ap1_template: Optional[str] = ''
+    ep_template: Optional[str] = ''
+    eps_template: Optional[str] = ''
+    mp_template: Optional[str | dict[str, str]] = ''
 
-    # Modèle pour un autre type de recette (exemple)
-    class GenepyCalibreRulers(BaseRecipe):
-        parser: str
+    @field_validator('ap1_mag', 'ap1_offset', mode='before')
+    def convert_empty_str(value):
+        """Interpret empty string as None for optional fields that are NOT str type"""
+        return None if value == '' else value
 
-    # Fonction pour charger et valider le fichier JSON
-    @staticmethod
-    def validate_json_file(json_config_content: dict, recipe_type_start: str | Path | None, user_recipe_build: str | None):
-        if recipe_type_start is None:
-            try:
-                data = json_config_content[user_recipe_build]
-                recipe = CheckConfigPydantic.BaseRecipe(**data)
-                return recipe
-            except ValidationError as e:
-                logger.warning(f"Erreur de validation: {e}")
-            except Exception as e:
-                logger.warning(f"Une erreur s'est produite: {e}")
-        else:
-            try:
-                data = json_config_content[recipe_type_start]
-                # ['genepy', 'calibre_rulers', 'csv', 'json']
-                if recipe_type_start == "genepy" or recipe_type_start == "calibre_rulers":
-                    recipe = CheckConfigPydantic.GenepyCalibreRulers(**data)
-                elif recipe_type_start == "opcfield":
-                    recipe = CheckConfigPydantic.OPCfield(**data)
-                # TODO make validator for csv and json recipes
-                else:
-                    logger.warning(f"ValueError: Unknown recipe type: {recipe_type_start}")
-                    raise ValueError(f"Unknown recipe type: {recipe_type_start}")
-                return recipe
-            except ValidationError as e:
-                print("Erreur de validation:", e)
-            except Exception as e:
-                print("Une erreur s'est produite:", e)
+    @field_validator('layout', 'output_dir')
+    def validate_paths(cls, value):
+        return validate_path(value)
+
+
+class OPCField(BaseRecipe):
+    parser: Optional[str] = ''
+    origin_x_y: list[float]
+    step_x_y: list[float]
+    n_rows_cols: list[int]
+
+
+class CoordFile(BaseRecipe):
+    parser: Path
+
+    @field_validator('parser')
+    def validate_parser(cls, value):
+        return validate_path(value)
+
+
+def get_config_checker(config_recipe: dict) -> BaseModel:
+    """Determine the recipe kind and return the corresponding validated model"""
+    if 'parser' in config_recipe and config_recipe['parser']:
+        return CoordFile(**config_recipe)
+    if {'origin_x_y', 'step_x_y', 'n_rows_cols'}.issubset(config_recipe):
+        return OPCField(**config_recipe)
+    raise ValueError("Please provide either a 'parser' file path or OPCfield parameters")

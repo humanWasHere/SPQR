@@ -1,4 +1,3 @@
-# FIXME variables in file unused
 """
 Interface with RetDB to fetch mask data
 """

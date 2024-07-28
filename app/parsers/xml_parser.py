@@ -61,6 +61,7 @@ class CalibreXMLParser(FileParser):
         else:
             raise ValueError("Unknown XML type")
         parsed_data = pd.DataFrame(rows, columns=['name', 'x', 'y'])
+        # TODO make post_parse?
         # Normalize name - keep alphanumeric only
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r' ', '_', s))
         parsed_data['name'] = parsed_data['name'].apply(lambda s: re.sub(r'\W+', '', s))

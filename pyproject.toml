@@ -30,6 +30,7 @@ sqlalchemy = "^2.0.23"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.3.4"
+ipython = "^8.26.0"
 flake8 = "^6.1.0"
 mypy = "^1.10.0"
 pylint = "^3.0.3"
@@ -79,3 +80,6 @@ ignore_errors = true
 [tool.mypy]
 ignore_missing_imports = true
 packages = "app"
+plugins = [
+  "pydantic.mypy"
+]

@@ -37,7 +37,7 @@ class HssCreator:
         else:
             self.recipe_output_file = self.recipe_output_dir / str(json_conf['recipe_name'])
         assert re.match(r'^[a-zA-Z0-9_-]{0,37}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
-        # FIXME add already existing recipe in user_input ? -> parameter in CLI to add
+
         if template is None:
             self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
         sections = JSONParser(self.json_template).json_to_section_dicts()
@@ -112,14 +112,14 @@ class HssCreator:
         whole_recipe = whole_recipe.rstrip('\n')
         return whole_recipe
 
-    # FIXME out of class ?
-    def rename_eps_data_header(self, string_to_edit: str) -> str:
+    @staticmethod
+    def rename_eps_data_header(string_to_edit: str) -> str:
         """Convert all 'TypeN' with N a number in 'Type'"""
         new_string = re.sub(r"Type(\d+)", r"Type", string_to_edit)
         return new_string
 
-    # FIXME out of class ?
-    def set_commas_afterwards(self, string_to_modify: str) -> str:
+    @staticmethod
+    def set_commas_afterwards(string_to_modify: str) -> str:
         """Get the max number of columns and write the same number of commas in the file """
         lines = [line.rstrip() for line in string_to_modify.splitlines()]
         # WARNING maintenabilité : number separated with commas -> manage sep
@@ -154,8 +154,6 @@ class HssCreator:
         logger.info('4. Other sections creation')
         self.get_set_section()
         logger.info('Other sections created')
-        # self.fill_type_in_eps_data()
-        # self.convert_coord_to_nm()
         whole_recipe_template = self.dataframe_to_hss()
         whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)
         whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)

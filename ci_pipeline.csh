@@ -1,15 +1,21 @@
 #!/bin/tcsh -f
 source sourceme.csh
+set venv_path = `poetry env info --path`
+if ("$path" !~ "${venv_path}/bin") then
+    echo "toto"
+    source ${venv_path}/bin/activate.csh
+endif
 
-# Test coverage
+# Test & coverage
 echo "Running pytest coverage..."
 coverage run -m pytest -q  # > /dev/null
 coverage report -m
 coverage html
 
-# Lint & complexity
+# Style & complexity
 echo "Running style and complexity analysis..."
 flake8 app/ -qq --statistics --count  # --extend-ignore=E501,W505
+# Static type checking
 echo "Running type checking..."
 mypy
 

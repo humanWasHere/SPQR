@@ -1,18 +1,9 @@
-import json
-import os
 from pathlib import Path
 
 import pandas as pd
 import pytest
-from unittest import mock
 
 from app.parsers.json_parser import JSONParser, import_json
-# from app.data_structure import Block
-# from app.export_hitachi.hss_creator import HssCreator
-
-
-# FIXME les colonnes nécessaire au fonctionnement du test seulement
-# test les vrai fonctions et 1 chose à la fois -> sinon fonction est mal écrite
 
 
 TEST_TEMPLATE = Path(__file__).resolve().parents[1] / "testfiles" / "test_template.json"

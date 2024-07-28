@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class EPSData:
-    '''this class manages the creation of the <EPS_Data> section only'''
+    """Manage the creation of a DataFrame for EPS_Data only, computed from core data"""
     # mapping in which the values are values to write in the recipe (since they are fixed)
     FIXED_VALUES = {
         'Mode': 1,
@@ -38,8 +38,6 @@ class EPSData:
         'EPS_Template': "eps_template",
         'AP1_Template': "ap1_template",
     }
-    # FIXME to remove ?
-    meas_len = 100
 
     def __init__(self, core_data: pd.DataFrame, step: str, mag: int, ap_mag: int, templates: dict,
                  eps_columns: pd.DataFrame):
@@ -56,8 +54,7 @@ class EPSData:
 
     def add_mp_width(self, mp_no=1, direction: Optional[Literal['X', 'Y']] = None,
                      template: str = "", measleng: int = 100) -> None:
-        """Add a width measurement point (line/space depending on MP template) at image center"""
-        # FIXME doesn't add more than 1 mp ?
+        """Add one width measurement point (line/space depending on MP template) at image center"""
         # TODO -> convert to nm -> MP1_X/Y ? -> at the end in hss_creator.write_in_file ?
         self.eps_data[[f"MP{mp_no}_X", f"MP{mp_no}_Y"]] = (0, 0)  # image center
         if direction is None:
@@ -81,8 +78,7 @@ class EPSData:
         # TODO: handle NaN & pitch (SA_out) # TODO check box overlap vs targetCD (SA_in)
         self.eps_data[f'MP{mp_no}_SA_In'] = (target_cd_pixel / 3).fillna(500).astype(int).clip(upper=30)
         self.eps_data[f'MP{mp_no}_SA_Out'] = self.eps_data[f'MP{mp_no}_SA_In']
-        self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng or self.meas_len
-        # TODO: compute measlen vs height  # FIXME same value = 100 ???
+        self.eps_data[f'MP{mp_no}_MeaLeng'] = measleng  # TODO: compute measlen vs height
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
 
         # MP_Template according to CD/SPACE in self.core_data
