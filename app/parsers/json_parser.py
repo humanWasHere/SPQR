@@ -7,7 +7,7 @@ import pandas as pd
 from .file_parser import FileParser
 
 
-def import_json(json_file: str | Path) -> dict:
+def import_json(json_file: str | Path) -> dict[str, dict]:
     """Parse generic JSON file"""
     try:
         return json.loads(Path(json_file).read_text())

@@ -16,7 +16,7 @@ from .ssfile_parser import SSFileParser
 from .xml_parser import CalibreXMLParser
 
 
-def get_parser(value: str) -> Type[FileParser]:
+def get_parser(value: str) -> Type[FileParser] | None:
     if value == "":
         return OPCFieldReverse
     if not Path(value).exists():
@@ -100,7 +100,7 @@ class OPCFieldReverse(FileParser):
 
         data['col'] = [get_column_letter(col) for col in cols]
         # data['col'] = [chr(ord(self.origin_letter.upper()) + col) for col in cols]
-        data.index = data['col'] + data['row'].astype(str)
+        data.index = pd.Index(data['col'] + data['row'].astype(str))
         data['name'] = data.index
         return data
 

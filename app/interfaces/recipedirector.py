@@ -29,10 +29,10 @@ DG_RECIPE = "/Designgauge/DGData/{techno}/Library/{maskset}/{recipe}"\
 
 
 def get_username(path: str) -> str:
-    return path.split('@')[0] if '@' in path else None
+    return path.split('@')[0] if '@' in path else ''
 
 
-def get_pw(user: str) -> str:
+def get_pw(user: str) -> str | None:
     load_dotenv()
     return os.getenv(user)
 
@@ -40,12 +40,9 @@ def get_pw(user: str) -> str:
 def dg_transfer(source: str, destination: str, password=None):
     # Use rsync to copy with specific permissions
     user = get_username(destination) or get_username(source)
-    print(user)
     if password is None:
-        try:
-            password = get_pw(user)
-        except FileNotFoundError:
-            pass
+        password = get_pw(user)
+
     child = pexpect.spawn(f"rsync -v -t --perms --chmod=u+r,g+r,o+r {source} {destination}")
     child.expect("password:")
     child.sendline(password or getpass.getpass(f"{user}'s password: "))

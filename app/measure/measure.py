@@ -1,6 +1,7 @@
 import logging
 import tempfile
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
@@ -14,26 +15,30 @@ logger = logging.getLogger(__name__)
 
 class Measure:
     def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
-                 offset: dict | None = None, tcl_script: str = None, row_range: list = None):
-        if offset is None:
-            offset = dict(x=0, y=0)
+                 offset: dict | None = None, tcl_script: Optional[str | Path] = None,
+                 row_range: Optional[list[list]] = None):
+
         self.parser_df = parser_input.parse_data()
-        self.get_all_intervals(row_range)
         self.unit = parser_input.unit  # TODO should work with dbu ?
         self.layout = block.layout_path
         self.precision = block.precision
         self.layers = layers
+        if offset is None:
+            offset = dict(x=0, y=0)
         self.offset = offset
         if tcl_script is None:
             tcl_script = Path(__file__).parent / "measure.tcl"
-        if not tcl_script.exists():
+        if not Path(tcl_script).exists():
             raise FileNotFoundError(f"Could not find {tcl_script}")
         self.tcl_script = tcl_script
+        if row_range is not None:
+            self.get_all_intervals(row_range)
 
-    def get_all_intervals(self, interval_range) -> None:
+    def get_all_intervals(self, interval_range: list[list]) -> None:
         '''modifies self.parser_df to select some intervals of data'''
+        # TODO: make it more explicit
         if interval_range:
-            combined_indices = []
+            combined_indices: list[int] = []
             for interval in interval_range:
                 assert interval[0] > 0, "the range selected is out of bound! Should not be under 1"
                 assert interval[1] <= len(self.parser_df), f"the range selected is out of bound ! Should not be above {len(self.parser_df)} for this recipe"
