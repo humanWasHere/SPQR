@@ -2,7 +2,6 @@
 source sourceme.csh
 set venv_path = `poetry env info --path`
 if ("$path" !~ "${venv_path}/bin") then
-    echo "toto"
     source ${venv_path}/bin/activate.csh
 endif
 

@@ -34,7 +34,7 @@ class TestEpsData:
         test_ex_gauge_df = EPSData(core_data=data_instance, step='PH', mag=200000, ap_mag=50000,
                                    templates=template_config, eps_columns=eps_data_columns)
         return test_ex_gauge_df
-    
+
     def test_add_mp_width(self, eps_data_instance):
         '''checks wether add_mp_width method fills data as expected'''
         # Arrange

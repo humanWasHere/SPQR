@@ -43,6 +43,7 @@ def test_opcfield_reverse_with_ap(opcfield):
 
 
 def test_parse_data(opcfield):
+    # FIXME doublon, supprimer
     # Arrange
     expected_data = pd.DataFrame({
         'x': [0, 15],

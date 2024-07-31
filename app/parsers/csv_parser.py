@@ -68,7 +68,7 @@ class HSSParser(FileParser):
             try:
                 return pd.read_csv(StringIO(content))
             except pd.errors.ParserError:
-                logger.error(f'Error parsing CSV data from {name}, skipping.')
+                logger.warning(f'Could not parse CSV data from section {name}, skipping.')
                 return None
 
         hss_sections: list[tuple[str, str]] = re.findall(r"(<\w+>),*([^<]*)",
