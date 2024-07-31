@@ -1,9 +1,22 @@
+from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
+import os
 from pathlib import Path
 
+load_dotenv()
+ENVIRONMENT = os.getenv('ENVIRONMENT')
 
-def logger_init(log_file=Path(__file__).resolve().parents[2] / "spqr.log", log_level=logging.INFO, max_bytes=2000, backup_count=0):
+
+if ENVIRONMENT == 'development':
+    log_file_path = Path(__file__).resolve().parents[2] / "spqr.log"
+elif ENVIRONMENT == 'production':
+    log_file_path = Path.home() / "tmp" / "spqr.log"
+else:
+    raise ValueError(f"Unknown environment: {ENVIRONMENT}")
+
+
+def logger_init(log_file=log_file_path, log_level=logging.INFO, max_bytes=2500, backup_count=1):
     # TODO max_bytes seems not to work
     # strange fix : https://stackoverflow.com/questions/24505145/how-to-limit-log-file-size-in-python
     """
@@ -15,7 +28,7 @@ def logger_init(log_file=Path(__file__).resolve().parents[2] / "spqr.log", log_l
     :param backup_count: Nombre de fichiers de sauvegarde à conserver.
     :return: Logger configuré.
     """
-    log_file.parent.mkdir(parents=True, exist_ok=True)
+    log_file.parent.mkdir(exist_ok=True)
     logging.basicConfig(level=log_level,
                         format='%(asctime)s - %(levelname)s - %(message)s - %(name)s', datefmt='%m/%d/%Y %H:%M:%S %p',
                         handlers=[

@@ -88,6 +88,7 @@ class HssCreator:
         """Converts internal dictionaries into a HSS format as raw text.
         Output CSV-like sections do not have a fixed number of separators"""
         whole_recipe = ""
+        # whole_recipe = "#HSS IDP Spreadsheet\n\n"
         # Write single-value sections
         for section, value in self.constant_sections.items():
             whole_recipe += f"{section}\n"
@@ -161,6 +162,8 @@ class HssCreator:
         self.recipe_output_file.with_suffix(".csv").write_text(whole_recipe_to_output)
         if self.recipe_output_file.with_suffix(".csv").exists():
             logger.info(f"csv recipe created ! Find it at {self.recipe_output_file}.csv")
+        # if self.measurement_file.with_suffix(".csv").exists():
+        #     logger.info(f"measurement file created ! Find it at {self.measurement_file_path}.csv")
         # if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():
         #     logger.info("VENI VEDI VICI")
         return f"{self.recipe_output_file}.csv"

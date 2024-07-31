@@ -1,5 +1,6 @@
 import logging
 import tempfile
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -42,6 +43,7 @@ class Measure:
 
     def apply_offset(self) -> None:
         # workaround if coords are not in same coord as layout. should be in parser's original unit
+        # takes parameter translation not ap1_offset
         self.parser_df.loc[:, 'x'] += self.offset['x']
         self.parser_df.loc[:, 'y'] += self.offset['y']
 
@@ -89,8 +91,21 @@ class Measure:
         # FIXME measure out of range? -> modify tcl to handle empty measurement
         meas_df.replace({'x_dim': {0: 3000}, 'y_dim': {0: 3000}}, inplace=True)
         return meas_df
+    
 
-    def run_measure(self) -> pd.DataFrame:
+    def output_measurement_file(self, df, output_dir, recipe_name) -> None:
+        try:
+            # output_measure_df = df[['name', 'x', 'y']].copy()
+            # output_measure_df['magnification'] = json_conf["magnification"]
+            measure_output_file = Path(f"{output_dir}/measure_{recipe_name}").with_suffix(".csv")
+            df.to_csv(measure_output_file, index=False)
+            if measure_output_file.exists():
+                logger.info(f"Measurement file saved successfully at {measure_output_file}")
+        except Exception as e:
+            logger.error(f"An error occurred while saving the file: {e}")
+
+
+    def run_measure(self, output_dir: Path = None, recipe_name: str = None) -> pd.DataFrame:
         '''runs Calibre script to automatically measure a layout'''
         self.apply_offset()
         measure_tempfile = tempfile.NamedTemporaryFile(
@@ -117,6 +132,8 @@ class Measure:
         # results = Path(measure_tempfile_path).read_text()
         # (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
         measure_tempfile.close()  # remove temporary script
+        if output_dir and recipe_name is not None:
+            self.output_measurement_file(merged_dfs, output_dir, recipe_name)
         if not merged_dfs.empty:
             logger.info('Measurement done')
         # logger.debug(merged_dfs.columns)

@@ -37,4 +37,4 @@ venv/
 web/
 
 # logging
-*.log
+*.log*

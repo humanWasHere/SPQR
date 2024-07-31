@@ -69,3 +69,33 @@ def test_run_measure(measure_instance, monkeypatch):
     # assert isinstance(result, pd.DataFrame)
     # assert result.columns.tolist() == expected_columns
     # assert result.shape == expected_shape
+
+def test_output_measurement_file(measure_instance):
+    # Arrange
+    test_df = pd.DataFrame({
+        'name': ['test_name1', 'test_name2', 'test_name3'],
+        'x': [1, 2, 3],
+        'y': [11, 22, 33],
+    })
+
+    test_output_dir = (Path(__file__).parents[1] / "tests" / "testfiles")
+    test_recipe_name = "test_output_recipe_name"
+    expected_path = test_output_dir / f"measure_{test_recipe_name}.csv"
+
+    expected_csv = """name,x,y\ntest_name1,1,11\ntest_name2,2,22\ntest_name3,3,33\n"""
+
+    # Act
+    measure_instance.output_measurement_file(df=test_df, output_dir=test_output_dir, recipe_name=test_recipe_name)
+
+
+    # Assert
+    print(expected_csv)
+    print(expected_path.read_text())
+    try:
+        assert expected_path.exists()
+        assert expected_path.read_text() == expected_csv
+    finally:
+        if expected_path.exists():
+            expected_path.unlink()
+        else:
+            print('file did not even create')

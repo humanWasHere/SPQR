@@ -5,16 +5,18 @@ from pathlib import Path
 
 import numpy as np
 
+from .interfaces.logger import logger_init
+import logging
+
+logger_init()
+
 from .data_structure import Block
 from .export_hitachi.hss_creator import HssCreator
 from .interfaces import recipedirector as rcpd
 from .interfaces.input_checker import get_config_checker
-from .interfaces.logger import logger_init
 from .measure.measure import Measure
 from .parsers import FileParser, get_parser, OPCFieldReverse
 from .parsers.json_parser import import_json
-
-logger_init()
 
 
 def parse_intervals(values: list[str]) -> list[list[int]]:
@@ -59,11 +61,14 @@ def cli() -> argparse.ArgumentParser:
     build_parser.add_argument('-u', '--upload_rcpd', action="store_true",
                               help='Send HSS recipe (.csv) and layout to RecipeDirector machine.')
     build_parser.add_argument('-l', '--line_selection', required=False, nargs='+', type=str,
-                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50 60 150 160" where 50 and 60 are included as well as 150 and 160')
+                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50-60 150-160" where 50 and 60 are included as well as 150 and 160')
+    build_parser.add_argument('-m', '--mesurement_file', action="store_true",
+                              help='Outputs the measurement file to user outputs directory')
     return parser
 
 
 def build_mode(args: argparse.Namespace) -> None:
+    logger.info('app running in prod mode')
     if not args.user_config.exists() or not args.user_config.is_file():
         raise ValueError(f'Path does not exist or is not a file: {args.user_config}')
     if args.user_config.stat().st_size == 0:
@@ -92,17 +97,18 @@ def build_mode(args: argparse.Namespace) -> None:
     if isinstance(build_config['step'], list):
         steps = build_config['step']
         for part, step in enumerate(steps):
-            logger.info(f"creating recipe {build_config['recipe_name']} "
+            logger.info(f"recipe {build_config['recipe_name']}"
                         f"{part+1}/{len(steps)}: {step} from {steps}")
             copied_config = build_config.copy()
             copied_config['step'] = step
             copied_config['recipe_name'] = str(f"{build_config['recipe_name']}_{step}")
-            create_recipe(copied_config, args.upload_rcpd, parse_intervals(args.line_selection))
+            create_recipe(copied_config, args.upload_rcpd, parse_intervals(args.line_selection), args.mesurement_file)
     else:
-        create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_selection))
+        create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_selection), args.mesurement_file)
 
 
 def start_mode(args: argparse.Namespace) -> None:
+    logger.info('app running in dev mode')
     app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
     app_config = import_json(app_config_file)
     if not app_config:
@@ -149,7 +155,7 @@ def manage_app_launch():
         logger.exception(f'{e.__class__.__name__}')
 
 
-def create_recipe(json_conf: dict, upload=False, line_selection=None):
+def create_recipe(json_conf: dict, upload=False, line_selection=None, output_measurement=False):
     """this is the real main function which runs the flow with the measure - "prod" function"""
     block = Block(json_conf['layout'])
 
@@ -158,6 +164,7 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None):
     parser = get_parser(json_conf['parser'])
     if parser is None:
         raise ValueError("Your coordinate source may not be in a valid format")
+    logger.info(f'parser is {parser}')
     selected_parser: FileParser | OPCFieldReverse
     if issubclass(parser, OPCFieldReverse):
         selected_parser = parser(
@@ -171,7 +178,8 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None):
     # measurement
     measure_instance = Measure(selected_parser, block, json_conf['layers'],
                                json_conf.get('translation'), row_range=line_selection)
-    output_measure = measure_instance.run_measure()
+    output_measure = measure_instance.run_measure(output_dir=json_conf['output_dir'] if output_measurement else None,
+                                                  recipe_name=json_conf['recipe_name'] if output_measurement else None)
 
     # renaming of measure points
     if isinstance(selected_parser, OPCFieldReverse):
