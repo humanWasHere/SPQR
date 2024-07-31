@@ -234,22 +234,21 @@ class TestJsonParser:
     def test_json_to_section_dicts(self, json_parser_instance):
         '''tests that the template is correctly generated in several dataframes'''
         # Arrange
-        expected_first_level_df = {
+        expected_constants = {
             "<FileID>": "LIDP00",
             "<Version>": 6,
             "<Revision>": 0
         }
-        expected_coordinate_system = pd.DataFrame({"Type": [1], "ACD_Type": [1]})
+        expected_table = pd.DataFrame({"Type": [1], "ACD_Type": [1]})
 
         # Act
         result = json_parser_instance.json_to_section_dicts()
 
-
         print(result)
-        print(expected_first_level_df)
-        print(expected_coordinate_system)
+        print(expected_constants)
+        print(expected_table)
         # Assert
         for section in json_parser_instance.table_sections.values():
             assert isinstance(section, pd.DataFrame)
-        assert result.constant_sections == expected_first_level_df
-        pd.testing.assert_frame_equal(result.table_sections["<CoordinateSystem>"], expected_coordinate_system)
+        assert result.constant_sections == expected_constants
+        pd.testing.assert_frame_equal(result.table_sections["<CoordinateSystem>"], expected_table)

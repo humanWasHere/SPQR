@@ -1,6 +1,5 @@
 import pandas as pd
 from pathlib import Path
-import pytest
 
 from app.parsers.csv_parser import HSSParser
 

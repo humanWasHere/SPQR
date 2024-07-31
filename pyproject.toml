@@ -67,6 +67,7 @@ omit = [
     "/work/ratsoft/*",
     "/work/retprod/*",
     "*/tests/*",
+    "*/integration/*",
 ]
 
 [tool.coverage.report]

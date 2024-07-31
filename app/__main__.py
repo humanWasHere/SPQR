@@ -10,7 +10,6 @@ import logging
 
 logger_init()
 
-from .data_structure import Block
 from .export_hitachi.hss_creator import HssCreator
 from .interfaces import recipedirector as rcpd
 from .interfaces.input_checker import get_config_checker
@@ -67,6 +66,23 @@ def cli() -> argparse.ArgumentParser:
     return parser
 
 
+def check_recipe(full_config: dict[str, dict], recipe_name: str) -> dict:
+    if len(full_config) == 0:
+        raise ValueError("The provided configuration file does not contain any recipe.")
+    elif len(full_config) == 1 and recipe_name is None:
+        # recipe name is optional if there is only one
+        recipe_name = next(iter(full_config.keys()))
+    elif len(full_config) > 1 and recipe_name is None:
+        logging.warning("More than one recipe found in the configuration file. Please select one with the -r option.")
+        sys.exit(1)
+
+    if recipe_name not in full_config:
+        logging.error(f'TU QUOQUE FILI !? Recipe {recipe_name} not found in the JSON config file.')
+        sys.exit(1)
+
+    return full_config[recipe_name]
+
+
 def build_mode(args: argparse.Namespace) -> None:
     logger.info('app running in prod mode')
     if not args.user_config.exists() or not args.user_config.is_file():
@@ -78,26 +94,13 @@ def build_mode(args: argparse.Namespace) -> None:
     user_config = import_json(args.user_config)
 
     # Recipe selection
-    if len(user_config) == 0:
-        raise ValueError("The provided configuration file does not contain any recipe.")
-    elif len(user_config) == 1 and args.user_recipe is None:
-        # recipe name is optional if there is only one
-        args.user_recipe = next(iter(user_config.keys()))
-    elif len(user_config) > 1 and args.user_recipe is None:
-        logger.warning("More than one recipe found in the configuration file. Please select one with the -r option.")
-        sys.exit(1)
-    if args.user_recipe not in user_config:
-        logger.error(f'TU QUOQUE FILI !? Recipe {args.user_recipe} not found in the JSON config file.')
-        sys.exit(1)
-
-    # print(f'running recipe {args.user_recipe}')
-    build_config = user_config.get(args.user_recipe, {})
+    build_config = check_recipe(user_config, args.user_recipe)
     get_config_checker(build_config)  # TODO use return value
 
     if isinstance(build_config['step'], list):
         steps = build_config['step']
         for part, step in enumerate(steps):
-            logger.info(f"recipe {build_config['recipe_name']}"
+            logging.info(f"creating recipe {build_config['recipe_name']} "
                         f"{part+1}/{len(steps)}: {step} from {steps}")
             copied_config = build_config.copy()
             copied_config['step'] = step
@@ -114,7 +117,7 @@ def start_mode(args: argparse.Namespace) -> None:
     if not app_config:
         raise ValueError(f"File {app_config_file.name} does not exist or is empty.")
 
-    test_env_config = app_config.get(args.recipe)
+    test_env_config = app_config[args.recipe]
     get_config_checker(test_env_config)
 
     if args.recipe == "calibre_rulers":
@@ -134,12 +137,12 @@ def manage_app_launch():
     try:
         args = cli().parse_args()
     except SystemExit as e:
-        logger.error("Argument parsing failed. Exiting.")
+        logging.error("Argument parsing failed. Exiting.")
         sys.exit(e.code)
 
     # Post process args
     if not args.running_mode:
-        logger.warning("CLI app arguments should be executed as indicated in the helper below.")
+        logging.warning("CLI app arguments should be executed as indicated in the helper below.")
         cli().print_help()
         sys.exit(1)
     # if args.line_selection is not None:
@@ -150,16 +153,17 @@ def manage_app_launch():
         elif args.running_mode == 'build':
             build_mode(args)
     except KeyboardInterrupt:
-        logger.error('Interrupted by user')
+        logging.error('Interrupted by user')
     except Exception as e:
-        logger.exception(f'{e.__class__.__name__}')
+        logging.exception(f'{e.__class__.__name__}')
 
 
 def create_recipe(json_conf: dict, upload=False, line_selection=None, output_measurement=False):
     """this is the real main function which runs the flow with the measure - "prod" function"""
+    from .data_structure import Block  # lazy import for perf issue
     block = Block(json_conf['layout'])
 
-    logger.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
+    logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
     # Parser selection
     parser = get_parser(json_conf['parser'])
     if parser is None:
@@ -198,9 +202,10 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
         rcpd.upload_csv(recipe_path)
         rcpd.upload_gds(json_conf['layout'])
         # TODO if file already exists on remote, check if new file is changed
-        logger.info(f"recipe named {json_conf['recipe_name']} should be on RCPD machine!")
-    logger.info("### END RECIPE CREATION ###")
+        logging.info(f"recipe named {json_conf['recipe_name']} should be on RCPD machine!")
+    logging.info("### END RECIPE CREATION ###")
 
 
 if __name__ == "__main__":
+    logger_init()
     manage_app_launch()

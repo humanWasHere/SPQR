@@ -87,19 +87,19 @@ class TestSectionMaker:
         with pytest.raises(ValueError) as excinfo:
             section_maker.make_gp_data_section()
         assert "GP_Template is mandatory" in str(excinfo.value)
-        
+
     def test_make_idd_cond_section(self, section_maker):
         # Arrange
-        test_layout_stem = "COMPLETED_TEMPLATE"
-        test_layout_path = f'/path/to/{test_layout_stem}.gds'
+        layout_stem = "COMPLETED_TEMPLATE"
+        layout_path = f'/path/to/{layout_stem}.gds'
         test_topcell = "OPCFIeld"
         expected_df = pd.DataFrame({
-            "DesignData": [test_layout_stem],
+            "DesignData": [layout_stem],
             "CellName": [test_topcell]
         })
 
         # Act
-        result_df = section_maker.make_idd_cond_section(layout=test_layout_path, topcell=test_topcell)
+        result_df = section_maker.make_idd_cond_section(layout=layout_path, topcell=test_topcell)
 
         # Assert
         pd.testing.assert_frame_equal(result_df, expected_df)

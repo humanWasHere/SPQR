@@ -56,7 +56,7 @@ class HSSParser(FileParser):
         self.parse_hss()
         data = self.table_sections['<EPS_Data>'].loc[
             :, ['EPS_Name', 'Move_X', 'Move_Y', 'AP1_X', 'AP1_Y']].copy()
-        data.columns = ['name', 'x', 'y', 'x_ap', 'y_ap']
+        data.columns = pd.Index(['name', 'x', 'y', 'x_ap', 'y_ap'])
         if not data.empty:
             logger.info('Genepy ssfile parsing done')
         return data
@@ -68,7 +68,7 @@ class HSSParser(FileParser):
             try:
                 return pd.read_csv(StringIO(content))
             except pd.errors.ParserError:
-                logger.error(f'Error parsing CSV data from {name}, skipping.')
+                logger.warning(f'Could not parse CSV data from section {name}, skipping.')
                 return None
 
         hss_sections: list[tuple[str, str]] = re.findall(r"(<\w+>),*([^<]*)",
