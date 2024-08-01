@@ -137,6 +137,7 @@ def manage_app_launch():
     try:
         args = cli().parse_args()
     except SystemExit as e:
+        # TODO manage helper ?
         logging.error("Argument parsing failed. Exiting.")
         sys.exit(e.code)
 
