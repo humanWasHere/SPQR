@@ -221,7 +221,7 @@ class TestEpsData:
                                          'EPS_Template': ["EPS_Template", "EPS_Template", "EPS_Template"],
                                          'AP2_Template': ["OPC_AP2_Off", "OPC_AP2_Off", "OPC_AP2_Off"],
                                          'AP1_Mag': [50000, 50000, 50000],
-                                         'AP1_AF_Mag': [45000, 45000, 45000],
+                                         'AP1_AF_Mag': [50000, 50000, 50000],
                                          'AP1_Rot': [0, 0, 0],
                                          'EP_Mag_X': [200000, 200000, 200000],
                                          'EP_AF_Mag': [200000, 200000, 200000],

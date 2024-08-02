@@ -1,6 +1,5 @@
 import logging
 import tempfile
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -69,6 +68,7 @@ class Measure:
             .astype({'x': float, 'y': float}).astype(str)
             .apply(lambda row: f"{{{' '.join(row.values)}}}", axis=1)
         )
+        logging.debug(coordonnees.head(1))
         # Paths must be passed as str
         with (open(self.tcl_script, "r") as template,
               open(tmp_script, "w") as script):
@@ -85,18 +85,23 @@ class Measure:
 
     def process_results(self, output_path: str) -> pd.DataFrame:
         meas_df = pd.read_csv(output_path, index_col=False, na_values="unknown")
-        # TODO : traiter les "Pitch non symetrical" -> minimum?
-        # Drop invalid rows
-        meas_df.dropna(subset=[" X_dimension(nm) ", " Y_dimension(nm) "], inplace=True)
         # TODO : rename in tcl file?
-        meas_df.rename(columns={'Gauge ': "name", ' X_dimension(nm) ': "x_dim",
-                                ' Y_dimension(nm) ': "y_dim", 'pitch_x(nm)': "pitch_x",
-                                'pitch_y(nm)': "pitch_y", ' Polarity (polygon) ': "polarity"},
+        meas_df.rename(columns={'Gauge ': "name", ' Layer ': "layer",
+                                ' Polarity (polygon) ': "polygon_tone",
+                                ' X_dimension(nm) ': "x_dim", ' Y_dimension(nm) ': "y_dim",
+                                'pitch_x(nm)': "pitch_x", 'pitch_y(nm)': "pitch_y",
+                                ' min_dimension(nm)': "min_dim",
+                                ' complementary(nm)': "complement_min_dim",
+                                ' pitch_of_min_dim(nm)': "pitch_min_dim"},
                        inplace=True)
+        # Drop invalid rows
         # FIXME measure out of range? -> modify tcl to handle empty measurement
-        meas_df.replace({'x_dim': {0: 3000}, 'y_dim': {0: 3000}}, inplace=True)
+        meas_df.replace({'x_dim': {0: None}, 'y_dim': {0: None}}, inplace=True)
+        meas_df.replace('Pitch non symetrical', 0, inplace=True)  # TODO better
+        meas_df.replace({'polygon_tone': "CD"}, "LINE", inplace=True)
+        meas_df.dropna(subset=["x_dim", "y_dim"], inplace=True)
+
         return meas_df
-    
 
     def output_measurement_file(self, df, output_dir, recipe_name) -> None:
         try:
@@ -108,7 +113,6 @@ class Measure:
                 logger.info(f"Measurement file saved successfully at {measure_output_file}")
         except Exception as e:
             logger.error(f"An error occurred while saving the file: {e}")
-
 
     def run_measure(self, output_dir: Path = None, recipe_name: str = None) -> pd.DataFrame:
         '''runs Calibre script to automatically measure a layout'''

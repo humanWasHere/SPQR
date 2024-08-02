@@ -45,7 +45,8 @@ class HssCreator:
         self.table_sections: dict[str, pd.DataFrame] = sections.table_sections
         templates = {key: json_conf[key] for key in ['ap1_template', 'ep_template', 'eps_template', 'mp_template']}
         eps_data = EPSData(core_data, json_conf['step'], json_conf['magnification'],
-                           json_conf['ap1_mag'], templates, sections.table_sections['<EPS_Data>'])
+                           json_conf['ap1_mag'], templates, sections.table_sections['<EPS_Data>'],
+                           field_tone=polarity)
         self.eps_data = eps_data.get_eps_data()
         self.section_maker: SectionMaker
 

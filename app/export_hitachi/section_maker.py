@@ -58,12 +58,12 @@ class SectionMaker:
         self.idd_cond.loc[0, ["DesignData", "CellName"]] = [Path(layout).stem, topcell]
         return self.idd_cond
 
-    def make_idd_layer_data_section(self, mask_layer: int, tone: str) -> pd.DataFrame:
+    def make_idd_layer_data_section(self, mask_layer: int, field_tone: str) -> pd.DataFrame:
         """Set IDD_Layer_Data section for visible layer mapping"""
         # TODO link with step / target layer
         self.idd_layer_data.loc[0, ['LayerNo', 'DataType']] = [0, 114]
         self.idd_layer_data.loc[1:, 'LayerNo'] = mask_layer
-        self.idd_layer_data.loc[:, 'Tone'] = dict(clear=0, dark=1)[tone]
+        self.idd_layer_data.loc[:, 'Tone'] = dict(clear=0, dark=1)[field_tone]
         return self.idd_layer_data
 
     def make_recipe_section(self, step: str) -> pd.DataFrame:

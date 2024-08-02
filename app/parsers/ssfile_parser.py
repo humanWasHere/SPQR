@@ -33,7 +33,11 @@ class SSFileParser(FileParser):
 
     def genepy_to_dataframe(self) -> pd.DataFrame:
         '''converts a genepy ssfile to a formatted parsing'''
-        self.data = pd.read_csv(self.ssfile, sep='\t', on_bad_lines='warn')
+        try:
+            self.data = pd.read_csv(self.ssfile, sep='\t')
+        except pd.errors.ParserError:
+            # workaround to keep bad lines / extra fields (retro compat. with non-genepy) # FIXME
+            self.data = pd.read_csv(self.ssfile, sep='\t', on_bad_lines=lambda x: x, engine='python')
         if 'UNIT_COORD' not in self.data and 'Name' in self.data:
             # genepat testcase workaround
             self.data['UNIT_COORD'] = 'nm'

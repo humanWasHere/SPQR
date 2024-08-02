@@ -9,16 +9,17 @@ ENVIRONMENT = os.getenv('ENVIRONMENT')
 
 
 if ENVIRONMENT == 'development':
-    log_file_path = Path(__file__).resolve().parents[2] / "spqr.log"
+    DEFAULT_LOG_PATH = Path(__file__).resolve().parents[2] / "spqr.log"
+    LOG_LEVEL = logging.DEBUG
 elif ENVIRONMENT == 'production':
-    log_file_path = Path.home() / "tmp" / "spqr.log"
+    DEFAULT_LOG_PATH = Path.home() / "tmp" / "spqr.log"
+    LOG_LEVEL = logging.INFO
 else:
-    raise ValueError(f"Unknown environment: {ENVIRONMENT}")
+    raise EnvironmentError(f"Unknown environment: {ENVIRONMENT}")
 
 
-def logger_init(log_file=log_file_path, log_level: int = logging.INFO, max_bytes: int = 1024*1024, backup_count: int = 5) -> None:
-    # TODO max_bytes seems not to work
-    # strange fix : https://stackoverflow.com/questions/24505145/how-to-limit-log-file-size-in-python
+def logger_init(log_file: str | Path = DEFAULT_LOG_PATH, log_level: int = LOG_LEVEL,
+                max_bytes: int = 1024*1024, backup_count: int = 5) -> None:
     """
     Initialise et configure le logger de l'application.
 

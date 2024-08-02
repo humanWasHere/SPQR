@@ -34,6 +34,7 @@ def get_parser(value: str) -> Type[FileParser] | None:
         if {'gauge', 'base_x', 'base_y', 'head_x', 'head_y'}.issubset(header):
             return TACRulerParser
         if {'Name', 'X_coord_Pat', 'Y_coord_Pat', 'X_coord_Addr'}.issubset(header):
+            logging.debug(f'delimiter: {dialect.delimiter!r}, header: {header}')
             return SSFileParser
     except csv.Error:
         pass  # not a CSV or dialect not found
@@ -52,7 +53,7 @@ def get_parser(value: str) -> Type[FileParser] | None:
         return JSONParser
     except json.JSONDecodeError:
         pass
-    return None
+    return None  # TODO return instance
 
 
 class OPCFieldReverse(FileParser):

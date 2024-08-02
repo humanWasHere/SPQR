@@ -23,6 +23,7 @@ def valid_recipe_data():
         'ep_template': "EP_16F",
         'eps_template': "EPS_Default",
         'magnification': 200000,
+        'polarity': 'dark',
         'mp_template': "Width_Default",
         'step': "PH",
         'origin_x_y': [0.5, 0.5],
@@ -63,6 +64,7 @@ def test_recipe_with_minimum_fields():
     assert coordfile.layers == ["13.100"]
     assert coordfile.step == "PH"
     assert coordfile.magnification == 200_000
+    assert coordfile.polarity == 'clear'
     assert coordfile.ap1_mag is None
     assert coordfile.ap1_offset is None
     assert coordfile.ap1_template == ''
@@ -75,6 +77,7 @@ def test_recipe_with_minimum_fields():
     # (BaseRecipe, 'layers', '13.100'),
     (BaseRecipe, 'output_dir', Path('.')),
     (BaseRecipe, 'step', ['PH', 'ET_HR']),
+    pytest.param(BaseRecipe, 'polarity', 'DARK', marks=pytest.mark.xfail),
     (BaseRecipe, 'ap1_mag', 70000),
     (BaseRecipe, 'ap1_mag', '70000'),
     (BaseRecipe, 'ap1_offset', [1, 1]),
@@ -99,6 +102,7 @@ def test_validate_data(make_recipe_data, field, value, model):
     (BaseRecipe, 'step', []),
     (BaseRecipe, 'step', 'PHOTO'),
     (BaseRecipe, 'magnification', 'abc'),
+    (BaseRecipe, 'polarity', 'DK'),
     (BaseRecipe, 'ap1_mag', 1000.5),
     (BaseRecipe, 'ap1_mag', -1000),
     (BaseRecipe, 'ap1_offset', [-1]),  # length

@@ -1,10 +1,26 @@
 import logging
+from enum import Flag
 from typing import Literal, Optional
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+
+class Tone(Flag):
+    """Tones of layout features, reticle field, and photoresist."""
+    LINE = 0
+    SPACE = 1
+    CLEAR = 0
+    DARK = 1
+    PTD = 0
+    NTD = 1
+
+
+def combine_tones(pattern: Tone, mask_field: Tone, resist: Tone = Tone.PTD) -> Tone:
+    """Combine tones using XOR to return resist LINE or SPACE"""
+    return Tone(pattern ^ mask_field ^ resist)
 
 
 class EPSData:
@@ -14,7 +30,7 @@ class EPSData:
         'Mode': 1,
         'EPS_Template': "EPS_Default",
         'AP2_Template': "OPC_AP2_Off",
-        'AP1_Mag': 45000,
+        'AP1_Mag': 45000,  # TODO: coherence Template
         'AP1_AF_Mag': 45000,
         'AP1_Rot': 0,
     }
@@ -40,10 +56,9 @@ class EPSData:
     }
 
     def __init__(self, core_data: pd.DataFrame, step: str, mag: int, ap_mag: int, templates: dict,
-                 eps_columns: pd.DataFrame):
+                 eps_columns: pd.DataFrame, field_tone: str = "clear"):
         # TODO: validate data (columns, type, nan...) -> validator -> see when to validate in flow
-        self.core_data = core_data.astype({'x': int, 'y': int, 'x_ap': int, 'y_ap': int},
-                                          errors="ignore")
+        self.core_data = core_data.astype(dict(x=int, y=int, x_ap=int, y_ap=int), errors="ignore")
         assert step in {"PH", "ET", "PH_HR", "ET_HR"}
         self.step = step
         self.mag = mag
@@ -51,6 +66,7 @@ class EPSData:
         self.templates = templates
         # self.columns = columns  # {'eps_col': value} similar to FIXED_VALUES mapper -> use it?
         self.eps_data = pd.DataFrame(columns=eps_columns.columns)
+        self.field_tone = Tone[field_tone.upper()]
 
     def add_mp_width(self, mp_no=1, direction: Optional[Literal['X', 'Y']] = None,
                      template: str = "", measleng: int = 100) -> None:
@@ -82,19 +98,26 @@ class EPSData:
         self.eps_data['MP1_PNo'] = self.eps_data['EPS_ID']  # TODO not for multiple MP
 
         # MP_Template according to CD/SPACE in self.core_data
-        if self.templates['mp_template'] == "":
-            template = np.where(self.core_data['polarity'] == 'CD', 'Width_Default', 'Space_Default')
-        # mp_template according to string
-        elif isinstance(self.templates['mp_template'], str):
-            template = self.templates['mp_template']
-        # FIXME 1D/2D is not in core_data spec
-        # mp_template according to 1D/2D
-        elif isinstance(self.templates['mp_template'], dict):
-            template = np.where(
-                self.core_data['1D/2D'] == '1D', self.templates['mp_template']['1D'], np.nan)
-            template = np.where(
-                self.core_data['1D/2D'] == '2D', self.templates['mp_template']['2D'], template)
-        self.eps_data[f'MP{mp_no}_Template'] = template
+        self.eps_data[f'MP{mp_no}_Template'] = template or self.get_mp_template()
+
+    def get_mp_template(self) -> pd.Series:
+        template = self.templates['mp_template']
+        if isinstance(template, str):
+            return pd.Series([template] * len(self.core_data))
+
+        # Column operations to apply resist line or space template
+        polygon: pd.Series = self.core_data['polygon_tone'].apply(Tone.__getitem__)
+        resist = polygon.apply(combine_tones, args=(self.field_tone,))
+
+        if not template:
+            return np.where(resist == Tone.LINE, "Width_Default", "Space_Default")
+        if isinstance(template, dict) and list(template.keys()) == ['line', 'space']:
+            return np.where(resist == Tone.LINE, template['line'], template['space'])
+
+        # FIXME 1D/2D is not in spec: to deprecate
+        if isinstance(template, dict) and list(template.keys()) == ['1D', '2D']:
+            return np.where(self.core_data['1D/2D'] == '1D', template['1D'],
+                            np.where(self.core_data['1D/2D'] == '2D', template['2D'], template))
 
     def mapping_core_data(self) -> None:
         """Map columns from core dataframe to target HSS naming"""
@@ -109,7 +132,8 @@ class EPSData:
     def mapping_user_config(self) -> None:
         """Fill columns with user input from JSON config (overwrites fixed values)"""
         self.eps_data[['EP_Mag_X', 'EP_AF_Mag']] = self.mag
-        self.eps_data['AP1_Mag'] = self.ap_mag
+        if self.ap_mag:
+            self.eps_data[['AP1_Mag', 'AP1_AF_Mag']] = self.ap_mag
         for eps_col, user_col_key in self.MAPPING_TEMPLATES.items():
             if self.templates[user_col_key] != "":
                 self.eps_data[eps_col] = self.templates[user_col_key]

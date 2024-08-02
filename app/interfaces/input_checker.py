@@ -13,12 +13,14 @@ class BaseRecipe(BaseModel):
     layers: list[str] = Field(min_length=1)
     step: StepType | list[StepType] = Field(min_length=1)
     magnification: int = Field(gt=0)
+    polarity: Optional[Literal['clear', 'dark']] = 'clear'
     ap1_mag: Optional[int] = Field(None, gt=0)
     ap1_offset: Optional[list[float]] = Field(None, min_length=2, max_length=2)
     ap1_template: Optional[str] = ''
     ep_template: Optional[str] = ''
     eps_template: Optional[str] = ''
     mp_template: Optional[str | dict[str, str]] = ''
+    translation: Optional[dict[str, float]] = None
 
     @field_validator('ap1_mag', 'ap1_offset', mode='before')
     def convert_empty_str(value):

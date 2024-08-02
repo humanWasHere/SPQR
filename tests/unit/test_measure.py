@@ -70,6 +70,7 @@ def test_run_measure(measure_instance, monkeypatch):
     # assert result.columns.tolist() == expected_columns
     # assert result.shape == expected_shape
 
+
 def test_output_measurement_file(measure_instance):
     # Arrange
     test_df = pd.DataFrame({
@@ -86,7 +87,6 @@ def test_output_measurement_file(measure_instance):
 
     # Act
     measure_instance.output_measurement_file(df=test_df, output_dir=test_output_dir, recipe_name=test_recipe_name)
-
 
     # Assert
     print(expected_csv)

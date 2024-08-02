@@ -5,15 +5,10 @@ from pathlib import Path
 
 import numpy as np
 
-from .interfaces.logger import logger_init
-import logging
-
-logger_init()
-
+from .interfaces.logger import logger_init  # import first
 from .export_hitachi.hss_creator import HssCreator
 from .interfaces import recipedirector as rcpd
 from .interfaces.input_checker import get_config_checker
-from .measure.measure import Measure
 from .parsers import FileParser, get_parser, OPCFieldReverse
 from .parsers.json_parser import import_json
 
@@ -84,7 +79,7 @@ def check_recipe(full_config: dict[str, dict], recipe_name: str) -> dict:
 
 
 def build_mode(args: argparse.Namespace) -> None:
-    logger.info('app running in prod mode')
+    logging.info('app running in prod mode')
     if not args.user_config.exists() or not args.user_config.is_file():
         raise ValueError(f'Path does not exist or is not a file: {args.user_config}')
     if args.user_config.stat().st_size == 0:
@@ -95,13 +90,15 @@ def build_mode(args: argparse.Namespace) -> None:
 
     # Recipe selection
     build_config = check_recipe(user_config, args.user_recipe)
-    get_config_checker(build_config)  # TODO use return value
+    build_model = get_config_checker(build_config)
+    logging.debug(repr(build_model))
+    build_config = build_model.model_dump()
 
     if isinstance(build_config['step'], list):
         steps = build_config['step']
         for part, step in enumerate(steps):
             logging.info(f"creating recipe {build_config['recipe_name']} "
-                        f"{part+1}/{len(steps)}: {step} from {steps}")
+                         f"{part+1}/{len(steps)}: {step} from {steps}")
             copied_config = build_config.copy()
             copied_config['step'] = step
             copied_config['recipe_name'] = str(f"{build_config['recipe_name']}_{step}")
@@ -111,14 +108,14 @@ def build_mode(args: argparse.Namespace) -> None:
 
 
 def start_mode(args: argparse.Namespace) -> None:
-    logger.info('app running in dev mode')
+    logging.info('app running in dev mode')
     app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
     app_config = import_json(app_config_file)
     if not app_config:
         raise ValueError(f"File {app_config_file.name} does not exist or is empty.")
 
     test_env_config = app_config[args.recipe]
-    get_config_checker(test_env_config)
+    test_env_config = get_config_checker(test_env_config).model_dump()
 
     if args.recipe == "calibre_rulers":
         create_recipe(test_env_config, line_selection=[[10, 20]])
@@ -161,7 +158,9 @@ def manage_app_launch():
 
 def create_recipe(json_conf: dict, upload=False, line_selection=None, output_measurement=False):
     """this is the real main function which runs the flow with the measure - "prod" function"""
-    from .data_structure import Block  # lazy import for perf issue
+    # lazy import for perf issue
+    from .measure.measure import Measure
+    from .data_structure import Block
     block = Block(json_conf['layout'])
 
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
@@ -169,7 +168,7 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
     parser = get_parser(json_conf['parser'])
     if parser is None:
         raise ValueError("Your coordinate source may not be in a valid format")
-    logger.info(f'parser is {parser}')
+    logging.info(f'parser is {parser}')
     selected_parser: FileParser | OPCFieldReverse
     if issubclass(parser, OPCFieldReverse):
         selected_parser = parser(
@@ -188,11 +187,11 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
 
     # renaming of measure points
     if isinstance(selected_parser, OPCFieldReverse):
-        cd_space = (output_measure["polarity"].str[:2]
-                    + output_measure[' min_dimension(nm)'].astype(float).astype(int).astype(str))
-        iso = output_measure[' pitch_of_min_dim(nm)'] == output_measure[' min_dimension(nm)']
-        pitch = np.where(iso, "ISO", 'P' + output_measure[' pitch_of_min_dim(nm)']
-                         .replace('Pitch non symetrical', 0).astype(float).astype(int).astype(str))
+        cd_space = (output_measure["polygon_tone"].str[:2]
+                    + output_measure['min_dim'].astype(float).astype(int).astype(str))
+        iso = output_measure['pitch_min_dim'] == output_measure['min_dim']
+        pitch = np.where(iso, "ISO", 'P' + output_measure['pitch_min_dim']
+                         .astype(float).astype(int).astype(str))
         output_measure.name = cd_space + '_' + pitch + '_' + output_measure.name.astype(str)
 
     # all recipe's sections creation
