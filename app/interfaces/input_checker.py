@@ -20,7 +20,7 @@ class BaseRecipe(BaseModel):
     ep_template: Optional[str] = ''
     eps_template: Optional[str] = ''
     mp_template: Optional[str | dict[str, str]] = ''
-    translation: Optional[dict[str, float]] = None
+    offset: Optional[dict[str, float]] = None
 
     @field_validator('ap1_mag', 'ap1_offset', mode='before')
     def convert_empty_str(value):
@@ -29,20 +29,20 @@ class BaseRecipe(BaseModel):
 
 
 class OPCField(BaseRecipe):
-    parser: Optional[str] = ''
+    coord_file: Optional[str] = ''
     origin_x_y: list[float] = Field(min_length=2, max_length=2)
     step_x_y: list[float] = Field(min_length=2, max_length=2)
-    n_rows_cols: list[int] = Field(min_length=2, max_length=2)
+    n_cols_rows: list[int] = Field(min_length=2, max_length=2)
 
 
 class CoordFile(BaseRecipe):
-    parser: FilePath
+    coord_file: FilePath
 
 
 def get_config_checker(config_recipe: dict) -> BaseModel:
     """Determine the recipe kind and return the corresponding validated model"""
-    if 'parser' in config_recipe and config_recipe['parser']:
+    if 'coord_file' in config_recipe and config_recipe['coord_file']:
         return CoordFile(**config_recipe)
-    if {'origin_x_y', 'step_x_y', 'n_rows_cols'}.issubset(config_recipe):
+    if {'origin_x_y', 'step_x_y', 'n_cols_rows'}.issubset(config_recipe):
         return OPCField(**config_recipe)
-    raise ValueError("Please provide either a 'parser' file path or OPCfield parameters")
+    raise ValueError("Please provide either a 'coord_file' path or OPCfield parameters")

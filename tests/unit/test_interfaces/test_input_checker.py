@@ -14,7 +14,7 @@ def valid_recipe_data():
     return {
         'recipe_name': "test_recipe",
         'output_dir': "./",
-        'parser': str(TESTFILES / "ssfile_proto.txt"),
+        'coord_file': str(TESTFILES / "ssfile_proto.txt"),
         'layout': str(TESTFILES / "COMPLETED_TEMPLATE.gds"),
         'layers': ["1.0"],
         'ap1_template': 'AP1_45K',
@@ -28,7 +28,7 @@ def valid_recipe_data():
         'step': "PH",
         'origin_x_y': [0.5, 0.5],
         'step_x_y': [4.5, 4.5],
-        'n_rows_cols': [9, 9]
+        'n_cols_rows': [9, 9]
     }
 
 
@@ -50,14 +50,14 @@ def test_recipe_with_all_fields(valid_recipe_data):
 
 def test_recipe_with_minimum_fields():
     coordfile_recipe = {
-        'parser': str(TESTFILES / "ssfile_proto.txt"),
+        'coord_file': str(TESTFILES / "ssfile_proto.txt"),
         'layout': str(TESTFILES / "COMPLETED_TEMPLATE.gds"),
         'layers': ["13.100"],
         'step': "PH",
         'magnification': "200000",
     }
     coordfile = CoordFile(**coordfile_recipe)
-    assert coordfile.parser == TESTFILES / "ssfile_proto.txt"
+    assert coordfile.coord_file == TESTFILES / "ssfile_proto.txt"
     assert coordfile.recipe_name is None
     assert coordfile.output_dir == Path.cwd()
     assert coordfile.layout == TESTFILES / "COMPLETED_TEMPLATE.gds"
@@ -78,13 +78,14 @@ def test_recipe_with_minimum_fields():
     (BaseRecipe, 'output_dir', Path('.')),
     (BaseRecipe, 'step', ['PH', 'ET_HR']),
     pytest.param(BaseRecipe, 'polarity', 'DARK', marks=pytest.mark.xfail),
+    pytest.param(BaseRecipe, 'offset', dict(x=1000, y=1000), marks=pytest.mark.xfail),
     (BaseRecipe, 'ap1_mag', 70000),
     (BaseRecipe, 'ap1_mag', '70000'),
     (BaseRecipe, 'ap1_offset', [1, 1]),
     (BaseRecipe, 'mp_template', 'MP_width'),
     (BaseRecipe, 'mp_template', {'line': 'MP_width'}),
     (OPCField, 'origin_x_y', [0.1, 0.1]),
-    (OPCField, 'n_rows_cols', [9, 9]),
+    (OPCField, 'n_cols_rows', [9, 9]),
 ])
 def test_validate_data(make_recipe_data, field, value, model):
     recipe_data = make_recipe_data(**{field: value})
@@ -110,10 +111,10 @@ def test_validate_data(make_recipe_data, field, value, model):
     (OPCField, 'origin_x_y', None),
     (OPCField, 'origin_x_y', 0.),  # list
     (OPCField, 'origin_x_y', [0.]),  # length
-    (OPCField, 'n_rows_cols', [9.1, 9.1]),
-    (CoordFile, 'parser', None),
-    (CoordFile, 'parser', '/fake/path'),
-    (CoordFile, 'parser', './'),
+    (OPCField, 'n_cols_rows', [9.1, 9.1]),
+    (CoordFile, 'coord_file', None),
+    (CoordFile, 'coord_file', '/fake/path'),
+    (CoordFile, 'coord_file', './'),
 ])
 def test_fail_invalid_data(make_recipe_data, field, value, model):
     recipe_data = make_recipe_data(**{field: value})
@@ -122,8 +123,8 @@ def test_fail_invalid_data(make_recipe_data, field, value, model):
 
 
 # @pytest.mark.parametrize("valid_data", [
-#         dict(parser=None, origin_x_y='', step_x_y='', n_rows_cols=''),
-#         dict(parser=None, mp_template=[]),
+#         dict(coord_file=None, origin_x_y='', step_x_y='', n_cols_rows=''),
+#         dict(coord_file=None, mp_template=[]),
 #     ], indirect=True)
 # def test_invalid_data(valid_data):
     # with pytest.raises(ValueError):

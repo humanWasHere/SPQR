@@ -11,7 +11,7 @@
     "genepy": {
         "recipe_name": "test_env_genepy",
         "output_dir": "recipe_output/test_env/",
-        "parser": "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/ssfile_proto.txt",
+        "coord_file": "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/ssfile_proto.txt",
         "layout": "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
         "layers": ["1.0"],
         "ap1_template": "",
@@ -23,14 +23,14 @@
         "step": "PH",
         "origin_x_y": "",
         "step_x_y": "",
-        "n_rows_cols": "",
+        "n_cols_rows": "",
         "ap1_offset": ""
     },
 
     "calibre_rulers": {
         "recipe_name": "test_env_calibre_rulers",
         "output_dir": "recipe_output/test_env/",
-        "parser": "/work/opc/all/users/banger/X90M/GATE/rulers_product.xml",
+        "coord_file": "/work/opc/all/users/banger/X90M/GATE/rulers_product.xml",
         "layout": "/work/opc/all/users/banger/X90M/GATE/466_Product_clips.oas",
         "layers": ["13.0"],
         "ap1_template": "",
@@ -42,14 +42,14 @@
         "step": "PH",
         "origin_x_y": "",
         "step_x_y": "",
-        "n_rows_cols": "",
+        "n_cols_rows": "",
         "ap1_offset": ""
     },
 
     "opcfield": {
         "recipe_name": "test_env_OPCField",
         "output_dir": "recipe_output/test_env/",
-        "parser": "",
+        "coord_file": "",
         "layout": "/prj/opc/all/users/bigarnen/P18/GDS/1808A_OPCMACRO_OPCF_FGAT.oas",
         "layers": ["7.0"],
         "ap1_template": "",
@@ -61,13 +61,13 @@
         "step": "PH",
         "origin_x_y": [12888.5, 16507.5],
         "step_x_y": [10, 10],
-        "n_rows_cols": [93, 33],
+        "n_cols_rows": [93, 33],
         "ap1_offset": [2.75, 0]
     },
     "json": {
         "recipe_name": "test_env_json",
         "output_dir": "recipe_output/test_env/",
-        "parser": "/work/opc/all/users/chanelir/spqr-assets/json_csv_recipes/test_env_genepy.json",
+        "coord_file": "/work/opc/all/users/chanelir/spqr-assets/json_csv_recipes/test_env_genepy.json",
         "layout": "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
         "layers": ["1.0"],
         "ap1_template": "",
@@ -79,13 +79,13 @@
         "step": "PH",
         "origin_x_y": "",
         "step_x_y": "",
-        "n_rows_cols": "",
+        "n_cols_rows": "",
         "ap1_offset": ""
     },
     "csv": {
         "recipe_name": "test_env_csv",
         "output_dir": "recipe_output/test_env/",
-        "parser": "/work/opc/all/users/chanelir/spqr-assets/json_csv_recipes/test_env_genepy.csv",
+        "coord_file": "/work/opc/all/users/chanelir/spqr-assets/json_csv_recipes/test_env_genepy.csv",
         "layout": "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
         "layers": ["1.0"],
         "ap1_template": "",
@@ -97,7 +97,7 @@
         "step": "PH",
         "origin_x_y": "",
         "step_x_y": "",
-        "n_rows_cols": "",
+        "n_cols_rows": "",
         "ap1_offset": ""
     }
 }

@@ -165,23 +165,23 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
 
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
     # Parser selection
-    parser = get_parser(json_conf['parser'])
+    parser = get_parser(json_conf['coord_file'])
     if parser is None:
         raise ValueError("Your coordinate source may not be in a valid format")
-    logging.info(f'parser is {parser}')
+    logging.info(f'parser is {parser.__name__}')
     selected_parser: FileParser | OPCFieldReverse
     if issubclass(parser, OPCFieldReverse):
         selected_parser = parser(
             json_conf['origin_x_y'][0], json_conf['origin_x_y'][1],
             json_conf['step_x_y'][0], json_conf['step_x_y'][1],
-            json_conf['n_rows_cols'][0], json_conf['n_rows_cols'][1],
+            json_conf['n_cols_rows'][0], json_conf['n_cols_rows'][1],
             json_conf['ap1_offset'][0], json_conf['ap1_offset'][1])
     else:
-        selected_parser = parser(json_conf['parser'])
+        selected_parser = parser(json_conf['coord_file'])
 
     # measurement
     measure_instance = Measure(selected_parser, block, json_conf['layers'],
-                               json_conf.get('translation'), row_range=line_selection)
+                               json_conf.get('offset'), row_range=line_selection)
     output_measure = measure_instance.run_measure(output_dir=json_conf['output_dir'] if output_measurement else None,
                                                   recipe_name=json_conf['recipe_name'] if output_measurement else None)
 

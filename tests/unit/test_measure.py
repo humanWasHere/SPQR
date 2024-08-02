@@ -79,7 +79,7 @@ def test_output_measurement_file(measure_instance):
         'y': [11, 22, 33],
     })
 
-    test_output_dir = (Path(__file__).parents[1] / "tests" / "testfiles")
+    test_output_dir = (Path(__file__).parents[1] / "testfiles")
     test_recipe_name = "test_output_recipe_name"
     expected_path = test_output_dir / f"measure_{test_recipe_name}.csv"
 

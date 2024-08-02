@@ -23,12 +23,12 @@ def run_recipe(json_conf, parser: Type[FileParser], upload=False, rows=None) -> 
     if parser == OPCFieldReverse:
         origin_x, origin_y = json_conf['origin_x_y']
         step_x, step_y = json_conf['step_x_y']
-        n_rows, n_cols = json_conf['n_rows_cols']
+        n_rows, n_cols = json_conf['n_cols_rows']
         ap_x, ap_y = json_conf['ap1_offset']
         parser_instance = OPCFieldReverse(origin_x=origin_x, origin_y=origin_y, step_x=step_x, step_y=step_y,
                                           n_rows=n_rows, n_cols=n_cols, ap_x=ap_x, ap_y=ap_y)
     else:
-        parser_instance = parser(json_conf['parser'])
+        parser_instance = parser(json_conf['coord_file'])
 
     block = Block(json_conf['layout'])
     start = time.time()
@@ -116,7 +116,7 @@ def test_json(tmp_path):
     #     step = "PH",
     #     origin_x_y = [],
     #     step_x_y = [],
-    #     n_rows_cols = [],
+    #     n_cols_rows = [],
     #     ap1_offset = []
     # )
     json_conf = app_config_content.get('json')

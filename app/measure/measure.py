@@ -47,7 +47,6 @@ class Measure:
 
     def apply_offset(self) -> None:
         # workaround if coords are not in same coord as layout. should be in parser's original unit
-        # takes parameter translation not ap1_offset
         self.parser_df.loc[:, 'x'] += self.offset['x']
         self.parser_df.loc[:, 'y'] += self.offset['y']
 
@@ -68,7 +67,7 @@ class Measure:
             .astype({'x': float, 'y': float}).astype(str)
             .apply(lambda row: f"{{{' '.join(row.values)}}}", axis=1)
         )
-        logging.debug(coordonnees.head(1))
+        logging.debug(f'First point: {coordonnees.iloc[0]}')
         # Paths must be passed as str
         with (open(self.tcl_script, "r") as template,
               open(tmp_script, "w") as script):
