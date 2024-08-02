@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from app.interfaces.input_checker import BaseRecipe, CoordFile, OPCField
 
 
-TESTFILES = Path(__file__).resolve().parents[1] / "testfiles"
+TESTFILES = Path(__file__).resolve().parents[2] / "testfiles"
 
 
 @pytest.fixture

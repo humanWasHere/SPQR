@@ -11,7 +11,7 @@ class TestEpsData:
 
     @pytest.fixture
     def eps_data_columns(self) -> dict:
-        test_hss = Path(__file__).resolve().parents[1] / "testfiles" / "test_template.json"
+        test_hss = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
         hss_template = json.loads(test_hss.read_text())
         return pd.DataFrame(columns=hss_template.get('<EPS_Data>'))
 

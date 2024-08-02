@@ -6,7 +6,7 @@ import pytest
 from app.parsers.json_parser import JSONParser, import_json
 
 
-TEST_TEMPLATE = Path(__file__).resolve().parents[1] / "testfiles" / "test_template.json"
+TEST_TEMPLATE = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
 
 
 class TestJsonParser:

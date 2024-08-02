@@ -6,7 +6,7 @@ import pytest
 from app.parsers.parse import OPCFieldReverse, get_parser
 from app.parsers import (CalibreXMLParser, HSSParser, JSONParser, SSFileParser, TACRulerParser)
 
-TESTFILES = Path(__file__).resolve().parents[1] / "testfiles"
+TESTFILES = Path(__file__).resolve().parents[2] / "testfiles"
 
 
 @pytest.fixture

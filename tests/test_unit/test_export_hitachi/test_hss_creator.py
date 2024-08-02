@@ -14,7 +14,7 @@ from app.parsers.json_parser import JSONParser
 # TODO make relative file path for "test_template.json"
 
 # LAYOUT_TESTCASE = Path(__file__).resolve().parents[1] / "testfiles" / "COMPLETED_TEMPLATE.gds"
-TEST_TEMPLATE = Path(__file__).resolve().parents[1] / "testfiles" / "test_template.json"
+TEST_TEMPLATE = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
 
 
 class TestHssCreator:

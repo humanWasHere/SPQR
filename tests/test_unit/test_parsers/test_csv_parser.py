@@ -3,8 +3,8 @@ from pathlib import Path
 
 from app.parsers.csv_parser import HSSParser
 
-testfile = Path(__file__).resolve().parents[1] / "testfiles" / "test_env_genepy.csv"
-short_testfile = Path(__file__).resolve().parents[1] / "testfiles" / "short_eps_data_csv.csv"
+testfile = Path(__file__).resolve().parents[2] / "testfiles" / "test_env_genepy.csv"
+short_testfile = Path(__file__).resolve().parents[2] / "testfiles" / "short_eps_data_csv.csv"
 
 
 class TestHssParser:
