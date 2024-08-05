@@ -12,7 +12,7 @@ def test_cli_help():
     """Test the help command of the CLI."""
     result = run_cli_command('python -m app --help')
     assert result.returncode == 0
-    assert 'usage: spqr [-h] {start,build} ...' in result.stdout
+    assert 'usage: spqr [-h] [-v] {start,build} ...' in result.stdout
 
 # def test_cli_version():
 #     """Test the version command of the CLI."""

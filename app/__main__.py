@@ -4,13 +4,8 @@ import os
 import sys
 from pathlib import Path
 
-import numpy as np
-
+from . import __version__
 from .interfaces.logger import logger_init  # import first
-from .interfaces import recipedirector as rcpd
-from .interfaces.input_checker import get_config_checker
-from .parsers import FileParser, get_parser, OPCFieldReverse
-from .parsers.json_parser import import_json
 
 
 def parse_intervals(values: list[str]) -> list[list[int]]:
@@ -32,6 +27,7 @@ def cli() -> argparse.ArgumentParser:
     """defines the command lines actions of the soft"""
     parser = argparse.ArgumentParser(prog='spqr',
                                      description='----- CLI tool for SEM Recipe Creation -----')
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
     subparsers = parser.add_subparsers(
         dest='running_mode',
         help='Selects the running mode of the app (start or build). End user should use build.')
@@ -77,6 +73,9 @@ def check_recipe(full_config: dict[str, dict], recipe_name: str) -> dict:
 
 def build_mode(args: argparse.Namespace) -> None:
     logging.info('app running in prod mode')
+    from .parsers.json_parser import import_json  # pandas is slow
+    from .interfaces.input_checker import get_config_checker
+
     if not args.user_config.exists() or not args.user_config.is_file():
         raise ValueError(f'Path does not exist or is not a file: {args.user_config}')
     if args.user_config.stat().st_size == 0:
@@ -106,6 +105,9 @@ def build_mode(args: argparse.Namespace) -> None:
 
 def start_mode(args: argparse.Namespace) -> None:
     logging.info('app running in dev mode')
+    from .parsers.json_parser import import_json  # pandas is slow
+    from .interfaces.input_checker import get_config_checker
+
     app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
     app_config = import_json(app_config_file)
     if not app_config:
@@ -128,6 +130,7 @@ def manage_app_launch():
     """Read the command line and user config.json and launches the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
+    logger_init()
     args = cli().parse_args()
 
     # Post process args
@@ -152,9 +155,12 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
     """this is the real main function which runs the flow with the measure - "prod" function"""
     # lazy import for perf issue
     os.environ['ENV_TYPE'] = "PRODUCTION"  # workaround for MAPICore.runtime.Environment
+
     from .data_structure import Block
+    from .interfaces import recipedirector as rcpd
     from .export_hitachi.hss_creator import HssCreator
     from .measure.measure import Measure
+    from .parsers import FileParser, get_parser, OPCFieldReverse
     block = Block(json_conf['layout'])
 
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
@@ -179,8 +185,10 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
     output_measure = measure_instance.run_measure(output_dir=json_conf['output_dir'] if output_measurement else None,
                                                   recipe_name=json_conf['recipe_name'] if output_measurement else None)
 
-    # renaming of measure points
+    # renaming of measure points  # TODO not here
     if isinstance(selected_parser, OPCFieldReverse):
+        import numpy as np
+
         cd_space = (output_measure["polygon_tone"].str[:2]
                     + output_measure['min_dim'].astype(float).astype(int).astype(str))
         iso = output_measure['pitch_min_dim'] == output_measure['min_dim']
@@ -201,5 +209,4 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
 
 
 if __name__ == "__main__":
-    logger_init()
     manage_app_launch()

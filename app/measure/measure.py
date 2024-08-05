@@ -96,7 +96,7 @@ class Measure:
         # Drop invalid rows
         # FIXME measure out of range? -> modify tcl to handle empty measurement
         meas_df.replace({'x_dim': {0: None}, 'y_dim': {0: None}}, inplace=True)
-        meas_df.replace('Pitch non symetrical', 0, inplace=True)  # TODO better
+        meas_df.replace('Pitch non symetrical', '0', inplace=True)  # TODO better
         meas_df.replace({'polygon_tone': "CD"}, "LINE", inplace=True)
         meas_df.dropna(subset=["x_dim", "y_dim"], inplace=True)
 

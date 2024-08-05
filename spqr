@@ -1,0 +1,22 @@
+#!/bin/tcsh -f
+set source_cwd = `pwd`
+set script = `realpath $0`
+set root_dir = `dirname $script`
+
+source $root_dir/.venv/bin/activate.csh
+
+if (`domainname` == "ratmpw") then
+    setenv PYTHONPATH /work/retprod/src/pythonlib:$root_dir
+else if (`domainname` == "azurl") then
+    setenv PYTHONPATH /prj/ret/retprod/src:$root_dir
+else
+    setenv PYTHONPATH $root_dir
+endif
+
+source /sw/st/itcad/setup/global/sw -set $root_dir/.ucdprod
+echo launching
+
+#cd $root_dir
+$root_dir/.venv/bin/python -m app $*
+#cd $source_cwd
+
