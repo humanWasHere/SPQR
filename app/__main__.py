@@ -1,12 +1,12 @@
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 
 import numpy as np
 
 from .interfaces.logger import logger_init  # import first
-from .export_hitachi.hss_creator import HssCreator
 from .interfaces import recipedirector as rcpd
 from .interfaces.input_checker import get_config_checker
 from .parsers import FileParser, get_parser, OPCFieldReverse
@@ -26,9 +26,6 @@ def parse_intervals(values: list[str]) -> list[list[int]]:
         except ValueError as e:
             raise argparse.ArgumentTypeError(f"Each range must be in the format 'start-end'. Error: {e}")
     return list_of_lists
-
-
-logger = logging.getLogger(__name__)
 
 
 def cli() -> argparse.ArgumentParser:
@@ -131,12 +128,7 @@ def manage_app_launch():
     """Read the command line and user config.json and launches the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
-    try:
-        args = cli().parse_args()
-    except SystemExit as e:
-        # TODO manage helper ?
-        logging.error("Argument parsing failed. Exiting.")
-        sys.exit(e.code)
+    args = cli().parse_args()
 
     # Post process args
     if not args.running_mode:
@@ -159,8 +151,10 @@ def manage_app_launch():
 def create_recipe(json_conf: dict, upload=False, line_selection=None, output_measurement=False):
     """this is the real main function which runs the flow with the measure - "prod" function"""
     # lazy import for perf issue
-    from .measure.measure import Measure
+    os.environ['ENV_TYPE'] = "PRODUCTION"  # workaround for MAPICore.runtime.Environment
     from .data_structure import Block
+    from .export_hitachi.hss_creator import HssCreator
+    from .measure.measure import Measure
     block = Block(json_conf['layout'])
 
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
