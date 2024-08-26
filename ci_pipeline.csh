@@ -23,6 +23,8 @@ echo "Running auto-documentation..."
 #generate class diagram
 pyreverse -A -o png app/  #  --ignore frontend
 # sphinx
+# sphinx-quickstart
+# sphinx-apidoc -o ./spqr_doc ../app
 # cd docs; make html
 
 

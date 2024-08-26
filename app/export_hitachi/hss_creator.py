@@ -16,7 +16,7 @@ from ..parsers.json_parser import JSONParser
 # -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
 # faire un checker pour csv ET hss -> intégrer le tool d'alex -> recipe checker
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) 
 
 
 class HssCreator:

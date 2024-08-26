@@ -14,9 +14,11 @@ __pycache__/
 *.swp
 
 # Test / coverage
+*.pyc
 .pytest_cache/
 htmlcov/
 .coverage
+.coveragerc
 sphinx/
 
 # Environments

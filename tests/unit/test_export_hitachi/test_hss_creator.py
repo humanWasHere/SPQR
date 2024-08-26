@@ -23,7 +23,7 @@ class TestHssCreator:
     test_json_user_config = {
         "recipe_name": "test_temp_output",
         "output_dir": Path(__file__).resolve().parent,
-        "parser": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
+        "coord_file": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/ssfile_proto.txt",
         "layout": "/work/opc/all/users/chanelir/semrc-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
         "layers": ["1.0"],
         "ap1_template": "",

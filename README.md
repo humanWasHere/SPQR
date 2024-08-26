@@ -92,6 +92,7 @@ spqr - project root
 │   │   ├── calibre_python.py
 │   │   ├── __init__.py
 │   │   ├── input_checker.py
+│   │   ├── logger.py
 │   │   ├── mask_db.py
 │   │   └── recipedirector.py
 │   ├── __main__.py
@@ -106,55 +107,47 @@ spqr - project root
 │   │   ├── json_parser.py
 │   │   ├── parse.py
 │   │   ├── ssfile_parser.py
-│   │   ├── tacx_parser.py
 │   │   └── xml_parser.py
-│   └── setup.py
+│   ├── setup.py
+│   └── web
+│       ├── auth_app
+│       ├── db.sqlite3
+│       ├── home
+│       ├── manage.py
+│       ├── recipe_creation
+│       └── spqr
 ├── assets
 │   ├── app_config.json
 │   └── template_SEM_recipe.json
 ├── ci_pipeline.csh
 ├── .coverage
+├── .coveragerc
 ├── .flake8
 ├── .git
-│   └── ...
 ├── .gitignore
 ├── htmlcov
-│   └── coverage_lib...
-├── integration
-│   ├── __init__.py
-│   └── test_integration.py
+├── jenkinsfile
 ├── poetry.lock
 ├── pyproject.toml
 ├── README.md
 ├── recipe_output
-│   ├── recipes_outputed...
-│   └── test_env
-│       └── test_env_recipes_outputed...
 ├── requirements.txt
 ├── sourceme.csh
 ├── sphinx
-│   └── auto_doc_lib...
-└── tests
-    ├── __init__.py
-    ├── test_export_hitachi
-    │   ├── __init__.py
-    │   ├── test_eps_data.py
-    │   ├── test_hss_creator.py
-    │   └── test_section_maker.py
-    ├── testfiles
-    │   ├── COMPLETED_TEMPLATE.gds
-    │   ├── .COMPLETED_TEMPLATE.gds.20240506-172141.pyratImplementation.GTCheck
-    │   ├── ssfile_proto.txt
-    │   └── test_template.json
-    ├── test_measure.py
-    ├── test_output
-    │   └── recipe.json
-    ├── test_parsers
-    │   ├── test_json_parser.py
-    │   ├── test_parse.py
-    │   ├── test_ssfile_parser.py
-    │   └── test_xml_parser.py
-    └── tmp
+├── spqr
+├── spqr.log
+├── spqr.log.1
+├── tests
+│   ├── end2end
+│   │   └── test_e2e.py
+│   ├── __init__.py
+│   ├── integration
+│   │   ├── __init__.py
+│   │   └── test_integration.py
+│   ├── testfiles
+│   ├── tmp
+│   └── unit
+└── .venv
 ```
 
 ### Modules :

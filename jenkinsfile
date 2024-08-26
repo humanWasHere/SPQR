@@ -1,0 +1,134 @@
+pipeline {
+    agent any
+
+    environment {
+        VENV_DIR = "${WORKSPACE}/venv"
+        // PRE_PROD_DIR = "/work/retprod/src/deploy/spqr-preprod"
+        DEPLOY_DIR = "/work/retprod/src/deploy/spqr"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout scm
+                }
+            }
+        }
+
+        stage('Préparation') {
+            steps {
+                // script {
+                //     // Installer Poetry si ce n'est pas déjà fait
+                //     if (!fileExists('/usr/local/bin/poetry')) {
+                //         sh 'curl -sSL https://install.python-poetry.org | python3 -'
+                //     }
+                // }
+                // Vérifier si l'environnement virtuel existe déjà
+                script {
+                    if (!fileExists("${VENV_DIR}/bin/activate.csh")) {
+                        sh 'python3 -m venv ${VENV_DIR}'
+                    }
+                }
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry install
+                '''
+            }
+        }
+
+        // Flake8
+        stage('Lint') {
+            steps {
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry run flake8 .
+                    // flake8 app/ -qq --statistics --count
+                '''
+            }
+        }
+
+        // Mypy lib
+        stage('Type checking') {
+            steps {
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry run mypy
+                '''
+            }
+        }
+
+        // Pytest lib
+        stage('Testing') {
+            steps {
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry run pytest
+                '''
+            }
+        }
+
+        // Coverage lib
+        stage('Coverage testing') {
+            steps {
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry run coverage run -m pytest -q
+                    poetry run coverage report -m
+                    poetry run coverage html
+                '''
+            }
+        }
+
+        // Sphinx
+        stage('Autodoc') {
+            steps {
+                sh '''
+                    // sphinx-quickstart
+                    sphinx-apidoc -o ./spqr_doc ../app
+                    // cd docs;
+                    make html
+                '''
+            }
+        }
+
+        // Pyreverse
+        stage('UML') {
+            steps {
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry run pyreverse -A -o png app/
+                '''
+            }
+        }
+
+        // Poetry
+        stage('Déploiement') {
+            when {
+                branch 'master'
+            }
+            steps {
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry build
+                    mkdir -p ${DEPLOY_DIR}
+                    cp -r dist/* ${DEPLOY_DIR}/
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline terminé.'
+            // cleanWs()
+            // sh 'rm -rf ${VENV_DIR}'
+        }
+        success {
+            echo 'Pipeline exécuté avec succès.'
+        }
+        failure {
+            echo 'Le pipeline a échoué.'
+        }
+    }
+}

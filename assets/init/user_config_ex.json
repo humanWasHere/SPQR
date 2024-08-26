@@ -1,0 +1,55 @@
+{
+    "recipe_from_input_file": {
+        "recipe_name": "banger_X901A",
+        "output_dir": "recipe_output/",
+        "coord_file": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/SJ71_X901A_GATE_OPCVERIF_FEM_PH2.csv",
+        "layout": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/X901A_FR_TOPRIGHT_ALL_cropped_for_SEM.oas",
+        "layers": ["13.0"],
+        "step": "PH",
+        "magnification": 200000,
+        "polarity": "clear",
+        "ap1_offset": [0.35, -4.4],
+        "ap1_template": "OPC_AP1_template_45K",
+        "mp_template": {
+            "line": "X90M_GATE_PH_Line",
+            "space": "X90M_GATE_PH_Space"
+        }
+    },
+    "recipe_from_opcfield_reverse": {
+        "recipe_name": "banger-X901A-GATE-etchbias",
+        "output_dir": "recipe_output/",
+        "layout": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/X901A_FR_TOPRIGHT_ALL_cropped_for_SEM.oas",
+        "layers": ["0.400"],
+        "magnification": 200000,
+        "ap1_template": "OPC_AP1_template_45K",
+        "ap1_offset": [0.35, -4.4],
+        "ap1_mag": 45000,
+        "mp_template": "X90M_GATE_PH",
+        "step": ["PH", "ET"],
+        "origin_x_y": [6216.487, 29885.021],
+        "step_x_y": [6, 8.4],
+        "n_cols_rows": [4, 12]
+    },
+    "all_options": {
+        "recipe_name": "banger_X901A",
+        "output_dir": "recipe_output/",
+        "coord_file": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/SJ71_X901A_GATE_OPCVERIF_FEM_PH2.csv",
+        "layout": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/X901A_FR_TOPRIGHT_ALL_cropped_for_SEM.oas",
+        "layers": ["13.0"],
+        "step": "PH",
+        "magnification": 200000,
+        "polarity": "clear",
+        "ap1_mag": 45000,
+        "ap1_offset": [0.35, -4.4],
+        "ap1_template": "",
+        "ep_template": "",
+        "eps_template": "",
+        "mp_template": {
+            "line": "X90M_GATE_PH_Line",
+            "space": "X90M_GATE_PH_Space"
+        },
+        "origin_x_y": [0.0, 0.0],
+        "step_x_y": [5.0, 5.0],
+        "n_cols_rows": [5, 10]
+    }
+}

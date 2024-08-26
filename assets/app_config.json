@@ -1,13 +1,4 @@
 {
-    "scripts": {
-        "start": "python -m app",
-        "build": "python -m app",
-        "test": "pytest tests/",
-        "lint": "flake8 .",
-        "coverage": "run coverage",
-        "doc": "make apidoc; make html"
-    },
-
     "genepy": {
         "recipe_name": "test_env_genepy",
         "output_dir": "recipe_output/test_env/",

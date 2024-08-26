@@ -62,6 +62,13 @@ def test_genepy(tmp_path):
         rows=[[60, 70]]
     )
     assert True  # TODO
+    assert Path(json_conf['output_dir']).exists(), "Output directory does not exist"
+    expected_output_files = [
+        Path(json_conf['output_dir']) / f"{json_conf['recipe_name']}.csv",
+        Path(json_conf['output_dir']) / f"{json_conf['recipe_name']}.json"
+    ]
+    for file in expected_output_files:
+        assert file.exists(), f"Expected output file {file} does not exist"
 
 
 def test_rulers(tmp_path):

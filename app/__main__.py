@@ -4,71 +4,8 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__
 from .interfaces.logger import logger_init  # import first
-
-
-def parse_intervals(values: list[str]) -> list[list[int]]:
-    if values is None:
-        return None
-    list_of_lists = []
-    for value in values:
-        try:
-            if '-' not in value:
-                raise ValueError("Separator must be a hyphen")
-            start, end = map(int, value.split('-'))
-            list_of_lists.append([start, end])
-        except ValueError as e:
-            raise argparse.ArgumentTypeError(f"Each range must be in the format 'start-end'. Error: {e}")
-    return list_of_lists
-
-
-def cli() -> argparse.ArgumentParser:
-    """defines the command lines actions of the soft"""
-    parser = argparse.ArgumentParser(prog='spqr',
-                                     description='----- CLI tool for SEM Recipe Creation -----')
-    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
-    subparsers = parser.add_subparsers(
-        dest='running_mode',
-        help='Selects the running mode of the app (start or build). End user should use build.')
-
-    start_parser = subparsers.add_parser(
-        'start', help='Runs the "testing" mode of the app. Meant for app developers.')
-    start_parser.add_argument('-r', '--recipe', required=True,
-                              help='Runs the recipe inputted (genepy, calibre_rulers or opcfield) in testing mode. Refer to app_config.json.',
-                              choices=['genepy', 'calibre_rulers', 'opcfield', 'csv', 'json'],
-                              type=str)
-
-    build_parser = subparsers.add_parser(
-        'build', help='Runs the "prod" mode of the app. Meant for end user.')
-    build_parser.add_argument('-c', '--user_config', required=True, type=Path,
-                              help="Path to user JSON config file containing recipe options.")
-    build_parser.add_argument('-r', '--user_recipe',
-                              help='Runs the recipe inputted if it is matching one in user_config.json. Refer to this file')
-    build_parser.add_argument('-u', '--upload_rcpd', action="store_true",
-                              help='Send HSS recipe (.csv) and layout to RecipeDirector machine.')
-    build_parser.add_argument('-l', '--line_selection', required=False, nargs='+', type=str,
-                              help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50-60 150-160" where 50 and 60 are included as well as 150 and 160')
-    build_parser.add_argument('-m', '--mesurement_file', action="store_true",
-                              help='Outputs the measurement file to user outputs directory')
-    return parser
-
-
-def check_recipe(full_config: dict[str, dict], recipe_name: str) -> dict:
-    if len(full_config) == 0:
-        raise ValueError("The provided configuration file does not contain any recipe.")
-    elif len(full_config) == 1 and recipe_name is None:
-        # recipe name is optional if there is only one
-        recipe_name = next(iter(full_config.keys()))
-    elif len(full_config) > 1 and recipe_name is None:
-        logging.warning("More than one recipe found in the configuration file. Please select one with the -r option.")
-        sys.exit(1)
-
-    if recipe_name not in full_config:
-        logging.error(f'TU QUOQUE FILI !? Recipe {recipe_name} not found in the JSON config file.')
-        sys.exit(1)
-
-    return full_config[recipe_name]
+from .interfaces.cli import check_recipe, parse_intervals, cli
 
 
 def build_mode(args: argparse.Namespace) -> None:
@@ -103,7 +40,7 @@ def build_mode(args: argparse.Namespace) -> None:
         create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_selection), args.mesurement_file)
 
 
-def start_mode(args: argparse.Namespace) -> None:
+def test_mode(args: argparse.Namespace) -> None:
     logging.info('app running in dev mode')
     from .parsers.json_parser import import_json  # pandas is slow
     from .interfaces.input_checker import get_config_checker
@@ -113,17 +50,55 @@ def start_mode(args: argparse.Namespace) -> None:
     if not app_config:
         raise ValueError(f"File {app_config_file.name} does not exist or is empty.")
 
-    test_env_config = app_config[args.recipe]
-    test_env_config = get_config_checker(test_env_config).model_dump()
-
-    if args.recipe == "calibre_rulers":
-        create_recipe(test_env_config, line_selection=[[10, 20]])
-    else:
-        create_recipe(test_env_config, line_selection=[[100, 110]])
+    if args.recipe:
+        test_env_config = app_config[args.recipe]
+        test_env_config = get_config_checker(test_env_config).model_dump()
+        if args.recipe == "calibre_rulers":
+            create_recipe(test_env_config, line_selection=[[10, 20]])
+        else:
+            create_recipe(test_env_config, line_selection=[[100, 110]])
+    elif args.all_recipes:
+        for recipe_name in app_config:
+            print(recipe_name)
+            recipe_config = get_config_checker(app_config[recipe_name]).model_dump()
+            if recipe_name == "calibre_rulers":
+                create_recipe(recipe_config, line_selection=[[10, 20]])
+            else:
+                create_recipe(recipe_config, line_selection=[[100, 110]])
     # TODO for loop to run all test dev recipes with arg -a
     # Draft auto mode (override args and use build)
     # build_mode(cli().parse_args(
     #     ['build', '-c', str(app_config_file), '-r', 'calibre_rulers', '-l', '10-20']))
+
+
+def init_mode(args) -> None:
+    if args.coordinate_file:
+        logging.info('app running init mode (coordinate file example in txt)')
+        if args.config_file_path.is_dir():
+            if not args.config_file_path.exists():
+                raise ValueError(f'Path does not exist: {args.config_file_path}')
+            args.config_file_path = args.config_file_path / "default_coord_file.txt"
+        else:
+            if args.config_file_path.suffix != ".txt":
+                raise ValueError(f'File should be in .txt format: {args.config_file_path}')
+        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "coordinate_file_ex.txt"
+        ex_user_config_content = ex_user_config.read_text()
+        args.config_file_path.write_text(ex_user_config_content)
+    else:
+        logging.info('app running init mode (user configuration example in json)')
+        if args.config_file_path.is_dir():
+            if not args.config_file_path.exists():
+                raise ValueError(f'Path does not exist: {args.config_file_path}')
+            args.config_file_path = args.config_file_path / "default_config.json"
+        else:
+            if args.config_file_path.suffix == ".txt":
+                raise ValueError(f"File should be in .json format: {args.config_file_path}\nUse -p command to generate a default coordinate file in .txt")
+            if args.config_file_path.suffix != ".json":
+                raise ValueError(f'File should be in .json format: {args.config_file_path}')
+        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "user_config_ex.json"
+        ex_user_config_content = ex_user_config.read_text()
+        args.config_file_path.write_text(ex_user_config_content)
+    logging.info(f'Configuration file initialized at {args.config_file_path}')
 
 
 def manage_app_launch():
@@ -141,10 +116,12 @@ def manage_app_launch():
     # if args.line_selection is not None:
     #     args.line_selection = tuple(args.line_selection)
     try:
-        if args.running_mode == 'start':
-            start_mode(args)
+        if args.running_mode == 'test':
+            test_mode(args)
         elif args.running_mode == 'build':
             build_mode(args)
+        elif args.running_mode == 'init':
+            init_mode(args)
     except KeyboardInterrupt:
         logging.error('Interrupted by user')
     except Exception as e:
