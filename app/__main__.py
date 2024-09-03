@@ -6,10 +6,11 @@ from pathlib import Path
 
 from .interfaces.logger import logger_init  # import first
 from .interfaces.cli import check_recipe, parse_intervals, cli
+# log_metrics()
 
 
 def build_mode(args: argparse.Namespace) -> None:
-    logging.info('app running in prod mode')
+    logging.info('SPQR running in production mode')
     from .parsers.json_parser import import_json  # pandas is slow
     from .interfaces.input_checker import get_config_checker
 
@@ -41,7 +42,7 @@ def build_mode(args: argparse.Namespace) -> None:
 
 
 def test_mode(args: argparse.Namespace) -> None:
-    logging.info('app running in dev mode')
+    logging.info('SPQR running in dev mode')
     from .parsers.json_parser import import_json  # pandas is slow
     from .interfaces.input_checker import get_config_checker
 
@@ -59,7 +60,7 @@ def test_mode(args: argparse.Namespace) -> None:
             create_recipe(test_env_config, line_selection=[[100, 110]])
     elif args.all_recipes:
         for recipe_name in app_config:
-            print(recipe_name)
+            logging.info(f"running {recipe_name} recipe")
             recipe_config = get_config_checker(app_config[recipe_name]).model_dump()
             if recipe_name == "calibre_rulers":
                 create_recipe(recipe_config, line_selection=[[10, 20]])
@@ -72,33 +73,36 @@ def test_mode(args: argparse.Namespace) -> None:
 
 
 def init_mode(args) -> None:
-    if args.coordinate_file:
-        logging.info('app running init mode (coordinate file example in txt)')
-        if args.config_file_path.is_dir():
-            if not args.config_file_path.exists():
-                raise ValueError(f'Path does not exist: {args.config_file_path}')
-            args.config_file_path = args.config_file_path / "default_coord_file.txt"
+    if args.config_file:
+        logging.info('SPQR running init mode (user configuration example in json)')
+        if args.config_file.is_dir():
+            if not args.config_file.exists():
+                raise ValueError(f'Path does not exist: {args.config_file}')
+            args.config_file = args.config_file / "default_config.json"
         else:
-            if args.config_file_path.suffix != ".txt":
-                raise ValueError(f'File should be in .txt format: {args.config_file_path}')
-        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "coordinate_file_ex.txt"
+            if args.config_file.suffix == ".txt":
+                raise ValueError(f"File should be in .json format: {args.config_file}\nUse -t command to generate a default coordinate file in .txt")
+            if args.config_file.suffix != ".json":
+                raise ValueError(f'File should be in .json format: {args.config_file}')
+        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "user_config_ex.json"
         ex_user_config_content = ex_user_config.read_text()
-        args.config_file_path.write_text(ex_user_config_content)
-    else:
-        logging.info('app running init mode (user configuration example in json)')
-        if args.config_file_path.is_dir():
-            if not args.config_file_path.exists():
-                raise ValueError(f'Path does not exist: {args.config_file_path}')
-            args.config_file_path = args.config_file_path / "default_config.json"
+        Path(args.config_file).write_text(ex_user_config_content)
+        logging.info(f'Configuration file initialized at {args.config_file}')
+    elif args.coordinate_file:
+        logging.info('SPQR running init mode (coordinate file example in txt)')
+        if args.coordinate_file.is_dir():
+            if not args.coordinate_file.exists():
+                raise ValueError(f'Path does not exist: {args.coordinate_file}')
+            args.coordinate_file = args.coordinate_file / "default_coord_file.txt"
         else:
-            if args.config_file_path.suffix == ".txt":
-                raise ValueError(f"File should be in .json format: {args.config_file_path}\nUse -p command to generate a default coordinate file in .txt")
-            if args.config_file_path.suffix != ".json":
-                raise ValueError(f'File should be in .json format: {args.config_file_path}')
-        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "user_config_ex.json"
+            if args.coordinate_file.suffix != ".txt":
+                raise ValueError(f'File should be in .txt format: {args.coordinate_file}')
+            if args.coordinate_file.suffix == ".json":
+                raise ValueError(f'File should be in .json format: {args.coordinate_file}')
+        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "coordinate_file_ex.txt"
         ex_user_config_content = ex_user_config.read_text()
-        args.config_file_path.write_text(ex_user_config_content)
-    logging.info(f'Configuration file initialized at {args.config_file_path}')
+        args.coordinate_file.write_text(ex_user_config_content)
+        logging.info(f'Configuration file initialized at {args.coordinate_file}')
 
 
 def manage_app_launch():
@@ -135,6 +139,7 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
 
     from .data_structure import Block
     from .interfaces import recipedirector as rcpd
+    from .interfaces.tracker import user_tracker, parser_tracker, cli_command_tracker, launched_recipe_tracker  # , monitor_spqr_errors  # , log_metrics
     from .export_hitachi.hss_creator import HssCreator
     from .measure.measure import Measure
     from .parsers import FileParser, get_parser, OPCFieldReverse
@@ -143,6 +148,11 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
     # Parser selection
     parser = get_parser(json_conf['coord_file'])
+    user_tracker()
+    cli_command_tracker(sys.argv[1:])
+    launched_recipe_tracker()
+    parser_tracker(parser.__name__)
+    # monitor_spqr_errors()
     if parser is None:
         raise ValueError("Your coordinate source may not be in a valid format")
     logging.info(f'parser is {parser.__name__}')
@@ -182,7 +192,7 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
         rcpd.upload_gds(json_conf['layout'])
         # TODO if file already exists on remote, check if new file is changed
         logging.info(f"recipe named {json_conf['recipe_name']} should be on RCPD machine!")
-    logging.info("### END RECIPE CREATION ###")
+    logging.info("### END RECIPE CREATION ###\n")
 
 
 if __name__ == "__main__":

@@ -90,6 +90,7 @@ spqr - project root
 │   ├── __init__.py
 │   ├── interfaces
 │   │   ├── calibre_python.py
+│   │   ├── cli.py
 │   │   ├── __init__.py
 │   │   ├── input_checker.py
 │   │   ├── logger.py
@@ -117,6 +118,9 @@ spqr - project root
 │       ├── recipe_creation
 │       └── spqr
 ├── assets
+│   ├── init
+│   │   ├── coordinate_file_ex.txt
+│   │   └── user_config_ed.json
 │   ├── app_config.json
 │   └── template_SEM_recipe.json
 ├── ci_pipeline.csh
@@ -136,7 +140,6 @@ spqr - project root
 ├── sphinx
 ├── spqr
 ├── spqr.log
-├── spqr.log.1
 ├── tests
 │   ├── end2end
 │   │   └── test_e2e.py

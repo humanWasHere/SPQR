@@ -27,7 +27,8 @@ class Measure:
             offset = dict(x=0, y=0)
         self.offset = offset
         if tcl_script is None:
-            tcl_script = Path(__file__).parent / "measure.tcl"
+            # tcl_script = Path(__file__).parent / "measure.tcl"
+            tcl_script = Path(__file__).parent / "measure_reworked.tcl"
         if not Path(tcl_script).exists():
             raise FileNotFoundError(f"Could not find {tcl_script}")
         self.tcl_script = tcl_script

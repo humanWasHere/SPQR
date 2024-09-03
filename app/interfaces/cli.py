@@ -33,11 +33,11 @@ def cli() -> argparse.ArgumentParser:
     test_parser = subparsers.add_parser(
         'test', help='Runs the "testing" mode of the app. Meant for app developers.')
     test_parser.add_argument('-r', '--recipe',
-                              help='Runs the recipe inputted (genepy, calibre_rulers, opcfield, csv or json) in testing mode. Refer to app_config.json.',
-                              choices=['genepy', 'calibre_rulers', 'opcfield', 'csv', 'json'],
-                              type=str)
+                             help='Runs the recipe inputted (genepy, calibre_rulers, opcfield, csv or json) in testing mode. Refer to app_config.json.',
+                             choices=['genepy', 'calibre_rulers', 'opcfield', 'csv', 'json'],
+                             type=str)
     test_parser.add_argument('-a', '--all_recipes', action="store_true",
-                              help='Runs all recipes (genepy, calibre_rulers, opcfield, csv and json) in testing mode. Refer to app_config.json.')
+                             help='Runs all recipes (genepy, calibre_rulers, opcfield, csv and json) in testing mode. Refer to app_config.json.')
 
     build_parser = subparsers.add_parser(
         'build', help='Runs the "prod" mode of the app. Meant for end user.')
@@ -51,13 +51,14 @@ def cli() -> argparse.ArgumentParser:
                               help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50-60 150-160" where 50 and 60 are included as well as 150 and 160')
     build_parser.add_argument('-m', '--mesurement_file', action="store_true",
                               help='Outputs the measurement file to user outputs directory')
-    
+
     init_parser = subparsers.add_parser(
-        'init', help='Creates a default user configuration file in json under given path.')
-    init_parser.add_argument('-c', '--config_file_path', required=True, type=Path,
-                              help='Takes a path to make a default user configuration file in json under given path.')
-    init_parser.add_argument('-p', '--coordinate_file', action="store_true",
-                              help='Creates a generic coordinate source file (ssfile format).')
+        'init', help='Creates either a default user configuration file in json or a default ssfile under given path.')
+    init_group = init_parser.add_mutually_exclusive_group(required=True)
+    init_group.add_argument('-j', '--config_file', type=Path,
+                            help='Takes a path (file or directry) to make a default user configuration file in json under given path.')
+    init_group.add_argument('-t', '--coordinate_file', type=Path,
+                            help='Takes a path (file or directry) to create a generic coordinate source file (ssfile format) under given path.')
 
     return parser
 

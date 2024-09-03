@@ -5,6 +5,7 @@ import pandas as pd
 
 from .parsers.parse import FileParser
 from .interfaces.calibre_python import get_layout_precision, get_layout_topcell
+# from .interfaces.calibre_python import layout_peek
 
 
 @dataclass
@@ -19,6 +20,8 @@ class Block:
     def __post_init__(self):
         self.precision = get_layout_precision(self.layout_path)
         self.topcell = get_layout_topcell(self.layout_path)
+        # self.precision = int(float(layout_peek(self.layout_path, "-precision")))
+        # self.topcell = layout_peek(self.layout_path, "-topcell")
 
 
 class CoreData:

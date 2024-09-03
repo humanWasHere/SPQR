@@ -80,6 +80,36 @@ pipeline {
             }
         }
 
+        // Poetry
+        stage('Déploiement') {
+            when {
+                branch 'master'
+            }
+            steps {
+                sh '''
+                    source ${VENV_DIR}/bin/activate.csh
+                    poetry build
+                    mkdir -p ${DEPLOY_DIR}
+                    cp -r dist/* ${DEPLOY_DIR}/
+                '''
+            }
+        }
+
+        // // Env vars
+        // stage('Déploiement') {
+        //     when {
+        //         branch 'master'
+        //     }
+        //     steps {
+        //         sh '''
+        //             source ${VENV_DIR}/bin/activate.csh
+        //             poetry build
+        //             mkdir -p ${DEPLOY_DIR}
+        //             cp -r dist/* ${DEPLOY_DIR}/
+        //         '''
+        //     }
+        // }
+
         // Sphinx
         stage('Autodoc') {
             steps {
@@ -98,21 +128,6 @@ pipeline {
                 sh '''
                     source ${VENV_DIR}/bin/activate.csh
                     poetry run pyreverse -A -o png app/
-                '''
-            }
-        }
-
-        // Poetry
-        stage('Déploiement') {
-            when {
-                branch 'master'
-            }
-            steps {
-                sh '''
-                    source ${VENV_DIR}/bin/activate.csh
-                    poetry build
-                    mkdir -p ${DEPLOY_DIR}
-                    cp -r dist/* ${DEPLOY_DIR}/
                 '''
             }
         }

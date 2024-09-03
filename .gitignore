@@ -20,6 +20,10 @@ htmlcov/
 .coverage
 .coveragerc
 sphinx/
+recipe_outputs/
+tracker_outputs/
+init_outputs/
+# testfiles/recipe_output/
 
 # Environments
 venv/
@@ -40,3 +44,6 @@ web/
 
 # logging
 *.log*
+
+# dev env
+measure_reworked.tcl
