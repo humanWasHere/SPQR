@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Measure:
+    """this class returns a dataframe with measurement information."""
     def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
                  offset: dict | None = None, tcl_script: Optional[str | Path] = None,
                  row_range: Optional[list[list]] = None):
@@ -27,8 +28,8 @@ class Measure:
             offset = dict(x=0, y=0)
         self.offset = offset
         if tcl_script is None:
-            # tcl_script = Path(__file__).parent / "measure.tcl"
-            tcl_script = Path(__file__).parent / "measure_reworked.tcl"
+            tcl_script = Path(__file__).parent / "measure.tcl"
+            # tcl_script = Path(__file__).parent / "measure_reworked.tcl"
         if not Path(tcl_script).exists():
             raise FileNotFoundError(f"Could not find {tcl_script}")
         self.tcl_script = tcl_script
@@ -36,7 +37,7 @@ class Measure:
             self.get_all_intervals(row_range)
 
     def get_all_intervals(self, interval_range: list[list]) -> None:
-        '''modifies self.parser_df to select some intervals of data'''
+        """modifies self.parser_df to select some intervals of data."""
         # TODO: make it more explicit
         if interval_range:
             combined_indices: list[int] = []
@@ -47,12 +48,14 @@ class Measure:
             self.parser_df = self.parser_df.iloc[combined_indices, :]
 
     def apply_offset(self) -> None:
+        """method that applies an offset from configuration file ?
+        Not implemented yet."""
         # workaround if coords are not in same coord as layout. should be in parser's original unit
         self.parser_df.loc[:, 'x'] += self.offset['x']
         self.parser_df.loc[:, 'y'] += self.offset['y']
 
     def creation_script_tmp(self, output: str | Path, search_area=5) -> Path:
-        '''this method creates a temporary script using a TCL script template and input data'''
+        """this method creates a temporary script using a TCL script template and input data"""
         # TODO this method must close temp file ?
         # TODO rationnaliser l'emplacement des fichiers temporaires
         # Place temporary script in user's home because /tmp is not shared across farm
@@ -84,6 +87,7 @@ class Measure:
         return tmp_script
 
     def process_results(self, output_path: str) -> pd.DataFrame:
+        """docstring"""  # TODO
         meas_df = pd.read_csv(output_path, index_col=False, na_values="unknown")
         # TODO : rename in tcl file?
         meas_df.rename(columns={'Gauge ': "name", ' Layer ': "layer",
@@ -104,6 +108,7 @@ class Measure:
         return meas_df
 
     def output_measurement_file(self, df, output_dir, recipe_name) -> None:
+        """docstring"""  # TODO
         try:
             # output_measure_df = df[['name', 'x', 'y']].copy()
             # output_measure_df['magnification'] = json_conf["magnification"]
@@ -115,7 +120,7 @@ class Measure:
             logger.error(f"An error occurred while saving the file: {e}")
 
     def run_measure(self, output_dir: Path = None, recipe_name: str = None) -> pd.DataFrame:
-        '''runs Calibre script to automatically measure a layout'''
+        """run_measure is a method that calls all the requirement from mesure."""
         self.apply_offset()
         measure_tempfile = tempfile.NamedTemporaryFile(
             dir=Path.home() / "tmp")

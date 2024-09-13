@@ -10,6 +10,7 @@ from .interfaces.cli import check_recipe, parse_intervals, cli
 
 
 def build_mode(args: argparse.Namespace) -> None:
+    """Main function that manages the build CLI arguments."""
     logging.info('SPQR running in production mode')
     from .parsers.json_parser import import_json  # pandas is slow
     from .interfaces.input_checker import get_config_checker
@@ -42,6 +43,7 @@ def build_mode(args: argparse.Namespace) -> None:
 
 
 def test_mode(args: argparse.Namespace) -> None:
+    """Main function that manages the test CLI arguments."""
     logging.info('SPQR running in dev mode')
     from .parsers.json_parser import import_json  # pandas is slow
     from .interfaces.input_checker import get_config_checker
@@ -72,7 +74,22 @@ def test_mode(args: argparse.Namespace) -> None:
     #     ['build', '-c', str(app_config_file), '-r', 'calibre_rulers', '-l', '10-20']))
 
 
+def upload_mode(args: argparse.Namespace) -> None:
+    """Main function that manages the upload mode of the CLI arguments."""
+    from .interfaces import recipedirector as rcpd
+    logging.info('SPQR running upload mode')
+    if args.user_recipe:
+        rcpd.upload_csv(args.user_recipe)
+        logging.info(f'Recipe {args.user_recipe} should be on RCPD machine!')
+    elif args.user_layout:
+        rcpd.upload_gds(args.user_layout)
+        logging.info(f'Layout {args.user_layout} should be on RCPD machine!')
+    else:
+        logging.error("Upload mode failure. Not a known command !")
+
+
 def init_mode(args) -> None:
+    """Main function that manages the init CLI arguments."""
     if args.config_file:
         logging.info('SPQR running init mode (user configuration example in json)')
         if args.config_file.is_dir():
@@ -124,6 +141,8 @@ def manage_app_launch():
             test_mode(args)
         elif args.running_mode == 'build':
             build_mode(args)
+        elif args.running_mode == 'upload':
+            upload_mode(args)
         elif args.running_mode == 'init':
             init_mode(args)
     except KeyboardInterrupt:

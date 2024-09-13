@@ -21,12 +21,12 @@ else:
 def logger_init(log_file: str | Path = DEFAULT_LOG_PATH, log_level: int = LOG_LEVEL,
                 max_bytes: int = 1024*1024, backup_count: int = 5) -> None:
     """
-    Initialise et configure le logger de l'application.
+    Initializes and configures application logger.
 
-    :param log_file: Nom du fichier de log.
-    :param log_level: Niveau de logging (DEBUG, INFO, WARNING, ERROR, CRITICAL).
-    :param max_bytes: Taille maximale du fichier de log avant rotation.
-    :param backup_count: Nombre de fichiers de sauvegarde à conserver.
+    :param log_file: Log file name.
+    :param log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+    :param max_bytes: Maximum size of log file before rotation. A threshold.
+    :param backup_count: Number of backup file to keep.
     """
     log_file.parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(

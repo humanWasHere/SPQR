@@ -7,7 +7,7 @@ from pyter.calibre import DesignControlerRet
 
 
 def find_host() -> str:
-    '''uses perl script to find best available machine to execute a task'''
+    """uses perl script to find best available machine to execute a task."""
     # From /work/ratsoft/bin/fastlinux7
     cmd = 'use lib "/work/ratsoft/lib/perlmod"; use Rat::choose_host; use strict;' \
         'print &choose_host::best_machine( "lx24-amd64", "rh70", 100, 1, 0, "all.q" );'
@@ -21,7 +21,7 @@ def find_host() -> str:
 
 
 def layout_peek(layout, *options: str) -> str:
-    """Run Calibre DRV layout peek through SSH using find_host (fastlinux)"""
+    """Run Calibre DRV layout peek through SSH using find_host (fastlinux)."""
     # Add dash to options if needed
     options = tuple('-'+opt if not opt.startswith('-') else opt for opt in options)
     # assert set(options).issubset({"-precision", "-topcell", "-layers", "-bbox"})
@@ -33,19 +33,21 @@ def layout_peek(layout, *options: str) -> str:
 
 
 def get_layout_precision(layout: str | Path) -> int:
+    """get_layout_precision is a function that calls pyter.calibre to retrieve precision from a layout."""
     design = DesignControlerRet(str(layout))
     result = design.getPrecisionNumber()
     return int(float(result))
 
 
 def get_layout_topcell(layout: str | Path) -> str:
+    """get_layout_topcelle is a function that calls pyter.calibre to retrieve topcell from a layout."""
     design = DesignControlerRet(str(layout))
     result = design.getTopcellNameString()
     return str(result)
 
 
 def lance_script(script, debug="/dev/null", verbose=True) -> str:
-    '''runs Calibre script by using "calibredrv"'''
+    """runs Calibre script by using "calibredrv"."""
     # cmd = f"setcalibre rec >/dev/null; calibredrv -64 {script} | tee {debug}"  # 2.71 s ± 43.6 ms
     host = find_host()
     # TODO maintenabilité + portée grenoble

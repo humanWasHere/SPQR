@@ -17,7 +17,7 @@ def test_cli_help():
     result = run_cli_command('python -m app --help')
     logging.debug(f"CLI help output: {result.stdout}")
     assert result.returncode == 0
-    assert 'usage: spqr [-h] [-v] {test,build,init} ...' in result.stdout
+    assert 'usage: spqr [-h] [-v] {test,build,upload,init} ...' in result.stdout
 
 
 def test_cli_version():
@@ -53,6 +53,24 @@ def test_cli_build_command():
     assert 'Measurement done' in result.stderr
     assert 'json recipe created !' in result.stderr
     assert 'csv recipe created !' in result.stderr
+
+
+def test_upload_command_recipe():
+    """Test the upload command of the CLI"""
+    recipe_path = Path("../")
+    command = f"python -m app upload -c {recipe_path}"
+    result = run_cli_command(command)
+    assert 'SPQR running upload mode' in result.stderr
+    assert f'Recipe {recipe_path} should be on RCPD machine!' in result.stderr
+
+
+def test_upload_command_layout():
+    """Test the upload command of the CLI"""
+    layout_path = Path("../")
+    command = f"python -m app upload -g {layout_path}"
+    result = run_cli_command(command)
+    assert 'SPQR running upload mode' in result.stderr
+    assert f'Layout {layout_path} should be on RCPD machine!' in result.stderr
 
 
 if __name__ == "__main__":

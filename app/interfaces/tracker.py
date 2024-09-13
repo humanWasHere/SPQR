@@ -12,6 +12,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 
 def check_env_is_prod(tracker_name) -> bool:
+    """check_env_is_prod is a function that checks if the global environment is development or production."""
     if ENVIRONMENT != "production":
         logging.debug(f"{tracker_name} tracker only works in production")
         return False
@@ -20,6 +21,8 @@ def check_env_is_prod(tracker_name) -> bool:
 
 
 def setup_tracker(csv_filename: str, default_columns: list) -> pd.DataFrame:
+    """setup_tracker is a fonction that is reused in most tracker.
+    It gets current date and defines as DataFrame with months as rows."""
     # Get current date
     now = datetime.now()
     current_year = now.year
@@ -41,6 +44,7 @@ def setup_tracker(csv_filename: str, default_columns: list) -> pd.DataFrame:
 
 
 def launched_recipe_tracker():
+    """launched_recipe_tracker is a function that counts the number of recipe launched and stores it in a file."""
     if check_env_is_prod("launched recipe"):
         unpacked_values = setup_tracker("spqr_recipe_launched_tracker", ["launched_recipes"])
         tracker_dataframe, csv_tracker_path, current_month = unpacked_values[:3]
@@ -52,6 +56,7 @@ def launched_recipe_tracker():
 
 
 def user_tracker() -> None:
+    """user_tracker is a function that counts the number of use of each member of the team throughout time."""
     if check_env_is_prod("user"):
         unpacked_values = setup_tracker("spqr_user_tracker", [])
         tracker_dataframe, csv_tracker_path, current_month = unpacked_values[:3]
@@ -66,6 +71,7 @@ def user_tracker() -> None:
 
 
 def parser_tracker(current_parser) -> None:
+    """parser_tracker is a function that counts the kind of parser used throughout time."""
     if check_env_is_prod("parser"):
         unpacked_values = setup_tracker("spqr_parser_tracker", ['HSSParser', 'TACRulerParser', 'JSONParser', 'OPCFieldReverse', 'SSFileParser', 'CalibreXMLParser'])
         tracker_dataframe, csv_tracker_path, current_month = unpacked_values[:3]
@@ -79,6 +85,7 @@ def parser_tracker(current_parser) -> None:
 
 
 def cli_command_tracker(command_executed) -> None:
+    """cli_command_tracker is a function that counts the CLI commands used throughout time."""
     if check_env_is_prod("CLI command"):
         valid_command_list = ["-v", "build", "test", "init", "-c", "-r", "-u", "-l", "-m", "-a", "-j", "-t"]
         unpacked_values = setup_tracker("spqr_cli_command_tracker", valid_command_list)
@@ -110,6 +117,7 @@ def cli_command_tracker(command_executed) -> None:
 
 # WARNING : not to call in a recipe since it reads Log files
 def log_metrics() -> None:
+    """must be used manually for dev purpose."""
     # should be used in dev env in this state
     tracker_dataframe, csv_tracker_path, current_month, current_year = setup_tracker("spqr_log_metrics", ["error", "debug", "info"])
     if tracker_dataframe is None:

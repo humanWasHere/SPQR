@@ -7,6 +7,7 @@ StepType = Literal["PH", "ET", "PH_HR", "ET_HR"]
 
 
 class BaseRecipe(BaseModel):
+    """BaseRecipe is the mother class of different recipes (OPCField or CoordFile recipes)."""
     recipe_name: Optional[str] = None
     output_dir: Optional[DirectoryPath] = Path.cwd()
     layout: FilePath
@@ -24,11 +25,12 @@ class BaseRecipe(BaseModel):
 
     @field_validator('ap1_mag', 'ap1_offset', mode='before')
     def convert_empty_str(value):
-        """Interpret empty string as None for optional fields that are NOT str type"""
+        """Interpret empty string as None for optional fields that are NOT str type."""
         return None if value == '' else value
 
 
 class OPCField(BaseRecipe):
+    """OPCField is a kind of recipe that takes no coordinate files in input (opposed to CoordFile recipes)."""
     coord_file: Optional[str] = ''
     origin_x_y: list[float] = Field(min_length=2, max_length=2)
     step_x_y: list[float] = Field(min_length=2, max_length=2)
@@ -36,11 +38,12 @@ class OPCField(BaseRecipe):
 
 
 class CoordFile(BaseRecipe):
+    """CoordFile is a kind of recipe that takes coordinate files in input (opposed to OPCField recipes)."""
     coord_file: FilePath
 
 
 def get_config_checker(config_recipe: dict) -> BaseModel:
-    """Determine the recipe kind and return the corresponding validated model"""
+    """Determine the recipe kind and return the corresponding validated model."""
     if 'coord_file' in config_recipe and config_recipe['coord_file']:
         return CoordFile(**config_recipe)
     if {'origin_x_y', 'step_x_y', 'n_cols_rows'}.issubset(config_recipe):

@@ -7,6 +7,7 @@ from .. import __version__
 
 
 def parse_intervals(values: list[str]) -> list[list[int]]:
+    """parse_intervals is a function used in SPQR in order to convert CLI interval format to internal working format."""
     if values is None:
         return None
     list_of_lists = []
@@ -22,7 +23,7 @@ def parse_intervals(values: list[str]) -> list[list[int]]:
 
 
 def cli() -> argparse.ArgumentParser:
-    """defines the command lines actions of the soft"""
+    """Defines the command lines actions of the soft."""
     parser = argparse.ArgumentParser(prog='spqr',
                                      description='----- CLI tool for SEM Recipe Creation -----')
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
@@ -52,6 +53,14 @@ def cli() -> argparse.ArgumentParser:
     build_parser.add_argument('-m', '--mesurement_file', action="store_true",
                               help='Outputs the measurement file to user outputs directory')
 
+    upload_parser = subparsers.add_parser(
+        'upload', help='Uploads a given recipe to RCPD.')
+    upload_group = upload_parser.add_mutually_exclusive_group(required=True)
+    upload_group.add_argument('-c', '--user_recipe', type=Path,
+                              help="Path to recipe to upload.")
+    upload_group.add_argument('-g', '--user_layout', type=Path,
+                              help="Path to layout to upload.")
+
     init_parser = subparsers.add_parser(
         'init', help='Creates either a default user configuration file in json or a default ssfile under given path.')
     init_group = init_parser.add_mutually_exclusive_group(required=True)
@@ -64,6 +73,7 @@ def cli() -> argparse.ArgumentParser:
 
 
 def check_recipe(full_config: dict[str, dict], recipe_name: str) -> dict:
+    """Verifies that the configuration file and CLI command match in different cases."""
     if len(full_config) == 0:
         raise ValueError("The provided configuration file does not contain any recipe.")
     elif len(full_config) == 1 and recipe_name is None:

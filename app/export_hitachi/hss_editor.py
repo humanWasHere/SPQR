@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class RecipeModificator(HssCreator):
-    '''this class is meant to modify current instance of a class or imported recipe'''
+    """this class is meant to modify current instance of a class or imported recipe."""
     # TODO should it take a class instance in entry as RecipeModificator(instance)
     # or RecipeModificator(HssCreator.__init__.attributes)
     def __init__(self, json_recipe: Path = None, csv_recipe: Path = None):
@@ -40,9 +40,9 @@ class RecipeModificator(HssCreator):
         self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
 
     def check_json_recipe_validity(self) -> bool:
-        '''checks wether or not the imported recipe to modificate
+        """checks wether or not the imported recipe to modificate
         has the columns of the json template
-        by json comparison'''
+        by json comparison."""
         # comparing json template at lowest conversion level (if json_to_dataframe is bad -> it doesn't impact here)
         keys_json_template = list(import_json(self.json_template).keys())
         keys_json_recipe = list(import_json(self.imported_json_recipe).keys())
@@ -53,9 +53,9 @@ class RecipeModificator(HssCreator):
             return True
 
     def check_hss_recipe_validity(self) -> bool:
-        '''checks wether or not the imported recipe to modificate
+        """checks wether or not the imported recipe to modificate
         has the columns of the json template
-        by dataframe comparison'''
+        by dataframe comparison."""
         json_template_parser_instance = JSONParser(str(self.json_template))
         constant_sections_json_template, table_sections_json_template = json_template_parser_instance.parse_data()
         csv_recipe_parser_instance = HSSParser(str(self.imported_csv_recipe))
@@ -69,6 +69,8 @@ class RecipeModificator(HssCreator):
         # assert csv_section == template_section, "imported recipe is not valid (in table_sections level)"
 
     def section_modification(self):
+        """this method should be used to modificate a section.
+        Not implemented yet."""
         # TODO make an iterator -> while -> change different values -> englobe toute la fonction
         # TODO manage whole columns modification vs row modification
         section_to_modify = input("Which section do you want to modify?\n")
@@ -94,7 +96,7 @@ class RecipeModificator(HssCreator):
             logger.error(f"section {section_to_modify} apparently not in any dict")
 
     def rename_recipe(self) -> str:
-        '''renames the recipe in order to be recognized as modified'''
+        """renames the recipe in order to be recognized as modified."""
         # /!\ modify name without extension since HssCreator.will name the recipe -> insert it as a parameter of HssCreator
         is_previously_modified = re.search(r"_(\d+)\.(csv|json)$", self.working_recipe_path.name)
         if is_previously_modified:
@@ -108,6 +110,8 @@ class RecipeModificator(HssCreator):
             logger.warning("recipe name is not formatted as expected")
 
     def run_recipe_modification(self):
+        """run_recipe_modification is a method that should run the whole recipe modification process.
+        Not implemented yet."""
         if self.imported_json_recipe:
             if self.check_json_recipe_validity():
                 self.section_modification()

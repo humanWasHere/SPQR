@@ -10,6 +10,7 @@ from .interfaces.calibre_python import get_layout_precision, get_layout_topcell
 
 @dataclass
 class Block:
+    """Dataclass that holds the layout values."""
     # maskset: str
     # device: str
     layout_path: Path
@@ -25,6 +26,7 @@ class Block:
 
 
 class CoreData:
+    """Mother class of different configuration values."""
     SCHEMA = {
         'name': "string",
         'x': int, 'y': int, 'x_ap': int, 'y_ap': int, 'x_af': int, 'y_af': int,

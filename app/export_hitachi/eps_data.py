@@ -19,12 +19,12 @@ class Tone(Flag):
 
 
 def combine_tones(pattern: Tone, mask_field: Tone, resist: Tone = Tone.PTD) -> Tone:
-    """Combine tones using XOR to return resist LINE or SPACE"""
+    """Combine tones using XOR to return resist LINE or SPACE."""
     return Tone(pattern ^ mask_field ^ resist)
 
 
 class EPSData:
-    """Manage the creation of a DataFrame for EPS_Data only, computed from core data"""
+    """Manage the creation of a DataFrame for EPS_Data only, computed from core data."""
     # mapping in which the values are values to write in the recipe (since they are fixed)
     FIXED_VALUES = {
         'Mode': 1,
@@ -70,7 +70,7 @@ class EPSData:
 
     def add_mp_width(self, mp_no=1, direction: Optional[Literal['X', 'Y']] = None,
                      template: str = "", measleng: int = 100) -> None:
-        """Add one width measurement point (line/space depending on MP template) at image center"""
+        """Add one width measurement point (line/space depending on MP template) at image center."""
         # TODO -> convert to nm -> MP1_X/Y ? -> at the end in hss_creator.write_in_file ?
         self.eps_data[[f"MP{mp_no}_X", f"MP{mp_no}_Y"]] = (0, 0)  # image center
         if direction is None:
@@ -101,6 +101,7 @@ class EPSData:
         self.eps_data[f'MP{mp_no}_Template'] = template or self.get_mp_template()
 
     def get_mp_template(self) -> pd.Series:
+        """get_mp_template is the logic that defines the MP_Template value for each row."""
         template = self.templates['mp_template']
         if isinstance(template, str):
             return pd.Series([template] * len(self.core_data))
@@ -120,17 +121,17 @@ class EPSData:
                             np.where(self.core_data['1D/2D'] == '2D', template['2D'], template))
 
     def mapping_core_data(self) -> None:
-        """Map columns from core dataframe to target HSS naming"""
+        """Map columns from core dataframe to target HSS naming."""
         for eps_col, core_col in self.MAPPING_COREDATA.items():
             self.eps_data[eps_col] = self.core_data[core_col]
 
     def mapping_from_fix_values(self) -> None:
-        """Fill default value for entire columns"""
+        """Fill default value for entire columns."""
         for eps_col, value in self.FIXED_VALUES.items():
             self.eps_data[eps_col] = value
 
     def mapping_user_config(self) -> None:
-        """Fill columns with user input from JSON config (overwrites fixed values)"""
+        """Fill columns with user input from JSON config (overwrites fixed values)."""
         self.eps_data[['EP_Mag_X', 'EP_AF_Mag']] = self.mag
         if self.ap_mag:
             self.eps_data[['AP1_Mag', 'AP1_AF_Mag']] = self.ap_mag
@@ -145,18 +146,22 @@ class EPSData:
 
     # method naming based on Hitachi doc
     def set_eps_data_id(self) -> None:
+        """set_eps_data_id is a function that holds the logic for eps data id value."""
         # __________EPS_ID section__________
         self.eps_data['EPS_ID'] = range(1, min(len(self.core_data) + 1, 9999))
         if any(id > 9999 for id in self.eps_data['EPS_ID']):
             raise ValueError("EPS_ID values cannot exceed 9999")
 
     def set_eps_data_eps_modification(self) -> None:
+        """set_eps_data_eps_modification is a function that holds a logic.
+        Not implemented yet. It is a placeholder."""
         # from eps_name to fer_eps_id
         # EPS_Name is mapped
         # Ref_EPS_ID has default template value
         pass
 
     def set_eps_data_template(self) -> None:
+        """set_eps_data_template is the logic that defines the EPS_Data_template value."""
         # from eps_template to ep_template
         # __________EP_Template section__________
         if self.templates['ep_template'] == "":
@@ -169,15 +174,20 @@ class EPSData:
             self.eps_data['EP_Template'] = self.templates['ep_template']
 
     def set_eps_data_ap1_modification(self) -> None:
+        """set_eps_data_ap1_modification is a function that holds a logic.
+        Not implemented yet. It is a placeholder."""
         # from type to AP1_AST_Mag
         pass
 
     def set_eps_data_ap2_modification(self) -> None:
+        """set_eps_data_ap2_modification is a function that holds a logic.
+        Not implemented yet. It is a placeholder."""
         # from type to AP2_AST_Mag
         # AP1_Mag, AP1_Rot, AP1_AF_Mag are mapped
         pass
 
     def set_eps_data_ep_modification(self) -> None:
+        """set_eps_data_eps_modification is the logic defines EP_Rot."""
         """Columns from EP_Mag_X to EP_ABCC_X"""
         # __________EP_Rot section__________
         # TODO auto-rotation en fonction de plusieurs MP ? # FIXME demander a Julien + Mode
@@ -186,7 +196,7 @@ class EPSData:
         pass
 
     def fill_type_in_eps_data(self) -> None:
-        '''Defines if the Type column needs to be filled by 1s, 2s or empty values'''
+        """Defines if the Type column needs to be filled by 1s, 2s or empty values."""
         for col in self.eps_data.columns:
             if col == "Type1":
                 self.eps_data[col] = 1
@@ -195,7 +205,8 @@ class EPSData:
                 self.eps_data[col] = 2
 
     def get_eps_data(self) -> pd.DataFrame:
-        """Return the EPS_Data dataframe in HSS format for HSScreator"""
+        """get_eps_data is the main function of EPS_Data.
+        Return the EPS_Data dataframe in HSS format for HSScreator."""
         logger.info('3. <EPS_Data> section creation')
         # Do not change order, EPS_ID/EPS_Name should be initialized first
         self.mapping_core_data()

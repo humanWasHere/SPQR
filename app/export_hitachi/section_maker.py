@@ -55,6 +55,7 @@ class SectionMaker:
         return self.gp_data
 
     def make_idd_cond_section(self, layout: str | Path, topcell: str) -> pd.DataFrame:
+        """method that creates the idd cond section."""
         self.idd_cond.loc[0, ["DesignData", "CellName"]] = [Path(layout).stem, topcell]
         return self.idd_cond
 
@@ -67,6 +68,7 @@ class SectionMaker:
         return self.idd_layer_data
 
     def make_recipe_section(self, step: str) -> pd.DataFrame:
+        """method that creates the recipe section."""
         #  __________SEMCondNo__________
         step_to_value = dict(PH=2, ET=1, PH_HR=11, ET_HR=13)
         if step not in step_to_value.keys():
@@ -81,25 +83,33 @@ class SectionMaker:
         return self.coordinate_system
 
     def make_epa_list_section(self) -> pd.DataFrame:
+        """method that creates the epa list section."""
         return self.epa_list
 
     def make_gp_coordinate_system_section(self) -> pd.DataFrame:
+        """method that creates the gp coordinate system section."""
         return self.gp_coordinate_system
 
     def make_gp_offset_section(self) -> pd.DataFrame:
+        """method that creates the gp offset section."""
         return self.gp_offset
 
     def make_gpa_list_section(self) -> pd.DataFrame:
+        """method that creates the gpa list section."""
         return self.gpa_list
 
     def make_image_env_section(self) -> pd.DataFrame:
+        """method that creates the image env section."""
         return self.image_env
 
     def make_measenv_exec_section(self) -> pd.DataFrame:
+        """method that creates the measenv exec section."""
         return self.measenv_exec
 
     def make_measenv_measres_section(self) -> pd.DataFrame:
+        """method that creates the measenv measres section."""
         return self.measenv_measres
 
     def make_unit_section(self) -> pd.DataFrame:
+        """method that creates the unit section."""
         return self.unit

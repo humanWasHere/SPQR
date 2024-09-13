@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class HssCreator:
+    """this class is meant to create the final version of the recipe (through section making)."""
     def __init__(self, core_data: pd.DataFrame, block: Block, json_conf: dict,
                  polarity: str = 'clear', template=None):
         self.layout = block.layout_path
@@ -51,7 +52,7 @@ class HssCreator:
         self.section_maker: SectionMaker
 
     def fill_with_eps_data(self) -> None:
-        """Use template header and fill it with columns from the external EPSData dataframe"""
+        """Use template header and fill it with columns from the external EPSData dataframe."""
         # external_epsdata_columns.issubset(template_epsdata_columns)
         template_eps_data_header = pd.DataFrame(columns=self.table_sections['<EPS_Data>'].columns)
         for column_name, column_values in self.eps_data.items():
@@ -63,7 +64,7 @@ class HssCreator:
         self.table_sections["<EPS_Data>"] = template_eps_data_header
 
     def get_set_section(self) -> None:
-        """Fills the different sections of the recipe except <EPS_Data> using SectionMaker"""
+        """Fills the different sections of the recipe except <EPS_Data> using SectionMaker."""
         # note that if no logic is implemented in the SectionMaker class,
         # the default template key/value will be used
         self.section_maker = SectionMaker(self.table_sections)
@@ -87,7 +88,7 @@ class HssCreator:
 
     def dataframe_to_hss(self) -> str:
         """Converts internal dictionaries into a HSS format as raw text.
-        Output CSV-like sections do not have a fixed number of separators"""
+        Output CSV-like sections do not have a fixed number of separators."""
         whole_recipe = ""
         # whole_recipe = "#HSS IDP Spreadsheet\n\n"
         # Write single-value sections
@@ -133,7 +134,7 @@ class HssCreator:
         return str(modified_string)
 
     def output_dataframe_to_json(self):
-        '''method that writes a json of the recipe in a template to output and reuse'''
+        """method that writes a json of the recipe in a template to output and reuse."""
         json_content = self.constant_sections
         for section_keys, section_series in self.table_sections.items():
             if not section_series.empty:
@@ -150,7 +151,7 @@ class HssCreator:
             logger.info(f"json recipe created !  Find it at {str(self.recipe_output_file)}.json")
 
     def write_in_file(self) -> str:
-        '''this method executes the flow of writing the whole recipe'''
+       """this method executes the flow of writing the whole recipe."""
         # beware to not modify order
         self.fill_with_eps_data()
         logger.info('4. Other sections creation')
