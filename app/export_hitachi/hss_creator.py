@@ -16,7 +16,7 @@ from ..parsers.json_parser import JSONParser
 # -> informer l'utilisateur au moment où il nomme sa gauge si le format est valide ou non
 # faire un checker pour csv ET hss -> intégrer le tool d'alex -> recipe checker
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
 
 class HssCreator:
@@ -133,7 +133,7 @@ class HssCreator:
             modified_string += line + "," * num_commas + "\n"
         return str(modified_string)
 
-    def output_dataframe_to_json(self):
+    def output_dataframe_to_json(self) -> None:
         """method that writes a json of the recipe in a template to output and reuse."""
         json_content = self.constant_sections
         for section_keys, section_series in self.table_sections.items():
@@ -148,10 +148,10 @@ class HssCreator:
         json_str = re.sub(r'NaN', r'""', json_str)
         self.recipe_output_file.with_suffix(".json").write_text(json_str)
         if self.recipe_output_file.with_suffix(".json").exists():
-            logger.info(f"json recipe created !  Find it at {str(self.recipe_output_file)}.json")
+            logger.info(f"json recipe created !  Find it at {str(Path(self.recipe_output_file).resolve())}.json")
 
     def write_in_file(self) -> str:
-       """this method executes the flow of writing the whole recipe."""
+        """this method executes the flow of writing the whole recipe."""
         # beware to not modify order
         self.fill_with_eps_data()
         logger.info('4. Other sections creation')
@@ -163,7 +163,7 @@ class HssCreator:
         self.output_dataframe_to_json()
         self.recipe_output_file.with_suffix(".csv").write_text(whole_recipe_to_output)
         if self.recipe_output_file.with_suffix(".csv").exists():
-            logger.info(f"csv recipe created ! Find it at {self.recipe_output_file}.csv")
+            logger.info(f"csv recipe created ! Find it at {Path(self.recipe_output_file).resolve()}.csv")
         # if self.measurement_file.with_suffix(".csv").exists():
         #     logger.info(f"measurement file created ! Find it at {self.measurement_file_path}.csv")
         # if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():

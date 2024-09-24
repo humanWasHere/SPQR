@@ -1,4 +1,5 @@
 import argparse
+# import inquirer
 import logging
 import sys
 from pathlib import Path
@@ -29,7 +30,39 @@ def cli() -> argparse.ArgumentParser:
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
     subparsers = parser.add_subparsers(
         dest='running_mode',
-        help='Selects the running mode of the app (test, init or build). End user should use build.')
+        help='Selects the running mode of the app (init, upload, modification, test or build). End user should use build.')
+
+    init_parser = subparsers.add_parser(
+        'init', help='Creates either a default user configuration file in json or a default ssfile under given path.')
+    init_group = init_parser.add_mutually_exclusive_group(required=True)
+    init_group.add_argument('-j', '--config_file', type=Path,
+                            help='Takes a path (file or directry) to make a default user configuration file in json under given path.')
+    init_group.add_argument('-t', '--coordinate_file', type=Path,
+                            help='Takes a path (file or directry) to create a generic coordinate source file (ssfile format) under given path.')
+
+    # TODO find a valuable way to modificate a recipe
+    modification_parser = subparsers.add_parser('modification', help='Modificates a given recipe.')
+    # modification_group = modification_parser.add_mutually_exclusive_group(required=True)
+    modification_parser.add_argument('-r', '--recipe_to_modify_path', required=True, type=Path,
+                                     help="Path to recipe to modificate.")
+    modification_parser.add_argument('-c', '--user_configuration_path', required=True, type=Path,
+                                     help="Path to user configuration recipe to modify.")
+    modification_parser.add_argument('-n', '--recipe_name', required=True, type=Path,
+                                     help="Recipe name to modify.")
+    #                           help="Path to recipe to upload.")
+    # upload_group = modification_parser.add_mutually_exclusive_group(required=True)
+    # upload_group.add_argument('-c', '--user_recipe', type=Path,
+    #                           help="Path to recipe to upload.")
+    # upload_group.add_argument('-g', '--user_layout', type=Path,
+    #                           help="Path to layout to upload.")
+
+    upload_parser = subparsers.add_parser(
+        'upload', help='Uploads a given recipe to RCPD.')
+    upload_group = upload_parser.add_mutually_exclusive_group(required=True)
+    upload_group.add_argument('-c', '--user_recipe', type=Path,
+                              help="Path to recipe to upload.")
+    upload_group.add_argument('-g', '--user_layout', type=Path,
+                              help="Path to layout to upload.")
 
     test_parser = subparsers.add_parser(
         'test', help='Runs the "testing" mode of the app. Meant for app developers.')
@@ -41,7 +74,7 @@ def cli() -> argparse.ArgumentParser:
                              help='Runs all recipes (genepy, calibre_rulers, opcfield, csv and json) in testing mode. Refer to app_config.json.')
 
     build_parser = subparsers.add_parser(
-        'build', help='Runs the "prod" mode of the app. Meant for end user.')
+        'build', help='Runs the "production" mode of the app. Meant for end user.')
     build_parser.add_argument('-c', '--user_config', required=True, type=Path,
                               help="Path to user JSON config file containing recipe options.")
     build_parser.add_argument('-r', '--user_recipe',
@@ -52,22 +85,6 @@ def cli() -> argparse.ArgumentParser:
                               help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50-60 150-160" where 50 and 60 are included as well as 150 and 160')
     build_parser.add_argument('-m', '--mesurement_file', action="store_true",
                               help='Outputs the measurement file to user outputs directory')
-
-    upload_parser = subparsers.add_parser(
-        'upload', help='Uploads a given recipe to RCPD.')
-    upload_group = upload_parser.add_mutually_exclusive_group(required=True)
-    upload_group.add_argument('-c', '--user_recipe', type=Path,
-                              help="Path to recipe to upload.")
-    upload_group.add_argument('-g', '--user_layout', type=Path,
-                              help="Path to layout to upload.")
-
-    init_parser = subparsers.add_parser(
-        'init', help='Creates either a default user configuration file in json or a default ssfile under given path.')
-    init_group = init_parser.add_mutually_exclusive_group(required=True)
-    init_group.add_argument('-j', '--config_file', type=Path,
-                            help='Takes a path (file or directry) to make a default user configuration file in json under given path.')
-    init_group.add_argument('-t', '--coordinate_file', type=Path,
-                            help='Takes a path (file or directry) to create a generic coordinate source file (ssfile format) under given path.')
 
     return parser
 
@@ -88,3 +105,14 @@ def check_recipe(full_config: dict[str, dict], recipe_name: str) -> dict:
         sys.exit(1)
 
     return full_config[recipe_name]
+
+
+# def cli_list_selection(message: str, choices: list):
+#     questions = [
+#         inquirer.List('choice',
+#                       message=message,
+#                       choices=choices,
+#                       ),
+#     ]
+#     answers = inquirer.prompt(questions)
+#     return f"You selected: {answers['choice']}"

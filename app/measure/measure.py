@@ -55,7 +55,7 @@ class Measure:
         self.parser_df.loc[:, 'y'] += self.offset['y']
 
     def creation_script_tmp(self, output: str | Path, search_area=5) -> Path:
-        """this method creates a temporary script using a TCL script template and input data"""
+        """this method creates a temporary script using a TCL script template and input data."""
         # TODO this method must close temp file ?
         # TODO rationnaliser l'emplacement des fichiers temporaires
         # Place temporary script in user's home because /tmp is not shared across farm

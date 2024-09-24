@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+from .parsers.json_parser import import_json
+
 from .interfaces.logger import logger_init  # import first
 from .interfaces.cli import check_recipe, parse_intervals, cli
 # log_metrics()
@@ -71,7 +73,7 @@ def test_mode(args: argparse.Namespace) -> None:
     # TODO for loop to run all test dev recipes with arg -a
     # Draft auto mode (override args and use build)
     # build_mode(cli().parse_args(
-    #     ['build', '-c', str(app_config_file), '-r', 'calibre_rulers', '-l', '10-20']))
+    #     ['build', 'c', str(app_config_file), 'r', 'calibre_rulers', 'l', '10-20']))
 
 
 def upload_mode(args: argparse.Namespace) -> None:
@@ -88,10 +90,27 @@ def upload_mode(args: argparse.Namespace) -> None:
         logging.error("Upload mode failure. Not a known command !")
 
 
-def init_mode(args) -> None:
+def modification_mode(args: argparse.Namespace) -> None:
+    """Main function that modificates a recipe with CLI arguments."""
+    from .export_hitachi.hss_editor import RecipeModificator
+    logging.info('SPQR running modification mode')
+    if args.recipe_to_modify_path:
+        assert Path(args.recipe_to_modify_path).is_file(), logging.error("Specified -r file is not a file or a directory")
+    if args.user_configuration_path:
+        assert Path(args.user_configuration_path).is_file(), logging.error("Specified -c file is not a file or a directory")
+    assert str(args.recipe_name) in import_json(args.user_configuration_path), logging.error("recipe name doesn't exists or is not in user configuration file.")
+    if args.recipe_to_modify_path and args.user_configuration_path and args.recipe_name:
+        recipe_modificator_instance = RecipeModificator(recipe=Path(args.recipe_to_modify_path),
+                                                        json_conf=import_json(args.user_configuration_path),
+                                                        recipe_name=str(args.recipe_name))
+        result = recipe_modificator_instance.run_recipe_modification()
+        return result
+
+
+def init_mode(args: argparse.Namespace) -> None:
     """Main function that manages the init CLI arguments."""
     if args.config_file:
-        logging.info('SPQR running init mode (user configuration example in json)')
+        logging.info('SPQR running init mode (user configuration example in json).')
         if args.config_file.is_dir():
             if not args.config_file.exists():
                 raise ValueError(f'Path does not exist: {args.config_file}')
@@ -106,7 +125,7 @@ def init_mode(args) -> None:
         Path(args.config_file).write_text(ex_user_config_content)
         logging.info(f'Configuration file initialized at {args.config_file}')
     elif args.coordinate_file:
-        logging.info('SPQR running init mode (coordinate file example in txt)')
+        logging.info('SPQR running init mode (coordinate file example in txt).')
         if args.coordinate_file.is_dir():
             if not args.coordinate_file.exists():
                 raise ValueError(f'Path does not exist: {args.coordinate_file}')
@@ -137,14 +156,17 @@ def manage_app_launch():
     # if args.line_selection is not None:
     #     args.line_selection = tuple(args.line_selection)
     try:
-        if args.running_mode == 'test':
+        if args.running_mode == 'init':
+            init_mode(args)
+        elif args.running_mode == 'modification':
+            modification_mode(args)
+        elif args.running_mode == 'upload':
+            upload_mode(args)
+        elif args.running_mode == 'test':
             test_mode(args)
         elif args.running_mode == 'build':
             build_mode(args)
-        elif args.running_mode == 'upload':
-            upload_mode(args)
-        elif args.running_mode == 'init':
-            init_mode(args)
+
     except KeyboardInterrupt:
         logging.error('Interrupted by user')
     except Exception as e:
@@ -190,6 +212,11 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
                                json_conf.get('offset'), row_range=line_selection)
     output_measure = measure_instance.run_measure(output_dir=json_conf['output_dir'] if output_measurement else None,
                                                   recipe_name=json_conf['recipe_name'] if output_measurement else None)
+
+    # temp fix here --> marc support
+    if json_conf['ap1_offset']:
+        output_measure['x_ap'] = int(json_conf['ap1_offset'][0] * 1000)
+        output_measure['y_ap'] = int(json_conf['ap1_offset'][1] * 1000)
 
     # renaming of measure points  # TODO not here
     if isinstance(selected_parser, OPCFieldReverse):

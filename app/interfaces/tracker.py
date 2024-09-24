@@ -13,7 +13,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 def check_env_is_prod(tracker_name) -> bool:
     """check_env_is_prod is a function that checks if the global environment is development or production."""
-    if ENVIRONMENT != "production":
+    if ENVIRONMENT != "production":  # if ENVIRONMENT != "development":
         logging.debug(f"{tracker_name} tracker only works in production")
         return False
     else:
@@ -85,6 +85,7 @@ def parser_tracker(current_parser) -> None:
 
 
 def cli_command_tracker(command_executed) -> None:
+    # TODO change logic so that it covers all subcommands according commands
     """cli_command_tracker is a function that counts the CLI commands used throughout time."""
     if check_env_is_prod("CLI command"):
         valid_command_list = ["-v", "build", "test", "init", "-c", "-r", "-u", "-l", "-m", "-a", "-j", "-t"]

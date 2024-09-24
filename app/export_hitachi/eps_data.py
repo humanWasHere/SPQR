@@ -87,6 +87,10 @@ class EPSData:
             self.eps_data[f'MP{mp_no}_Direction'] = direction
             self.eps_data[f'MP{mp_no}_Name'] = (self.core_data.name + "_" + self.eps_data[f'MP{mp_no}_Direction'])
 
+        # FIXME did fix for hss_editor (cannot divide str and int -> changing empty string (str) to 0 (int))
+        # FIXME should drop NA instead ?
+        self.eps_data['EP_Mag_X'] = pd.to_numeric(self.eps_data['EP_Mag_X'], errors='coerce').fillna(0).astype(int)
+
         # Compute MP width/length (from SEM procedure)
         target_cd_pixel = (self.eps_data[f'MP{mp_no}_TargetCD']
                            * self.eps_data.EP_Mag_X * 512 / 1000 / 135000)
