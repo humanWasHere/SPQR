@@ -49,12 +49,6 @@ def cli() -> argparse.ArgumentParser:
                                      help="Path to user configuration recipe to modify.")
     modification_parser.add_argument('-n', '--recipe_name', required=True, type=Path,
                                      help="Recipe name to modify.")
-    #                           help="Path to recipe to upload.")
-    # upload_group = modification_parser.add_mutually_exclusive_group(required=True)
-    # upload_group.add_argument('-c', '--user_recipe', type=Path,
-    #                           help="Path to recipe to upload.")
-    # upload_group.add_argument('-g', '--user_layout', type=Path,
-    #                           help="Path to layout to upload.")
 
     upload_parser = subparsers.add_parser(
         'upload', help='Uploads a given recipe to RCPD.')

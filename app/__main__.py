@@ -102,7 +102,7 @@ def modification_mode(args: argparse.Namespace) -> None:
     if args.recipe_to_modify_path and args.user_configuration_path and args.recipe_name:
         recipe_modificator_instance = RecipeModificator(recipe=Path(args.recipe_to_modify_path),
                                                         json_conf=import_json(args.user_configuration_path),
-                                                        recipe_name=str(args.recipe_name))
+                                                        recipe_name_conf=str(args.recipe_name))
         result = recipe_modificator_instance.run_recipe_modification()
         return result
 
