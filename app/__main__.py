@@ -70,7 +70,6 @@ def test_mode(args: argparse.Namespace) -> None:
                 create_recipe(recipe_config, line_selection=[[10, 20]])
             else:
                 create_recipe(recipe_config, line_selection=[[100, 110]])
-    # TODO for loop to run all test dev recipes with arg -a
     # Draft auto mode (override args and use build)
     # build_mode(cli().parse_args(
     #     ['build', 'c', str(app_config_file), 'r', 'calibre_rulers', 'l', '10-20']))
@@ -90,55 +89,113 @@ def upload_mode(args: argparse.Namespace) -> None:
         logging.error("Upload mode failure. Not a known command !")
 
 
-def modification_mode(args: argparse.Namespace) -> None:
+def edit_mode(args: argparse.Namespace) -> None:
     """Main function that modificates a recipe with CLI arguments."""
-    from .export_hitachi.hss_editor import RecipeModificator
-    logging.info('SPQR running modification mode')
+    from .export_hitachi.hss_editor import RecipeEditor
+    logging.info('SPQR running edit mode')
     if args.recipe_to_modify_path:
         assert Path(args.recipe_to_modify_path).is_file(), logging.error("Specified -r file is not a file or a directory")
     if args.user_configuration_path:
         assert Path(args.user_configuration_path).is_file(), logging.error("Specified -c file is not a file or a directory")
     assert str(args.recipe_name) in import_json(args.user_configuration_path), logging.error("recipe name doesn't exists or is not in user configuration file.")
     if args.recipe_to_modify_path and args.user_configuration_path and args.recipe_name:
-        recipe_modificator_instance = RecipeModificator(recipe=Path(args.recipe_to_modify_path),
-                                                        json_conf=import_json(args.user_configuration_path),
-                                                        recipe_name_conf=str(args.recipe_name))
-        result = recipe_modificator_instance.run_recipe_modification()
+        recipe_editor_instance = RecipeEditor(recipe=Path(args.recipe_to_modify_path),
+                                              json_conf=import_json(args.user_configuration_path),
+                                              recipe_name_conf=str(args.recipe_name))
+        result = recipe_editor_instance.run_recipe_edit()
         return result
 
 
 def init_mode(args: argparse.Namespace) -> None:
     """Main function that manages the init CLI arguments."""
-    if args.config_file:
-        logging.info('SPQR running init mode (user configuration example in json).')
-        if args.config_file.is_dir():
-            if not args.config_file.exists():
-                raise ValueError(f'Path does not exist: {args.config_file}')
-            args.config_file = args.config_file / "default_config.json"
+    def init_function(argument: argparse.Namespace, bypass_checks=False) -> None:
+        dict_info_condition = {
+            "configuration": {
+                "default_file_name": "default_config.json",
+                "default_example_file_name": "user_config_ex.json",
+                "extension": ".json"
+            },
+            "coordinate": {
+                "default_file_name": "default_coord_file.txt",
+                "default_example_file_name": "coordinate_file_ex.txt",
+                "extension": ".txt"
+            }
+        }
+        argument_info = {}
+        if argument == args.config_file:
+            argument_info = dict_info_condition["configuration"]
+        elif argument == args.coordinate_file:
+            argument_info = dict_info_condition["coordinate"]
+
+        if not bypass_checks:
+            if argument.is_dir():
+                if not argument.exists():
+                    raise ValueError(f'Path does not exist: {argument}')
+                argument = argument / argument_info["default_file_name"]
         else:
-            if args.config_file.suffix == ".txt":
-                raise ValueError(f"File should be in .json format: {args.config_file}\nUse -t command to generate a default coordinate file in .txt")
-            if args.config_file.suffix != ".json":
-                raise ValueError(f'File should be in .json format: {args.config_file}')
-        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "user_config_ex.json"
+            # TODO manage creation of "spqr" if not exists
+            argument_path = Path.home() / "spqr"
+            argument_path.mkdir(parents=False, exist_ok=True)
+            argument = Path.home() / "spqr" / argument_info["default_file_name"]
+        # holds the logic for extension definition
+        if Path(argument_info["default_file_name"]).suffix == argument_info["extension"]:
+            argument = Path(argument).with_suffix(argument_info["extension"])
+        # TODO use shutil instead of reading and writting
+        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / argument_info["default_example_file_name"]
         ex_user_config_content = ex_user_config.read_text()
-        Path(args.config_file).write_text(ex_user_config_content)
-        logging.info(f'Configuration file initialized at {args.config_file}')
+        argument.write_text(ex_user_config_content)
+        return argument.resolve()
+
+    if args.config_file and args.coordinate_file:
+        logging.info('SPQR running init mode (user configuration and coordinate file example in json and txt).')
+        file_path_one = init_function(args.config_file)
+        file_path_two = init_function(args.coordinate_file)
+        logging.info(f'Configuration file initialized at {file_path_one} and {file_path_two}')
+    elif args.config_file:
+        logging.info('SPQR running init mode (user configuration example in json).')
+        file_path = init_function(args.config_file)
+        logging.info(f'Configuration file initialized at {file_path}')
     elif args.coordinate_file:
         logging.info('SPQR running init mode (coordinate file example in txt).')
-        if args.coordinate_file.is_dir():
-            if not args.coordinate_file.exists():
-                raise ValueError(f'Path does not exist: {args.coordinate_file}')
-            args.coordinate_file = args.coordinate_file / "default_coord_file.txt"
-        else:
-            if args.coordinate_file.suffix != ".txt":
-                raise ValueError(f'File should be in .txt format: {args.coordinate_file}')
-            if args.coordinate_file.suffix == ".json":
-                raise ValueError(f'File should be in .json format: {args.coordinate_file}')
-        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "coordinate_file_ex.txt"
-        ex_user_config_content = ex_user_config.read_text()
-        args.coordinate_file.write_text(ex_user_config_content)
-        logging.info(f'Configuration file initialized at {args.coordinate_file}')
+        file_path = init_function(args.coordinate_file)
+        logging.info(f'Configuration file initialized at {file_path}')
+    else:
+        logging.info('SPQR running init mode (user configuration and coordinate file example in json and txt).')
+        file_path_one = init_function(args.config_file, bypass_checks=True)
+        file_path_two = init_function(args.coordinate_file, bypass_checks=True)
+        logging.info(f'Configuration file initialized at {file_path_one} and {file_path_two}')
+
+    # if args.config_file:
+    #     logging.info('SPQR running init mode (user configuration example in json).')
+    #     if args.config_file.is_dir():
+    #         if not args.config_file.exists():
+    #             raise ValueError(f'Path does not exist: {args.config_file}')
+    #         args.config_file = args.config_file / "default_config.json"
+    #     # else:
+    #     #     if args.config_file.suffix == ".txt":
+    #     #         raise ValueError(f"File should be in .json format: {args.config_file}\nUse -t command to generate a default coordinate file in .txt")
+    #     #     if args.config_file.suffix != ".json":
+    #     #         raise ValueError(f'File should be in .json format: {args.config_file}')
+    #     ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "user_config_ex.json"
+    #     ex_user_config_content = ex_user_config.read_text()
+    #     Path(args.config_file).write_text(ex_user_config_content)
+    #     logging.info(f'Configuration file initialized at {args.config_file}')
+    # elif args.coordinate_file:
+    #     logging.info('SPQR running init mode (coordinate file example in txt).')
+    #     if args.coordinate_file.is_dir():
+    #         if not args.coordinate_file.exists():
+    #             raise ValueError(f'Path does not exist: {args.coordinate_file}')
+    #         args.coordinate_file = args.coordinate_file / "default_coord_file.txt"
+    #     # else:
+    #     #     if args.coordinate_file.suffix != ".txt":
+    #     #         raise ValueError(f'File should be in .txt format: {args.coordinate_file}')
+    #     #     if args.coordinate_file.suffix == ".json":
+    #     #         raise ValueError(f'File should be in .json format: {args.coordinate_file}')
+    #     ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "coordinate_file_ex.txt"
+    #     ex_user_config_content = ex_user_config.read_text()
+    #     args.coordinate_file.write_text(ex_user_config_content)
+    #     logging.info(f'Configuration file initialized at {args.coordinate_file}')
+    # else:
 
 
 def manage_app_launch():
@@ -158,8 +215,8 @@ def manage_app_launch():
     try:
         if args.running_mode == 'init':
             init_mode(args)
-        elif args.running_mode == 'modification':
-            modification_mode(args)
+        elif args.running_mode == 'edit':
+            edit_mode(args)
         elif args.running_mode == 'upload':
             upload_mode(args)
         elif args.running_mode == 'test':

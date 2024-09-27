@@ -17,7 +17,7 @@ def test_cli_help():
     result = run_cli_command('python -m app --help')
     logging.debug(f"CLI help output: {result.stdout}")
     assert result.returncode == 0
-    assert 'usage: spqr [-h] [-v] {test,build,upload,init} ...' in result.stdout
+    assert 'usage: spqr [-h] [-v] {init,edit,upload,test,build} ...' in result.stdout
 
 
 def test_cli_version():

@@ -30,25 +30,25 @@ def cli() -> argparse.ArgumentParser:
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {__version__}')
     subparsers = parser.add_subparsers(
         dest='running_mode',
-        help='Selects the running mode of the app (init, upload, modification, test or build). End user should use build.')
+        help='Selects the running mode of the app (init, upload, edit, test or build). End user should use build.')
 
     init_parser = subparsers.add_parser(
-        'init', help='Creates either a default user configuration file in json or a default ssfile under given path.')
-    init_group = init_parser.add_mutually_exclusive_group(required=True)
-    init_group.add_argument('-j', '--config_file', type=Path,
-                            help='Takes a path (file or directry) to make a default user configuration file in json under given path.')
-    init_group.add_argument('-t', '--coordinate_file', type=Path,
-                            help='Takes a path (file or directry) to create a generic coordinate source file (ssfile format) under given path.')
+        'init', help='Creates either a default user configuration file in json, a default ssfile under given path or both if no subargument is given.')
+    # init_group = init_parser.add_mutually_exclusive_group(required=True)
+    init_parser.add_argument('-c', '--config_file', type=Path,
+                             help='Takes a path (file or directry) to make a default user configuration file in json under given path.')
+    init_parser.add_argument('-x', '--coordinate_file', type=Path,
+                             help='Takes a path (file or directry) to create a generic coordinate source file (ssfile format) under given path.')
 
     # TODO find a valuable way to modificate a recipe
-    modification_parser = subparsers.add_parser('modification', help='Modificates a given recipe.')
+    edit_parser = subparsers.add_parser('edit', help='Modificates a given recipe.')
     # modification_group = modification_parser.add_mutually_exclusive_group(required=True)
-    modification_parser.add_argument('-r', '--recipe_to_modify_path', required=True, type=Path,
-                                     help="Path to recipe to modificate.")
-    modification_parser.add_argument('-c', '--user_configuration_path', required=True, type=Path,
-                                     help="Path to user configuration recipe to modify.")
-    modification_parser.add_argument('-n', '--recipe_name', required=True, type=Path,
-                                     help="Recipe name to modify.")
+    edit_parser.add_argument('-r', '--recipe_to_modify_path', required=True, type=Path,
+                             help="Path to recipe to modificate.")
+    edit_parser.add_argument('-c', '--user_configuration_path', required=True, type=Path,
+                             help="Path to user configuration recipe to modify.")
+    edit_parser.add_argument('-n', '--recipe_name', required=True, type=Path,
+                             help="Recipe name to modify.")
 
     upload_parser = subparsers.add_parser(
         'upload', help='Uploads a given recipe to RCPD.')

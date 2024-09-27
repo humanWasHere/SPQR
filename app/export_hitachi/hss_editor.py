@@ -12,7 +12,7 @@ from ..data_structure import Block
 logger = logging.getLogger(__name__)
 
 
-class RecipeModificator(HssCreator):
+class RecipeEditor(HssCreator):
     """this class is meant to modify current instance of a class or imported recipe."""
     # TODO faire une condition qui overlap le nom de recette donné ou garder la fonction qui s'en charge et changer les modèles pydantic
     # or RecipeModificator(HssCreator.__init__.attributes)
@@ -79,7 +79,7 @@ class RecipeModificator(HssCreator):
             else:
                 return True
 
-    def section_modification(self) -> bool | None:
+    def section_edit(self) -> bool | None:
         """this method should be used to modificate a section."""
         # TODO check si l'utilisateur a fait une modification. Si il n'en a pas fait, break RecipeModification (pas de modification effectuée) --> cas utilisateur : enter dès le début de la modification
         # TODO faire de la documentation répertoriant toutes les sections (pour que ça soit explicite pour l'utilisateur)
@@ -149,10 +149,10 @@ class RecipeModificator(HssCreator):
         else:
             logger.warning("Recipe name to modify is not formatted as expected")
 
-    def run_recipe_modification(self) -> None:
+    def run_recipe_edit(self) -> None:
         """run_recipe_modification is a method that should run the whole recipe modification process."""
         if self.check_recipe_validity() is True:
-            if self.section_modification() is False:
+            if self.section_edit() is False:
                 logging.warning("No modification has been made. Exiting recipe creation.")
                 return
             hss_recipe = super().dataframe_to_hss()
