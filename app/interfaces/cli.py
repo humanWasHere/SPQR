@@ -52,11 +52,14 @@ def cli() -> argparse.ArgumentParser:
 
     upload_parser = subparsers.add_parser(
         'upload', help='Uploads a given recipe to RCPD.')
-    upload_group = upload_parser.add_mutually_exclusive_group(required=True)
-    upload_group.add_argument('-c', '--user_recipe', type=Path,
-                              help="Path to recipe to upload.")
-    upload_group.add_argument('-g', '--user_layout', type=Path,
-                              help="Path to layout to upload.")
+    # upload_group = upload_parser.add_mutually_exclusive_group(required=True)
+    # TODO send both --> should take 2 arguments --> configuration file and recipe name
+    # upload_parser.add_argument('-c', '--both_recipe_and_layout', type=Path,
+    #                            help="Path to user configuration to find recipe and layout to upload.")
+    upload_parser.add_argument('-r', '--user_recipe', type=Path,
+                               help="Path to recipe to upload.")
+    upload_parser.add_argument('-l', '--user_layout', type=Path,
+                               help="Path to layout to upload.")
 
     test_parser = subparsers.add_parser(
         'test', help='Runs the "testing" mode of the app. Meant for app developers.')

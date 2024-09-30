@@ -2,6 +2,15 @@ pipeline {
     agent any
 
     environment {
+        ENVIRONMENT = "production"
+        upguest = $upguest
+        downguest = $downguest
+        ddguest = $ddguest
+        RET_DB_PASSWORD = $RET_DB_PASSWORD
+        DG_CSVUPs = $DG_CSVUPs
+        DG_DESIGNDATA = $DG_DESIGNDATA
+        CSV_TRACKER_PATH = $CSV_TRACKER_PATH
+
         VENV_DIR = "${WORKSPACE}/venv"
         // PRE_PROD_DIR = "/work/retprod/src/deploy/spqr-preprod"
         DEPLOY_DIR = "/work/retprod/src/deploy/spqr"
@@ -15,6 +24,18 @@ pipeline {
                 }
             }
         }
+
+        // stages {
+        // stage('Load .env') {
+        //     steps {
+        //         script {
+        //             def props = readProperties file: '.env'
+        //             for (entry in props) {
+        //                 env[entry.key] = entry.value
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Préparation') {
             steps {

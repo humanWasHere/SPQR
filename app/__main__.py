@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -108,7 +109,7 @@ def edit_mode(args: argparse.Namespace) -> None:
 
 def init_mode(args: argparse.Namespace) -> None:
     """Main function that manages the init CLI arguments."""
-    def init_function(argument: argparse.Namespace, bypass_checks=False) -> None:
+    def init_function(argument: argparse.Namespace, file_type: str, bypass_checks=False) -> None:
         dict_info_condition = {
             "configuration": {
                 "default_file_name": "default_config.json",
@@ -122,47 +123,48 @@ def init_mode(args: argparse.Namespace) -> None:
             }
         }
         argument_info = {}
-        if argument == args.config_file:
+        if file_type == "configuration":
             argument_info = dict_info_condition["configuration"]
-        elif argument == args.coordinate_file:
+        elif file_type == "coordinate":
             argument_info = dict_info_condition["coordinate"]
 
-        if not bypass_checks:
-            if argument.is_dir():
-                if not argument.exists():
-                    raise ValueError(f'Path does not exist: {argument}')
-                argument = argument / argument_info["default_file_name"]
-        else:
+        if bypass_checks:
             # TODO manage creation of "spqr" if not exists
             argument_path = Path.home() / "spqr"
             argument_path.mkdir(parents=False, exist_ok=True)
             argument = Path.home() / "spqr" / argument_info["default_file_name"]
+        else:
+            if argument.is_dir():
+                if not argument.exists():
+                    raise ValueError(f'Path does not exist: {argument}')
+                argument = argument / argument_info["default_file_name"]
         # holds the logic for extension definition
         if Path(argument_info["default_file_name"]).suffix == argument_info["extension"]:
             argument = Path(argument).with_suffix(argument_info["extension"])
         # TODO use shutil instead of reading and writting
         ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / argument_info["default_example_file_name"]
-        ex_user_config_content = ex_user_config.read_text()
-        argument.write_text(ex_user_config_content)
+        # ex_user_config_content = ex_user_config.read_text()
+        # argument.write_text(ex_user_config_content)
+        shutil.copy(ex_user_config, argument)
         return argument.resolve()
 
     if args.config_file and args.coordinate_file:
         logging.info('SPQR running init mode (user configuration and coordinate file example in json and txt).')
-        file_path_one = init_function(args.config_file)
-        file_path_two = init_function(args.coordinate_file)
+        file_path_one = init_function(args.config_file, "configuration")
+        file_path_two = init_function(args.coordinate_file, "coordinate")
         logging.info(f'Configuration file initialized at {file_path_one} and {file_path_two}')
     elif args.config_file:
         logging.info('SPQR running init mode (user configuration example in json).')
-        file_path = init_function(args.config_file)
+        file_path = init_function(args.config_file, "configuration")
         logging.info(f'Configuration file initialized at {file_path}')
     elif args.coordinate_file:
         logging.info('SPQR running init mode (coordinate file example in txt).')
-        file_path = init_function(args.coordinate_file)
+        file_path = init_function(args.coordinate_file, "coordinate")
         logging.info(f'Configuration file initialized at {file_path}')
     else:
         logging.info('SPQR running init mode (user configuration and coordinate file example in json and txt).')
-        file_path_one = init_function(args.config_file, bypass_checks=True)
-        file_path_two = init_function(args.coordinate_file, bypass_checks=True)
+        file_path_one = init_function(args.config_file, "configuration", bypass_checks=True)
+        file_path_two = init_function(args.coordinate_file, "coordinate", bypass_checks=True)
         logging.info(f'Configuration file initialized at {file_path_one} and {file_path_two}')
 
     # if args.config_file:
@@ -200,6 +202,7 @@ def init_mode(args: argparse.Namespace) -> None:
 
 def manage_app_launch():
     """Read the command line and user config.json and launches the corresponding command"""
+    from .interfaces.tracker import global_data_tracker
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
     logger_init()
@@ -213,11 +216,15 @@ def manage_app_launch():
     # if args.line_selection is not None:
     #     args.line_selection = tuple(args.line_selection)
     try:
+        # running tracking in create_recipe for test/build modes
         if args.running_mode == 'init':
+            global_data_tracker(parser=None, cli_arguments=vars(args))
             init_mode(args)
         elif args.running_mode == 'edit':
+            global_data_tracker(parser=None, cli_arguments=vars(args))
             edit_mode(args)
         elif args.running_mode == 'upload':
+            global_data_tracker(parser=None, cli_arguments=vars(args))
             upload_mode(args)
         elif args.running_mode == 'test':
             test_mode(args)
@@ -237,7 +244,7 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
 
     from .data_structure import Block
     from .interfaces import recipedirector as rcpd
-    from .interfaces.tracker import user_tracker, parser_tracker, cli_command_tracker, launched_recipe_tracker  # , monitor_spqr_errors  # , log_metrics
+    from .interfaces.tracker import global_data_tracker
     from .export_hitachi.hss_creator import HssCreator
     from .measure.measure import Measure
     from .parsers import FileParser, get_parser, OPCFieldReverse
@@ -246,10 +253,11 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
     # Parser selection
     parser = get_parser(json_conf['coord_file'])
-    user_tracker()
-    cli_command_tracker(sys.argv[1:])
-    launched_recipe_tracker()
-    parser_tracker(parser.__name__)
+    global_data_tracker(parser=parser.__name__, cli_arguments=vars(cli().parse_args()))
+    # user_tracker()
+    # cli_command_tracker(sys.argv[1:])
+    # launched_recipe_tracker()
+    # parser_tracker(parser.__name__)
     # monitor_spqr_errors()
     if parser is None:
         raise ValueError("Your coordinate source may not be in a valid format")
