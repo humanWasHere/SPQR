@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from unittest import mock
 
@@ -194,13 +193,23 @@ class TestHssCreator:
 
         # Act
         hss_instance.output_dataframe_to_json()
-        with open(str(hss_instance.recipe_output_file) + ".json", 'r') as json_file:
+        with open(str(hss_instance.recipe_output_file), 'r') as json_file:
             content = json_file.read()
-        print(hss_instance.eps_data)
 
         # Assert
-        assert os.path.exists(str(hss_instance.recipe_output_file) + ".json")
+        assert hss_instance.recipe_output_file.exists()
         assert content == expected_json_str
+        assert hss_instance.recipe_output_file.suffix == ".json"
+
+    def test_output_dataframe_to_csv(self, hss_instance):
+        # Arrange
+
+        # Act
+        hss_instance.output_dataframe_to_csv()
+
+        # Assert
+        assert hss_instance.recipe_output_file.exists()
+        assert hss_instance.recipe_output_file.suffix == ".csv"
 
     def test_write_in_file(self, hss_instance):
         '''checks for file writing and content written'''

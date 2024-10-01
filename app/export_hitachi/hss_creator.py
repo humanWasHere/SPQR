@@ -33,6 +33,7 @@ class HssCreator:
             self.recipe_output_dir = Path(__file__).resolve().parents[2] / "recipe_output"
         else:
             self.recipe_output_dir = Path(json_conf['output_dir'])
+        self.recipe_output_file: str
         if json_conf['recipe_name'] == "":
             self.recipe_output_file = self.recipe_output_dir / "recipe"
         else:
@@ -142,28 +143,32 @@ class HssCreator:
                 # json_content[section_keys] = section_dict
                 json_content[section_keys] = {col: section_series[col].tolist() for col in section_series}
             else:
-                # TODO raise an error ?
                 logger.error(f"{section_keys} has its series empty")
         json_str = json.dumps(json_content, indent=4)
         json_str = re.sub(r'NaN', r'""', json_str)
-        self.recipe_output_file.with_suffix(".json").write_text(json_str)
-        if self.recipe_output_file.with_suffix(".json").exists():
-            logger.info(f"json recipe created !  Find it at {str(Path(self.recipe_output_file).resolve())}.json")
+        # json_output_file = self.recipe_output_file.with_suffix('').with_suffix('.json')
+        self.recipe_output_file = self.recipe_output_file.with_suffix('').with_suffix('.json')
+        self.recipe_output_file.write_text(json_str)
+        if self.recipe_output_file.exists() and self.recipe_output_file.suffix == ".json":
+            logger.info(f"json recipe created !  Find it at {self.recipe_output_file.resolve()}")
+
+    def output_dataframe_to_csv(self) -> None:
+        whole_recipe_template = self.dataframe_to_hss()
+        whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)
+        whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)
+        self.recipe_output_file = self.recipe_output_file.with_suffix('').with_suffix('.csv')
+        self.recipe_output_file.write_text(whole_recipe_to_output)
+        if self.recipe_output_file.exists() and self.recipe_output_file.suffix == ".csv":
+            logger.info(f"csv recipe created ! Find it at {Path(self.recipe_output_file).resolve()}")
 
     def write_in_file(self) -> str:
         """this method executes the flow of writing the whole recipe."""
-        # beware to not modify order
         self.fill_with_eps_data()
         logger.info('4. Other sections creation')
         self.get_set_section()
         logger.info('Other sections created')
-        whole_recipe_template = self.dataframe_to_hss()
-        whole_recipe_good_types = self.rename_eps_data_header(whole_recipe_template)
-        whole_recipe_to_output = self.set_commas_afterwards(whole_recipe_good_types)
+        self.output_dataframe_to_csv()
         self.output_dataframe_to_json()
-        self.recipe_output_file.with_suffix(".csv").write_text(whole_recipe_to_output)
-        if self.recipe_output_file.with_suffix(".csv").exists():
-            logger.info(f"csv recipe created ! Find it at {Path(self.recipe_output_file).resolve()}.csv")
         # if self.measurement_file.with_suffix(".csv").exists():
         #     logger.info(f"measurement file created ! Find it at {self.measurement_file_path}.csv")
         # if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():

@@ -5,10 +5,8 @@ import shutil
 import sys
 from pathlib import Path
 
-from .parsers.json_parser import import_json
-
 from .interfaces.logger import logger_init  # import first
-from .interfaces.cli import check_recipe, parse_intervals, cli
+from .interfaces.cli import cli
 # log_metrics()
 
 
@@ -16,6 +14,7 @@ def build_mode(args: argparse.Namespace) -> None:
     """Main function that manages the build CLI arguments."""
     logging.info('SPQR running in production mode')
     from .parsers.json_parser import import_json  # pandas is slow
+    from .interfaces.cli import check_recipe, parse_intervals
     from .interfaces.input_checker import get_config_checker
 
     if not args.user_config.exists() or not args.user_config.is_file():
@@ -73,7 +72,7 @@ def test_mode(args: argparse.Namespace) -> None:
                 create_recipe(recipe_config, line_selection=[[100, 110]])
     # Draft auto mode (override args and use build)
     # build_mode(cli().parse_args(
-    #     ['build', 'c', str(app_config_file), 'r', 'calibre_rulers', 'l', '10-20']))
+    #     ['build', '-c', str(app_config_file), '-r', 'calibre_rulers', '-l', '10-20']))
 
 
 def upload_mode(args: argparse.Namespace) -> None:
@@ -93,6 +92,7 @@ def upload_mode(args: argparse.Namespace) -> None:
 def edit_mode(args: argparse.Namespace) -> None:
     """Main function that modificates a recipe with CLI arguments."""
     from .export_hitachi.hss_editor import RecipeEditor
+    from .parsers.json_parser import import_json
     logging.info('SPQR running edit mode')
     if args.recipe_to_modify_path:
         assert Path(args.recipe_to_modify_path).is_file(), logging.error("Specified -r file is not a file or a directory")

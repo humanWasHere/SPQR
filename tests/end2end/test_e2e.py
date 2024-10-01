@@ -58,7 +58,7 @@ def test_cli_build_command():
 def test_upload_command_recipe():
     """Test the upload command of the CLI"""
     recipe_path = Path("../")
-    command = f"python -m app upload -c {recipe_path}"
+    command = f"python -m app upload -r {recipe_path}"
     result = run_cli_command(command)
     assert 'SPQR running upload mode' in result.stderr
     assert f'Recipe {recipe_path} should be on RCPD machine!' in result.stderr
@@ -67,10 +67,21 @@ def test_upload_command_recipe():
 def test_upload_command_layout():
     """Test the upload command of the CLI"""
     layout_path = Path("../")
-    command = f"python -m app upload -g {layout_path}"
+    command = f"python -m app upload -l {layout_path}"
     result = run_cli_command(command)
     assert 'SPQR running upload mode' in result.stderr
     assert f'Layout {layout_path} should be on RCPD machine!' in result.stderr
+
+
+def test_edit_command_recipe():
+    """Test the edit command of the CLI"""
+    recipe_path = Path("../")
+    configuration_path = Path("../")
+    recipe_name_from_config = Path("recipe_name")
+    command = f"python -m app edit -r {recipe_path} -c {configuration_path}, -n {recipe_name_from_config}"
+    result = run_cli_command(command)
+    assert 'SPQR running edit mode' in result.stderr
+    # assert 'Which section do you want to modify (from the following list)?' in result.stderr
 
 
 if __name__ == "__main__":

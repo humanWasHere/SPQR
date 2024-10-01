@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 class RecipeEditor(HssCreator):
     """this class is meant to modify current instance of a class or imported recipe."""
-    # TODO faire une condition qui overlap le nom de recette donné ou garder la fonction qui s'en charge et changer les modèles pydantic
     # or RecipeModificator(HssCreator.__init__.attributes)
     def __init__(self, json_conf: dict, recipe_name_conf: str, recipe: Path = None):
         # some init
@@ -34,8 +33,10 @@ class RecipeEditor(HssCreator):
         elif Path(recipe).suffix == ".json":
             self.recipe = Path(recipe)
             # prepare for HssCreator init / parse sections
-            json_recipe_parser_instance = JSONParser(self.recipe)
-            constant_sections, table_sections = json_recipe_parser_instance.json_to_section_dicts()
+            json_recipe_parser_instance = JSONParser(str(self.recipe))
+            # constant_sections, table_sections = json_recipe_parser_instance.json_to_section_dicts()
+            json_recipe_parser_instance.json_to_section_dicts()
+            constant_sections, table_sections = json_recipe_parser_instance.constant_sections, json_recipe_parser_instance.table_sections
             pseudo_core_data = self.get_columns_for_edition(table_sections)
         else:
             logging.error("Recipe given for modification is not a valid recipe. Try with a .csv or .json.")
@@ -44,7 +45,6 @@ class RecipeEditor(HssCreator):
                          json_conf=json_conf[recipe_name_conf], polarity='clear', template=None)
         # get template info
         self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
-        # TODO split data creation and recipe writting ? --> HssCreator
         # HssCreator recreates sections --> we get the correct one from parsing
         self.constant_sections = constant_sections
         self.table_sections = table_sections
@@ -66,13 +66,12 @@ class RecipeEditor(HssCreator):
             assert all(element in list(import_json(self.json_template).keys()) for element in self.constant_sections.keys()), "imported recipe is not valid (at least at constant_sections level)"
             # table_sections
             assert all(key in list(import_json(self.json_template).keys()) for key in self.table_sections), "imported recipe is not valid (at least at table_sections level)"
-            # TODO assert all values are present in each (no modulo)
             # assert csv_section == template_section, "imported recipe is not valid (in table_sections level)"
             return True
         else:
             # comparing json template at lowest conversion level (if json_to_dataframe is bad -> it doesn't impact here)
             keys_json_template = list(import_json(self.json_template).keys())
-            keys_json_recipe = list(import_json(self.json_recipe).keys())
+            keys_json_recipe = list(import_json(self.recipe).keys())
             if keys_json_template != keys_json_recipe:
                 logger.error(f"imported recipe is not valid compared to template\n{keys_json_template}\n{keys_json_recipe}")
                 return False
@@ -81,8 +80,6 @@ class RecipeEditor(HssCreator):
 
     def section_edit(self) -> bool | None:
         """this method should be used to modificate a section."""
-        # TODO check si l'utilisateur a fait une modification. Si il n'en a pas fait, break RecipeModification (pas de modification effectuée) --> cas utilisateur : enter dès le début de la modification
-        # TODO faire de la documentation répertoriant toutes les sections (pour que ça soit explicite pour l'utilisateur)
         # TODO sanitize type user inputs
         first_modification = True
         while True:
@@ -90,12 +87,14 @@ class RecipeEditor(HssCreator):
             section_list = ", ".join(list(self.table_sections.keys()))
             section_to_modify = input(f"Which section do you want to modify (from the following list)?\n{section_list}\nIf none press Enter\n")
             if section_to_modify != "" and section_to_modify in self.table_sections.keys():
-                # print(f"print for doc - constant_sections + table_sections: {list(self.constant_sections.keys()) + list(self.table_sections.keys())}")
                 while True:
                     subsections_list = self.table_sections[section_to_modify].columns.tolist()
-                    subsections_list = ', '.join(subsections_list)
-                    # TODO if subsection > 1 print input else skip asking to user
-                    subsection_to_modify = input(f"Which subsection do you want to modify (from the following list)?\n{subsections_list}\nElse press Enter\n")
+                    subsections_list_str = ', '.join(subsections_list)
+                    print(f"list : {subsections_list} and len list : {len(subsections_list)}")
+                    if len(subsections_list) > 1:
+                        subsection_to_modify = input(f"Which subsection do you want to modify (from the following list)?\n{subsections_list_str}\nElse press Enter\n")
+                    else:
+                        subsection_to_modify = subsections_list_str
                     if subsection_to_modify in self.table_sections[section_to_modify].columns.tolist():
                         while True:
                             value_position = input("Do you want to modify only one specific value ? For single modification insert index row number else press enter for full column modification\n")
@@ -114,6 +113,7 @@ class RecipeEditor(HssCreator):
                         break
                     else:
                         logger.error(f"{subsection_to_modify} apparently not in df")
+                        break
             elif section_to_modify == "":
                 # covers the case a recipe is not modified
                 if first_modification:
@@ -155,15 +155,13 @@ class RecipeEditor(HssCreator):
             if self.section_edit() is False:
                 logging.warning("No modification has been made. Exiting recipe creation.")
                 return
-            hss_recipe = super().dataframe_to_hss()
-            hss_recipe_good_types = super().rename_eps_data_header(hss_recipe)
-            hss_recipe_to_output = super().set_commas_afterwards(hss_recipe_good_types)
-            # FIXME correct output path and recipe name
-            super().output_dataframe_to_json()
             recipe_output_file = Path(self.rename_recipe()).resolve()
-            recipe_output_file.with_suffix(".csv").write_text(hss_recipe_to_output)
-            if recipe_output_file.with_suffix(".csv").exists():
-                logger.info(f"csv recipe created ! Find it at {recipe_output_file}")
-                # return f"{recipe_output_file}.csv"
+            self.recipe_output_file = recipe_output_file
+            self.output_dataframe_to_csv()
+            self.output_dataframe_to_json()
+            # recipe_output_file.with_suffix(".csv").write_text(hss_recipe_to_output)
+            # if recipe_output_file.with_suffix(".csv").exists():
+            #     logger.info(f"csv recipe created ! Find it at {recipe_output_file}")
+            # return f"{recipe_output_file}.csv"
         # else:
         #     logger.warning("no recipe has been given")
