@@ -217,7 +217,7 @@ def define_file_path_from_env() -> Path | None:
         logging.error("Global tracker has not recognized environment !")
 
 
-def global_data_tracker(parser: FileParser | None, cli_arguments: argparse.Namespace) -> pd.DataFrame:
+def global_data_tracker(parser: FileParser | None, cli_arguments: dict) -> pd.DataFrame:
     """Here we set a dict of df to gather all tracker information."""
     # /!\ This method doesn't capture -v and -h commands
     def parse_argparse_arguments() -> list:

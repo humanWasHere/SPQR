@@ -2,6 +2,7 @@ import logging
 import subprocess
 from pathlib import Path
 import pytest
+from unittest.mock import patch
 
 from app.interfaces.logger import logger_init  # import first
 
@@ -73,15 +74,16 @@ def test_upload_command_layout():
     assert f'Layout {layout_path} should be on RCPD machine!' in result.stderr
 
 
+# @patch('pathlib.Path.is_file', return_value=True)
 def test_edit_command_recipe():
     """Test the edit command of the CLI"""
-    recipe_path = Path("../")
-    configuration_path = Path("../")
-    recipe_name_from_config = Path("recipe_name")
-    command = f"python -m app edit -r {recipe_path} -c {configuration_path}, -n {recipe_name_from_config}"
+    recipe_path = Path("/work/opc/all/users/chanelir/spqr-assets/spqr_test_ressources/test_env_genepy.csv")
+    configuration_path = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
+    recipe_name_from_config = "genepy"
+    command = f"python -m app edit -r {recipe_path} -c {configuration_path} -n {recipe_name_from_config}"
     result = run_cli_command(command)
     assert 'SPQR running edit mode' in result.stderr
-    # assert 'Which section do you want to modify (from the following list)?' in result.stderr
+    assert 'Which section do you want to modify (from the following list)?' in result.stderr
 
 
 if __name__ == "__main__":

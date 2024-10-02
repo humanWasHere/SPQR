@@ -151,7 +151,7 @@ class RecipeEditor(HssCreator):
 
     def run_recipe_edit(self) -> None:
         """run_recipe_modification is a method that should run the whole recipe modification process."""
-        if self.check_recipe_validity() is True:
+        if self.check_recipe_validity():
             if self.section_edit() is False:
                 logging.warning("No modification has been made. Exiting recipe creation.")
                 return
