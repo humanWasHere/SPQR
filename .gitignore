@@ -5,6 +5,8 @@ recipe_output/
 # Build
 dist/
 setup.py
+docs/_build
+docs/_apidoc
 
 # Compiled / IDE
 __pycache__/

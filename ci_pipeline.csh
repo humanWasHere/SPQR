@@ -22,10 +22,11 @@ mypy
 echo "Running auto-documentation..."
 #generate class diagram
 pyreverse -A -o png app/  #  --ignore frontend
-# sphinx
-# sphinx-quickstart
+# Sphinx
+# sphinx-quickstart  # first run
 # sphinx-apidoc -o ./spqr_doc ../app
-# cd docs; make html
+sphinx-apidoc -M -e -o docs/_apidoc .
+cd docs; make clean html
 
 
 # Cleanup

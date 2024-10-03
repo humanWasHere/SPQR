@@ -33,8 +33,6 @@ pexpect = "^4.9.0"
 pydantic = "^2.8.2"
 python-dotenv = "^1.0.1"
 sqlalchemy = "^2.0.23"
-ipython = "^8.26.0"
-sphinx = "^8.0.2"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.3.4"
@@ -47,8 +45,14 @@ pytest = "^7.4.3"
 pandas-stubs = "^2.2.2.240514"
 toml = "^0.10.2"
 
-[tool.poetry.group.temp.dependencies]
+[tool.poetry.group.doc.dependencies]
+furo = "^2024.8.6"
+myst-parser = "^4.0.0"
+sphinx = "^8.0.2"
+
+[tool.poetry.group.ext.dependencies]
 pyparsing = "^3.1.2"
+
 
 [build-system]
 requires = ["poetry-core"]
