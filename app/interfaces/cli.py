@@ -80,7 +80,7 @@ def cli() -> argparse.ArgumentParser:
                               help='Send HSS recipe (.csv) and layout to RecipeDirector machine.')
     build_parser.add_argument('-l', '--line_selection', required=False, nargs='+', type=str,
                               help='Allows user to run a recipe creation with a selected range of lines. Must be written like so : "-l 50-60 150-160" where 50 and 60 are included as well as 150 and 160')
-    build_parser.add_argument('-m', '--mesurement_file', action="store_true",
+    build_parser.add_argument('-m', '--measurement_file', action="store_true",
                               help='Outputs the measurement file to user outputs directory')
 
     return parser

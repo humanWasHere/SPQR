@@ -16,7 +16,7 @@ class BaseRecipe(BaseModel):
     magnification: int = Field(gt=0)
     polarity: Optional[Literal['clear', 'dark']] = 'clear'
     ap1_mag: Optional[int] = Field(None, gt=0)
-    ap1_offset: Optional[list[float]] = Field(None, min_length=2, max_length=2)
+    ap1_offset: list[float] = Field(min_length=2, max_length=2)
     ap1_template: Optional[str] = ''
     ep_template: Optional[str] = ''
     eps_template: Optional[str] = ''

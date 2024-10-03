@@ -39,9 +39,9 @@ def build_mode(args: argparse.Namespace) -> None:
             copied_config = build_config.copy()
             copied_config['step'] = step
             copied_config['recipe_name'] = str(f"{build_config['recipe_name']}_{step}")
-            create_recipe(copied_config, args.upload_rcpd, parse_intervals(args.line_selection), args.mesurement_file)
+            create_recipe(copied_config, args.upload_rcpd, parse_intervals(args.line_selection), args.measurement_file)
     else:
-        create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_selection), args.mesurement_file)
+        create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_selection), args.measurement_file)
 
 
 def test_mode(args: argparse.Namespace) -> None:
@@ -109,7 +109,7 @@ def edit_mode(args: argparse.Namespace) -> None:
 
 def init_mode(args: argparse.Namespace) -> None:
     """Main function that manages the init CLI arguments."""
-    def init_function(argument: argparse.Namespace, file_type: str, bypass_checks=False) -> None:
+    def init_function(argument: Path, file_type: str, bypass_checks=False) -> None:
         dict_info_condition = {
             "configuration": {
                 "default_file_name": "default_config.json",
@@ -122,82 +122,31 @@ def init_mode(args: argparse.Namespace) -> None:
                 "extension": ".txt"
             }
         }
-        argument_info = {}
-        if file_type == "configuration":
-            argument_info = dict_info_condition["configuration"]
-        elif file_type == "coordinate":
-            argument_info = dict_info_condition["coordinate"]
 
-        if bypass_checks:
-            # TODO manage creation of "spqr" if not exists
-            argument_path = Path.home() / "spqr"
-            argument_path.mkdir(parents=False, exist_ok=True)
-            argument = Path.home() / "spqr" / argument_info["default_file_name"]
-        else:
-            if argument.is_dir():
-                if not argument.exists():
-                    raise ValueError(f'Path does not exist: {argument}')
-                argument = argument / argument_info["default_file_name"]
+        argument_info = dict_info_condition[file_type]
+
+        if argument.is_dir():
+            argument = argument / argument_info["default_file_name"]
         # holds the logic for extension definition
         if Path(argument_info["default_file_name"]).suffix == argument_info["extension"]:
             argument = Path(argument).with_suffix(argument_info["extension"])
-        # TODO use shutil instead of reading and writting
         ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / argument_info["default_example_file_name"]
-        # ex_user_config_content = ex_user_config.read_text()
-        # argument.write_text(ex_user_config_content)
         shutil.copy(ex_user_config, argument)
         return argument.resolve()
 
-    if args.config_file and args.coordinate_file:
-        logging.info('SPQR running init mode (user configuration and coordinate file example in json and txt).')
-        file_path_one = init_function(args.config_file, "configuration")
-        file_path_two = init_function(args.coordinate_file, "coordinate")
-        logging.info(f'Configuration file initialized at {file_path_one} and {file_path_two}')
-    elif args.config_file:
-        logging.info('SPQR running init mode (user configuration example in json).')
-        file_path = init_function(args.config_file, "configuration")
-        logging.info(f'Configuration file initialized at {file_path}')
-    elif args.coordinate_file:
-        logging.info('SPQR running init mode (coordinate file example in txt).')
-        file_path = init_function(args.coordinate_file, "coordinate")
-        logging.info(f'Configuration file initialized at {file_path}')
-    else:
-        logging.info('SPQR running init mode (user configuration and coordinate file example in json and txt).')
-        file_path_one = init_function(args.config_file, "configuration", bypass_checks=True)
-        file_path_two = init_function(args.coordinate_file, "coordinate", bypass_checks=True)
-        logging.info(f'Configuration file initialized at {file_path_one} and {file_path_two}')
+    logging.info('SPQR running init mode.')
 
-    # if args.config_file:
-    #     logging.info('SPQR running init mode (user configuration example in json).')
-    #     if args.config_file.is_dir():
-    #         if not args.config_file.exists():
-    #             raise ValueError(f'Path does not exist: {args.config_file}')
-    #         args.config_file = args.config_file / "default_config.json"
-    #     # else:
-    #     #     if args.config_file.suffix == ".txt":
-    #     #         raise ValueError(f"File should be in .json format: {args.config_file}\nUse -t command to generate a default coordinate file in .txt")
-    #     #     if args.config_file.suffix != ".json":
-    #     #         raise ValueError(f'File should be in .json format: {args.config_file}')
-    #     ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "user_config_ex.json"
-    #     ex_user_config_content = ex_user_config.read_text()
-    #     Path(args.config_file).write_text(ex_user_config_content)
-    #     logging.info(f'Configuration file initialized at {args.config_file}')
-    # elif args.coordinate_file:
-    #     logging.info('SPQR running init mode (coordinate file example in txt).')
-    #     if args.coordinate_file.is_dir():
-    #         if not args.coordinate_file.exists():
-    #             raise ValueError(f'Path does not exist: {args.coordinate_file}')
-    #         args.coordinate_file = args.coordinate_file / "default_coord_file.txt"
-    #     # else:
-    #     #     if args.coordinate_file.suffix != ".txt":
-    #     #         raise ValueError(f'File should be in .txt format: {args.coordinate_file}')
-    #     #     if args.coordinate_file.suffix == ".json":
-    #     #         raise ValueError(f'File should be in .json format: {args.coordinate_file}')
-    #     ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / "coordinate_file_ex.txt"
-    #     ex_user_config_content = ex_user_config.read_text()
-    #     args.coordinate_file.write_text(ex_user_config_content)
-    #     logging.info(f'Configuration file initialized at {args.coordinate_file}')
-    # else:
+    if not (args.coordinate_file or args.config_file):
+        default_path = Path.cwd() / "spqr_init"
+        default_path.mkdir(parents=False, exist_ok=True)
+        args.coordinate_file = default_path
+        args.config_file = default_path
+    if args.config_file:
+        file_path_one = init_function(args.config_file, "configuration")
+        logging.info(f'Configuration file initialized at {file_path_one}')
+    if args.coordinate_file:
+        file_path_two = init_function(args.coordinate_file, "coordinate")
+        logging.info(f'Coordinate file initialized at {file_path_two}')
 
 
 def manage_app_launch():
@@ -217,19 +166,20 @@ def manage_app_launch():
     #     args.line_selection = tuple(args.line_selection)
     try:
         # running tracking in create_recipe for test/build modes
-        if args.running_mode == 'init':
-            global_data_tracker(parser=None, cli_arguments=vars(args))
-            init_mode(args)
-        elif args.running_mode == 'edit':
-            global_data_tracker(parser=None, cli_arguments=vars(args))
-            edit_mode(args)
-        elif args.running_mode == 'upload':
-            global_data_tracker(parser=None, cli_arguments=vars(args))
-            upload_mode(args)
-        elif args.running_mode == 'test':
-            test_mode(args)
-        elif args.running_mode == 'build':
-            build_mode(args)
+        match args.running_mode:
+            case 'init':
+                global_data_tracker(parser=None, cli_arguments=vars(args))
+                init_mode(args)
+            case 'edit':
+                global_data_tracker(parser=None, cli_arguments=vars(args))
+                edit_mode(args)
+            case 'upload':
+                global_data_tracker(parser=None, cli_arguments=vars(args))
+                upload_mode(args)
+            case 'test':
+                test_mode(args)
+            case 'build':
+                build_mode(args)
 
     except KeyboardInterrupt:
         logging.error('Interrupted by user')

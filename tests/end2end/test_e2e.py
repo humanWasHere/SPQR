@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from unittest.mock import patch
 
-from app.interfaces.logger import logger_init  # import first
+from app import __version__
 
 
 def run_cli_command(command):
@@ -25,7 +25,7 @@ def test_cli_version():
     """Test the version command of the CLI."""
     result = run_cli_command('python -m app --version')
     assert result.returncode == 0
-    assert 'spqr 0.2.0' in result.stdout
+    assert f'spqr {__version__}' in result.stdout
 
 
 def test_cli_functionality():
