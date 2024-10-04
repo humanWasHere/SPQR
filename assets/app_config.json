@@ -17,7 +17,6 @@
         "n_cols_rows": "",
         "ap1_offset": ""
     },
-
     "calibre_rulers": {
         "recipe_name": "test_env_calibre_rulers",
         "output_dir": "recipe_output/test_env/",

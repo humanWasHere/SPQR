@@ -25,6 +25,7 @@ sphinx/
 recipe_outputs/
 tracker_outputs/
 init_outputs/
+coverage.json
 # testfiles/recipe_output/
 
 # Environments
@@ -49,3 +50,4 @@ web/
 
 # dev env
 measure_reworked.tcl
+data_analysis.py

@@ -14,10 +14,11 @@ from app.export_hitachi.hss_editor import RecipeEditor
 # TODO make relative file path for "test_template.json"
 
 # LAYOUT_TESTCASE = Path(__file__).resolve().parents[1] / "testfiles" / "COMPLETED_TEMPLATE.gds"
-TEST_TEMPLATE = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
+# TEST_TEMPLATE = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
+TEST_TEMPLATE = Path(__file__).resolve().parents[3] / "assets" / "template_SEM_recipe.json"
 RECIPE_NAME_CONF = "recipe_to_modify"
-JSON_RECIPE = Path(__file__).resolve().parents[4] / "spqr-assets" / "spqr_test_ressources" / "test_env_genepy.json"
-CSV_RECIPE = Path(__file__).resolve().parents[4] / "spqr-assets" / "spqr_test_ressources" / "test_env_genepy.csv"
+JSON_RECIPE = Path(__file__).resolve().parents[2] / "testfiles" / "test_env_genepy.json"
+CSV_RECIPE = Path(__file__).resolve().parents[2] / "testfiles" / "test_env_genepy.csv"
 
 
 class TestRecipeEditor:
@@ -47,51 +48,9 @@ class TestRecipeEditor:
             }
         }
 
-    # should match config recipe name
-    # @pytest.fixture
-    # def global_recipe_name(self):
-    #     return "recipe_to_modify"
-
-    # @pytest.fixture
-    # def csv_recipe_path(self):
-    #     return Path(__file__).resolve().parents[4] / "spqr-assets" / "spqr_test_ressources" / "test_env_genepy.csv"
-
-    # @pytest.fixture
-    # def json_recipe_path(self):
-    #     return Path(__file__).resolve().parents[4] / "spqr-assets" / "spqr_test_ressources" / "test_env_genepy.json"
-
-    # @pytest.fixture
-    # def block_instance(self):
-    #     """Mock the execution of layout peek"""
-    #     mock_block = mock.create_autospec(Block, instance=True)
-    #     mock_block.layout_path = "fake.oas"
-    #     mock_block.topcell = "TOP"
-    #     mock_block.precision = 1000
-    #     return mock_block
-
-    # @pytest.fixture
-    # def core_data(self):
-    #     return pd.DataFrame({
-    #         'name': ['Name1', 'Name2', 'Name3'],
-    #         'x': [5500, 5500, 5500],
-    #         'y': [-94500, -94500, -94500],
-    #         'x_ap': [0, 0, 0],
-    #         'y_ap': [0, 0, 0],
-    #         'x_dim': [0, 0, 0],
-    #         'y_dim': [0, 0, 0]
-    #     })
-
-    # @pytest.fixture
-    # def hss_editor_instance_json(self, test_json_user_config, global_recipe_name, json_recipe_path):
-    #     return RecipeEditor(json_conf=test_json_user_config, recipe_name_conf=global_recipe_name, recipe=json_recipe_path)
-
     @pytest.fixture
     def hss_editor_instance_json(self, test_json_user_config):
         return RecipeEditor(json_conf=test_json_user_config, recipe_name_conf=RECIPE_NAME_CONF, recipe=JSON_RECIPE)
-
-    # @pytest.fixture
-    # def hss_editor_instance_csv(self, test_json_user_config, global_recipe_name, csv_recipe_path):
-    #     return RecipeEditor(json_conf=test_json_user_config, recipe_name_conf=global_recipe_name, recipe=csv_recipe_path)
 
     @pytest.fixture
     def hss_editor_instance_csv(self, test_json_user_config):

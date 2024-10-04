@@ -28,20 +28,6 @@ def test_cli_version():
     assert f'spqr {__version__}' in result.stdout
 
 
-def test_cli_functionality():
-    """Test a specific functionality of the CLI."""
-    # Arrange
-    # TODO takes a unverified path
-    path = Path(__file__).resolve().parents[1] / "testfiles"
-    # Act
-    result = run_cli_command(f'python -m app build -c {path} -r genepy')
-    # Assert
-    if result.returncode != 0:
-        logging.error(f"CLI command failed with stderr: {result.stderr}")
-    assert result.returncode == 0
-    # assert '### CREATING RECIPE ### : test_env_genepy' in result.stdout
-
-
 def test_cli_build_command():
     """Test the build command of the CLI."""
     path = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
@@ -77,7 +63,7 @@ def test_upload_command_layout():
 # @patch('pathlib.Path.is_file', return_value=True)
 def test_edit_command_recipe():
     """Test the edit command of the CLI"""
-    recipe_path = Path("/work/opc/all/users/chanelir/spqr-assets/spqr_test_ressources/test_env_genepy.csv")
+    recipe_path = Path(__file__).resolve().parents[1] / "testfiles" / "test_env_genepy.csv"
     configuration_path = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
     recipe_name_from_config = "genepy"
     command = f"python -m app edit -r {recipe_path} -c {configuration_path} -n {recipe_name_from_config}"

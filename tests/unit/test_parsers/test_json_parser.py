@@ -6,7 +6,8 @@ import pytest
 from app.parsers.json_parser import JSONParser, import_json
 
 
-TEST_TEMPLATE = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
+# TEST_TEMPLATE = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
+TEST_TEMPLATE = Path(__file__).resolve().parents[3] / "assets" / "template_SEM_recipe.json"
 
 
 class TestJsonParser:
@@ -40,14 +41,15 @@ class TestJsonParser:
                 "GP_X": [0, 0],
                 "GP_Y": [0, 0],
                 "GP_Template": ["chef_OM_default", "chef_SEM_default"],
-                "GP_Mag": [210, 12000],
-                "GP_Rot": [None, 0]
+                "GP_Mag": [210, 10000],
+                "GP_Rot": [None, 0],
+                "GP_Acceptance": [None, None]
             },
             "<EPS_Data>": {
                 "EPS_ID": 1,
                 "Type1": 1,
-                "Move_X": -300000000,
-                "Move_Y": -300000000,
+                "Move_X": 0,
+                "Move_Y": 0,
                 "Mode": 1,
                 "EPS_Name": "chaine",
                 "Ref_EPS_ID": 1,
@@ -153,21 +155,21 @@ class TestJsonParser:
                 "MP4_Direction": ""
             },
             "<GPA_List>": {
-                'Chip_X': [2, 8, 8, 2, 5, 5],
-                'Chip_Y': [4, 4, 4, 4, 6, 2],
-                'GPA_No': [1, 2, 3, 4, 5, 6],
-                'GP_ID': [1, 1, 2, 2, 2, 2]
+                "GPA_No": [1, 2, 3, 4, 5],
+                "Chip_X": [2, 8, 8, 2, 5],
+                "Chip_Y": [4, 4, 4, 4, 2],
+                "GP_ID": [1, 1, 2, 2, 2]
             },
             "<GP_Offset>": {
                 "Offset_X": 0,
                 "Offset_Y": 0
             },
             "<EPA_List>": {
-                "EPA_No": 1,
-                "Chip_X": 6,
-                "Chip_Y": 4,
-                "EPS_ID": 1,
-                "Move_Mode": 1
+                "EPA_No": None,
+                "Chip_X": None,
+                "Chip_Y": None,
+                "EPS_ID": None,
+                "Move_Mode": None
             },
             "<IDD_Cond>": {
                 "DesignData": "",
@@ -200,6 +202,60 @@ class TestJsonParser:
                 "MeasVal": [0, 0, 0],
                 "LinePro": [0, 0, 0],
                 "umMark": [0, 0, 0]
+            },
+            "<Recipe>": {
+                "ClassName": "DG",
+                "SEMCondNo": 2,
+                "WaferProperty": 0,
+                "SlotNum": 25,
+                "SlotNo1SW": 0,
+                "SlotNo2SW": 0,
+                "SlotNo3SW": 0,
+                "SlotNo4SW": 0,
+                "SlotNo5SW": 0,
+                "SlotNo6SW": 0,
+                "SlotNo7SW": 0,
+                "SlotNo8SW": 0,
+                "SlotNo9SW": 0,
+                "SlotNo10SW": 0,
+                "SlotNo11SW": 0,
+                "SlotNo12SW": 0,
+                "SlotNo13SW": 0,
+                "SlotNo14SW": 0,
+                "SlotNo15SW": 0,
+                "SlotNo16SW": 0,
+                "SlotNo17SW": 0,
+                "SlotNo18SW": 0,
+                "SlotNo19SW": 0,
+                "SlotNo20SW": 0,
+                "SlotNo21SW": 0,
+                "SlotNo22SW": 0,
+                "SlotNo23SW": 0,
+                "SlotNo24SW": 0,
+                "SlotNo25SW": 0,
+                "SlotNo26SW": 0,
+                "AutoCalibrationSW": 0
+            },
+            "<MeasEnv_Exec>": {
+                "WA_ExecMode": 0,
+                "MA_ExecMode": 0,
+                "ME_ExecMode": 0,
+                "WA_ManualAssist": 1,
+                "MA_ManualAssist": 0,
+                "ME_ManualAssist": 0,
+                "WA_ImageSave": 2,
+                "MA_ImageSave": 2,
+                "ME_ImageSave": 2
+            },
+            "<MeasEnv_MeasRes>": {
+                "DiskSave": 1,
+                "SendToHost": 1,
+                "PrintOut": 0,
+                "NetTransfer": 0,
+                "Confirm": 0,
+                "Method": 0,
+                "LimitCheck": 0,
+                "hiFrame": None
             }
         }
 
@@ -218,8 +274,8 @@ class TestJsonParser:
         # Arrange
         expected_epsdata_section = pd.DataFrame({
             'name': ["chaine"],
-            'x': [-300000000],
-            'y': [-300000000],
+            'x': [0],
+            'y': [0],
             'x_ap': [-300000000],
             'y_ap': [-300000000]
         })

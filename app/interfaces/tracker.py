@@ -4,6 +4,7 @@ import logging
 import os
 import pandas as pd
 from pathlib import Path
+import socket
 
 from ..parsers.parse import FileParser
 
@@ -46,17 +47,25 @@ def log_metrics() -> None:
     tracker_dataframe.to_csv(csv_tracker_path)
 
 
-def define_file_path_from_env() -> Path | None:
+def parse_global_data_tracker():
+    csv_tracker_path = define_file_path_from_env("GLOBAL_DATA_TRACKER")
+    if not csv_tracker_path.exists():
+        return
+    else:
+        return pd.read_csv(csv_tracker_path, index_col="Date")
+
+
+def define_file_path_from_env(file_name_env) -> Path | None:
     load_dotenv()
     ENVIRONMENT = os.getenv("ENVIRONMENT")
     if ENVIRONMENT:
-        csv_tracker_path = os.getenv(f"CSV_TRACKER_PATH_{ENVIRONMENT.upper()}")
-        if csv_tracker_path:
-            return Path(csv_tracker_path) / f"spqr_global_data_tracker_{datetime.now().year}_{os.getenv('ENVIRONMENT')}.csv"
+        csv_file_path = os.getenv(f"{file_name_env}_{ENVIRONMENT.upper()}")
+        if csv_file_path:
+            return Path(csv_file_path) / f"spqr_{file_name_env.lower()}_{datetime.now().year}_{str(ENVIRONMENT.lower())}.csv"
         else:
-            logging.error(f"CSV_TRACKER_PATH_{ENVIRONMENT} n'est pas défini dans les variables d'environnement.")
+            logging.error(f"{file_name_env} n'est pas défini dans les variables d'environnement.")
     else:
-        logging.error("Global tracker has not recognized environment !")
+        logging.error(f"{__file__} does not recognizes environment !")
 
 
 def global_data_tracker(parser: FileParser | None, cli_arguments: dict) -> pd.DataFrame:
@@ -76,21 +85,24 @@ def global_data_tracker(parser: FileParser | None, cli_arguments: dict) -> pd.Da
                         cli_arguments_list_formatted.append(f"{cli_arguments_key_list[argument_place_number_in_list]}")
         return cli_arguments_list_formatted
 
-    # if check_env_is_prod("global_tracker"):
     # get line info
     current_date = datetime.now().strftime('%d-%m-%Y')
     current_username = os.getlogin()
+    hostname = socket.gethostname()  # fqdn = socket.getfqdn()
+    operating_system = "Unix" if os.name == 'posix' else "Windows" if os.name == 'nt' else "Unknown"
     if cli_arguments['running_mode'] in ["init", "edit", "upload"]:
         parser = "Unused in this case"
     used_commands = parse_argparse_arguments()
     data = {
         'Date': [current_date],
+        'OS': [operating_system],
+        'Hostname': [hostname],
         'Username': [current_username],
         'Parser': [parser],
         'Commands': [used_commands]
     }
     # Create DataFrame
-    csv_tracker_path = define_file_path_from_env()
+    csv_tracker_path = define_file_path_from_env("GLOBAL_DATA_TRACKER")
     new_row = pd.DataFrame(data)
     new_row['Date'] = pd.to_datetime(new_row['Date'], dayfirst=True, format='%d-%m-%Y').dt.date
     new_row.set_index('Date', inplace=True)
@@ -105,14 +117,44 @@ def global_data_tracker(parser: FileParser | None, cli_arguments: dict) -> pd.Da
     tracker_dataframe.to_csv(csv_tracker_path)
     return tracker_dataframe
 
+
+# TODO add month as argument of functions
+def extract_app_usage(username: str | None = None, include_all_commands: bool = False) -> pd.DataFrame:
+    """extracts data from the global_data_tracker df related to user(s), recipe launched or app usage"""
+    global_data_tracker_df = parse_global_data_tracker()
+    index_as_a_column = global_data_tracker_df.reset_index()
+    working_df = index_as_a_column[["Date", "Username", "Commands"]]
+    if username is not None:
+        working_df = working_df[working_df['Username'] == username]
+    if include_all_commands:
+        number_of_recipe_launched = working_df['Commands'].apply(lambda commands_list: 'test' in commands_list or 'build' in commands_list).sum()
+        return f"{number_of_recipe_launched} recipe(s) have been launched by {'all users' if username is None else username} this year"
+    else:
+        return f"app has been used {working_df.shape[0]} times by {'all users' if username is None else username} this year"
+
+
+def extract_environment(environment: str | None = None):
+    """extracts os and machine data from global_data_tracker df"""
+    global_data_tracker_df = parse_global_data_tracker()
+    index_as_a_column = global_data_tracker_df.reset_index()
+    working_df = index_as_a_column[["Date", "OS", "Hostname"]]
+    return f"app has been used {working_df.shape[0]} times by {'all users' if username is None else username} this year"
+
+
+def extract_parser_usage():
+    """extracts parser info from global_data_tracker"""
+    global_data_tracker_df = parse_global_data_tracker()
+    index_as_a_column = global_data_tracker_df.reset_index()
+    working_df = index_as_a_column[["Date", "Parser"]]
+
+
 # def extract_launched_recipe_number() -> pd.DataFrame:
 #     tracker_dataframe = pd.read_csv(csv_tracker_path, index_col="Date")
 
 
 def run_tracker_data_extraction():
-    # parse whole dataframe csv
+    extract_app_usage()
     # extract_launched_recipe_number()
-    # extract_recipe_launched_by_user()
     # extract_parser_usage()
     # extract_command_usage()
     pass

@@ -8,7 +8,8 @@ from unittest.mock import patch, MagicMock
 from app.interfaces.tracker import global_data_tracker
 
 
-TEST_TRACKER_OUTPUT = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
+# TEST_TRACKER_OUTPUT = Path(__file__).resolve().parents[2] / "testfiles" / "test_template.json"
+TEST_TRACKER_OUTPUT = Path(__file__).resolve().parents[3] / "assets" / "template_SEM_recipe.json"
 
 
 # Arrange
