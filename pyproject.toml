@@ -46,8 +46,8 @@ pandas-stubs = "^2.2.2.240514"
 toml = "^0.10.2"
 
 [tool.poetry.group.doc.dependencies]
-furo = "^2024.8.6"
 myst-parser = "^4.0.0"
+pydata-sphinx-theme = "^0.15.4"
 sphinx = "^8.0.2"
 
 [tool.poetry.group.ext.dependencies]

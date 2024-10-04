@@ -26,11 +26,12 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 source_suffix = {
     '.rst': 'restructuredtext',
+    '.txt': 'restructuredtext',
     '.md': 'markdown',
 }
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
+html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']

@@ -11,28 +11,19 @@ User Documentation
 ==================
 In construction
 
+---------
+
 Developer Documentation
 =======================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: CI/CD:
+   :maxdepth: 4
+   :titlesonly:
+   :caption: Developer Documentation
 
    devops/deploy_procedure
+   ./api_reference
 
----------
-
-.. toctree::
-   :maxdepth: 4
-   :caption: API Reference:
-
-   _apidoc/app.data_structure
-   _apidoc/app.export_hitachi
-   _apidoc/app.interfaces
-   _apidoc/app.measure
-   _apidoc/app.parsers
-   .. _apidoc/app
-   .. _apidoc/modules
 
 Indices and tables
 ==================

@@ -156,7 +156,7 @@ Update team through :
 
 #### Sphinx/myst test snippet
 ```{code-block} python
-:filename: test.py
+:name: test.py
 :lineno-start: 10
 :emphasize-lines: 3
 a = 2
