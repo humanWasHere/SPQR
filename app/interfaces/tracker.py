@@ -59,7 +59,7 @@ def define_file_path_from_env(file_name_env) -> Path | None:
     load_dotenv()
     ENVIRONMENT = os.getenv("ENVIRONMENT")
     if ENVIRONMENT:
-        csv_file_path = os.getenv(f"{file_name_env}_{ENVIRONMENT.upper()}")
+        csv_file_path = os.getenv(file_name_env)
         if csv_file_path:
             return Path(csv_file_path) / f"spqr_{file_name_env.lower()}_{datetime.now().year}_{str(ENVIRONMENT.lower())}.csv"
         else:
