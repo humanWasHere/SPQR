@@ -109,7 +109,7 @@ def edit_mode(args: argparse.Namespace) -> None:
 
 def init_mode(args: argparse.Namespace) -> None:
     """Main function that manages the init CLI arguments."""
-    def init_function(argument: Path, file_type: str, bypass_checks=False) -> None:
+    def init_function(output: Path, file_type: str) -> None:
         dict_info_condition = {
             "configuration": {
                 "default_file_name": "default_config.json",
@@ -125,20 +125,21 @@ def init_mode(args: argparse.Namespace) -> None:
 
         argument_info = dict_info_condition[file_type]
 
-        if argument.is_dir():
-            argument = argument / argument_info["default_file_name"]
+        output.mkdir(parents=True, exist_ok=True)
+        if output.is_dir():
+            output = output / argument_info["default_file_name"]
         # holds the logic for extension definition
         if Path(argument_info["default_file_name"]).suffix == argument_info["extension"]:
-            argument = Path(argument).with_suffix(argument_info["extension"])
+            output = Path(output).with_suffix(argument_info["extension"])
         ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / argument_info["default_example_file_name"]
-        shutil.copy(ex_user_config, argument)
-        return argument.resolve()
+        shutil.copy(ex_user_config, output)
+        return output.resolve()
 
     logging.info('SPQR running init mode.')
 
     if not (args.coordinate_file or args.config_file):
         default_path = Path.cwd() / "spqr_init"
-        default_path.mkdir(parents=False, exist_ok=True)
+        default_path.mkdir(parents=True, exist_ok=True)
         args.coordinate_file = default_path
         args.config_file = default_path
     if args.config_file:
