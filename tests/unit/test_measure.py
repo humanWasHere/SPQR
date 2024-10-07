@@ -71,7 +71,7 @@ def test_run_measure(measure_instance, monkeypatch):
     # assert result.shape == expected_shape
 
 
-def test_output_measurement_file(measure_instance):
+def test_output_measure(measure_instance):
     # Arrange
     test_df = pd.DataFrame({
         'name': ['test_name1', 'test_name2', 'test_name3'],
@@ -86,7 +86,7 @@ def test_output_measurement_file(measure_instance):
     expected_csv = """name,x,y\ntest_name1,1,11\ntest_name2,2,22\ntest_name3,3,33\n"""
 
     # Act
-    measure_instance.output_measurement_file(df=test_df, output_dir=test_output_dir, recipe_name=test_recipe_name)
+    measure_instance.output_measure(df=test_df, output_dir=test_output_dir, recipe_name=test_recipe_name)
 
     # Assert
     print(expected_csv)

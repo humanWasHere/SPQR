@@ -1,50 +1,14 @@
-from datetime import datetime
-from dotenv import load_dotenv
+import argparse
 import logging
 import os
-import pandas as pd
-from pathlib import Path
 import socket
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+from dotenv import load_dotenv
 
 from ..parsers.parse import FileParser
-
-
-# WARNING : not to call in a recipe since it reads Log files
-def log_metrics() -> None:
-    """must be used manually for dev purpose."""
-    # should be used in dev env in this state
-    tracker_dataframe, csv_tracker_path, current_month, current_year = setup_tracker("spqr_log_metrics", ["error", "debug", "info"])
-    if tracker_dataframe is None:
-        return
-    tracker_dataframe.loc[:, :] = 0
-
-    log_file = Path(__file__).resolve().parents[2] / "spqr.log"
-    if not log_file.exists():
-        logging.error(f"Log file {log_file} does not exist.")
-        return
-
-    log_file_content = log_file.read_text().splitlines()
-
-    # Fonction pour traiter les lignes de log
-    def process_log_line(line, log_type) -> None:
-        log_date = line.split()[0]
-        log_year, log_month = log_date.split('/')[2], log_date.split('/')[1]
-        if int(log_year) == int(current_year):
-            month_name = pd.Timestamp(year=int(log_year), month=int(log_month), day=1).strftime("%B").lower()
-            if month_name in tracker_dataframe.index:
-                tracker_dataframe.at[month_name, log_type] += 1
-
-    # Parcourir le contenu du fichier de log
-    for line in log_file_content:
-        if "[ERROR]" in line:
-            process_log_line(line, "error")
-        elif "[DEBUG]" in line:
-            process_log_line(line, "debug")
-        elif "[INFO]" in line:
-            process_log_line(line, "info")
-    #     if command in command_executed:
-    #         tracker_dataframe.at[current_month, command_mapper[command]] += 1
-    tracker_dataframe.to_csv(csv_tracker_path)
 
 
 def parse_global_data_tracker():
@@ -58,41 +22,45 @@ def parse_global_data_tracker():
 def define_file_path_from_env(file_name_env) -> Path | None:
     load_dotenv()
     ENVIRONMENT = os.getenv("ENVIRONMENT")
-    if ENVIRONMENT:
-        csv_file_path = os.getenv(file_name_env)
-        if csv_file_path:
-            return Path(csv_file_path) / f"spqr_{file_name_env.lower()}_{datetime.now().year}_{str(ENVIRONMENT.lower())}.csv"
-        else:
-            logging.error(f"{file_name_env} n'est pas défini dans les variables d'environnement.")
-    else:
-        logging.error(f"{__file__} does not recognizes environment !")
+    csv_file_path = os.getenv(file_name_env)
+    if not ENVIRONMENT:
+        logging.debug(f"{__file__} does not recognize environment !")
+    if csv_file_path:
+        file_name = f"spqr_{file_name_env.lower()}_{datetime.now().year}_{ENVIRONMENT.lower()}.csv"
+        return Path(csv_file_path) / file_name
+    logging.error(f"{file_name_env} n'est pas défini dans les variables d'environnement.")
+    return Path(os.devnull)
 
 
-def global_data_tracker(parser: FileParser | None, cli_arguments: dict) -> pd.DataFrame:
-    """Here we set a dict of df to gather all tracker information."""
-    # /!\ This method doesn't capture -v and -h commands
-    def parse_argparse_arguments() -> list:
-        cli_arguments_list_formatted = []
-        cli_arguments_list_formatted.append(cli_arguments['running_mode'])
-        if len(cli_arguments) > 1:
-            cli_arguments_key_list = list(cli_arguments.keys())
-            cli_arguments_value_list = list(cli_arguments.values())
-            for argument_place_number_in_list in range(1, len(cli_arguments)):
-                if cli_arguments_value_list[argument_place_number_in_list] is not False:
-                    if cli_arguments_key_list[argument_place_number_in_list] == "recipe":
-                        cli_arguments_list_formatted.append(f"{cli_arguments_key_list[argument_place_number_in_list]}-{cli_arguments_value_list[argument_place_number_in_list]}")
-                    else:
-                        cli_arguments_list_formatted.append(f"{cli_arguments_key_list[argument_place_number_in_list]}")
-        return cli_arguments_list_formatted
+def global_data_tracker(parser: FileParser | None, cli_args: argparse.Namespace) -> pd.DataFrame:
+    """
+    Append all tracking information to a central log file using pandas.
+    Does not capture -v and -h commands"""
+    def parse_argparse_arguments(arguments: argparse.Namespace) -> list:
+        cli_arguments = vars(arguments).copy()
+        mode = cli_arguments.pop('running_mode')
+        arg_list = [mode]
+        if mode == 'test' and cli_arguments['recipe']:
+            arg_list.append('recipe-' + cli_arguments.pop('recipe'))
+        remaining_args = [key for key, value in cli_arguments.items() if value]
+        arg_list.extend(remaining_args)
+        return arg_list
 
     # get line info
     current_date = datetime.now().strftime('%d-%m-%Y')
     current_username = os.getlogin()
     hostname = socket.gethostname()  # fqdn = socket.getfqdn()
-    operating_system = "Unix" if os.name == 'posix' else "Windows" if os.name == 'nt' else "Unknown"
-    if cli_arguments['running_mode'] in ["init", "edit", "upload"]:
-        parser = "Unused in this case"
-    used_commands = parse_argparse_arguments()
+    if os.name == 'posix':
+        import distro
+        operating_system = f"{distro.id()}_{distro.version()}"
+    elif os.name == 'nt':
+        operating_system = "Windows"
+    else:
+        operating_system = "Unknown"
+
+    if cli_args.running_mode in ["init", "edit", "upload"]:
+        parser = "NA"
+    used_commands = parse_argparse_arguments(cli_args)
     data = {
         'Date': [current_date],
         'OS': [operating_system],

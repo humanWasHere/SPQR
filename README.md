@@ -1,39 +1,37 @@
-# SPQR project
-SEM Professional Quick Recipe - software for OPC applications
+## Purpose
+SEM Pro: Quick Recipe (SPQR) is meant to automate the generation of SEM recipes in order to ease RET user interactions with Recipe Director for OPC applications.
 
-## Table of matters
-0. [Quick start](#quick-start)
-1. [General informations](#spqr's-purpose-)
-2. [Features](#features-)
-3. [Inputs & outputs](#inputs&outputs-)
-4. [Installation](#installation-)
-5. [Tree structure](#tree-structure-)
-6. [Modules](#modules-)
-7. [Developers](#developers-)
-8. [Legal](#legal-)
+### Main features
+At the moment, this tool performs the following actions:  
+* parse a coordinate source file among a variety of supported types (see #Input),
+* measure patterns in a layout at the intendend coordinates,
+* calculate and define the sections and values of the recipe,
+* generate an HSS recipe file (.csv) and JSON recipe file,
+* export recipe and layout to Recipe Director.
 
 ## Quick start
-Command to launch the deployed app : 
-```bash
-/work/retprod/src/deploy/semrc/build --help
+Usage:
+```
+spqr build [-h] -c CONFIG [-r RECIPE] [-u] [-l RANGE [RANGE ...]] [-m]
+```
+Example command to generate a recipe:
+```
+spqr build -c ./my_config.json -r my_recipe1 --upload 
 ```
 
-## SPQR's purpose :
-The SPQR project finds its root in a highly qualified team which is the RET team.
-This project is led by Romain Bange and developed by Romain Chaneliere.
+For a list of all available commands, run `spqr -h`
+```
+init                Generate default configuration files for quick start.
+build               <<< Build a SEM recipe: main mode.
+upload              Upload a given recipe and/or layout to Recipe Director.
+test                Run the "testing" mode of the app. Meant for developers.
+edit                Edit a given HSS recipe (experimental).
+```
+For detailed help on each command, run `spqr <command> -h`. For example: `spqr build --help`
 
-It is meant to automatically make SEM recipes in order to ease user interactions with Recipe Director.
 
-### Features :
-At the moment, this tool processes the following actions :  
-* gets coordinates sources (by parsing a different coordinate sources)
-* runs measure  
-* calculates and define the sections and values of the recipe  
-* generates a .csv and .json file  
-* exports .csv recipe and layout on QCG 5k is needed  
-
-### inputs&outputs :
-To use this software, you will need to enter the following informations :
+### Input & output
+To use this software, you will need to enter the following informations:
 * Coordinate source (like Genepy ssfile, calibre rulers or first coordinates of an OPCField matrix)
 * layout
 * layer(s) (at least the main layer of interest)
@@ -42,21 +40,20 @@ To use this software, you will need to enter the following informations :
 * Step (post litho or post etch)
 
 This software will :
-* return a SEM recipe in .csv format (matching the Hitachi requirements)
+* return a SEM recipe in .csv format (HSS / Hitachi SpreadSheet)
 * return a SEM recipe in .json format (in order to be reused later)
-* export the .csv recipe and the layout on the QCG5k (if specified)
+* export the .csv recipe and the layout to *Recipe Director* host (if `--upload` is specified)
 <!-- * some documentation (made with sphinx) -->
 <!-- * some template in .json format (that should be stored in a DB in order to reuse the created recipe afterwards) -->
 
-## Installation :
+## Installation (to rework)
 Move to a directory in which you want the project to be stored : 
 ```bash
 cd <your_folder_name>
 ```
-Make sure you have a SSH key exchange to codex. Else, follow the documentation below :  
-```
-https://stmicroelectronics.sharepoint.com/:w:/r/sites/RETCROLLES/Projects%20development/SEM%20Recipe%20Creator/doc/SPQR%27s_user_documentation.docx?d=wd4248d7530144c1d8102960288b790c6&csf=1&web=1&e=UBjYLU
-```
+Make sure you have a SSH key exchange to codex. Else, follow the [Word documentation](https://stmicroelectronics.sharepoint.com/:w:/r/sites/RETCROLLES/_layouts/15/Doc.aspx?sourcedoc=%7BD4248D75-3014-4C1D-8102-960288B790C6%7D&file=SPQR%27s_user_documentation.docx&action=view&mobileredirect=true&web=1) on RET Sharepoint Online.
+
+
 Clone from the folder repository
 ```bash
 git clone ssh://gitolite@codex.cro.st.com/retdev/semrc.git
@@ -75,7 +72,7 @@ python -m app
 ```
 Enjoy your free time ! SPQR is cooking a recipe for you !
 
-### Tree structure :
+### Tree structure
 ```
 spqr - project root
 ├── app

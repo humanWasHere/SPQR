@@ -5,8 +5,9 @@ import shutil
 import sys
 from pathlib import Path
 
-from .interfaces.logger import logger_init  # import first
 from .interfaces.cli import cli
+from .interfaces.logger import logger_init  # import first
+from .interfaces.tracker import global_data_tracker
 # log_metrics()
 
 
@@ -17,16 +18,15 @@ def build_mode(args: argparse.Namespace) -> None:
     from .interfaces.cli import check_recipe, parse_intervals
     from .interfaces.input_checker import get_config_checker
 
-    if not args.user_config.exists() or not args.user_config.is_file():
-        raise ValueError(f'Path does not exist or is not a file: {args.user_config}')
-    if args.user_config.stat().st_size == 0:
-        raise ValueError(f'File is empty: {args.user_config}')
+    if not args.config.exists() or not args.config.is_file():
+        raise ValueError(f'Path does not exist or is not a file: {args.config}')
+    if args.config.stat().st_size == 0:
+        raise ValueError(f'File is empty: {args.config}')
 
-    # TODO validate whole JSON
-    user_config = import_json(args.user_config)
+    user_config = import_json(args.config)
 
     # Recipe selection
-    build_config = check_recipe(user_config, args.user_recipe)
+    build_config = check_recipe(user_config, args.recipe)
     build_model = get_config_checker(build_config)
     logging.debug(repr(build_model))
     build_config = build_model.model_dump()
@@ -39,9 +39,9 @@ def build_mode(args: argparse.Namespace) -> None:
             copied_config = build_config.copy()
             copied_config['step'] = step
             copied_config['recipe_name'] = str(f"{build_config['recipe_name']}_{step}")
-            create_recipe(copied_config, args.upload_rcpd, parse_intervals(args.line_selection), args.measurement_file)
+            create_recipe(copied_config, args.upload_rcpd, parse_intervals(args.line_select), args.measure)
     else:
-        create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_selection), args.measurement_file)
+        create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_select), args.measure)
 
 
 def test_mode(args: argparse.Namespace) -> None:
@@ -59,17 +59,17 @@ def test_mode(args: argparse.Namespace) -> None:
         test_env_config = app_config[args.recipe]
         test_env_config = get_config_checker(test_env_config).model_dump()
         if args.recipe == "calibre_rulers":
-            create_recipe(test_env_config, line_selection=[[10, 20]])
+            create_recipe(test_env_config, line_select=[[10, 20]])
         else:
-            create_recipe(test_env_config, line_selection=[[100, 110]])
+            create_recipe(test_env_config, line_select=[[100, 110]])
     elif args.all_recipes:
         for recipe_name in app_config:
             logging.info(f"running {recipe_name} recipe")
             recipe_config = get_config_checker(app_config[recipe_name]).model_dump()
             if recipe_name == "calibre_rulers":
-                create_recipe(recipe_config, line_selection=[[10, 20]])
+                create_recipe(recipe_config, line_select=[[10, 20]])
             else:
-                create_recipe(recipe_config, line_selection=[[100, 110]])
+                create_recipe(recipe_config, line_select=[[100, 110]])
     # Draft auto mode (override args and use build)
     # build_mode(cli().parse_args(
     #     ['build', '-c', str(app_config_file), '-r', 'calibre_rulers', '-l', '10-20']))
@@ -79,29 +79,33 @@ def upload_mode(args: argparse.Namespace) -> None:
     """Main function that manages the upload mode of the CLI arguments."""
     from .interfaces import recipedirector as rcpd
     logging.info('SPQR running upload mode')
-    if args.user_recipe:
-        rcpd.upload_csv(args.user_recipe)
-        logging.info(f'Recipe {args.user_recipe} should be on RCPD machine!')
-    elif args.user_layout:
-        rcpd.upload_gds(args.user_layout)
-        logging.info(f'Layout {args.user_layout} should be on RCPD machine!')
+    if args.recipe:
+        rcpd.upload_csv(args.recipe)
+        logging.info(f'Recipe {args.recipe} should be on RCPD machine!')
+    elif args.layout:
+        rcpd.upload_gds(args.layout)
+        logging.info(f'Layout {args.layout} should be on RCPD machine!')
     else:
         logging.error("Upload mode failure. Not a known command !")
 
 
 def edit_mode(args: argparse.Namespace) -> None:
-    """Main function that modificates a recipe with CLI arguments."""
+    """Main function that modifies a recipe from the terminal."""
     from .export_hitachi.hss_editor import RecipeEditor
     from .parsers.json_parser import import_json
     logging.info('SPQR running edit mode')
-    if args.recipe_to_modify_path:
-        assert Path(args.recipe_to_modify_path).is_file(), logging.error("Specified -r file is not a file or a directory")
-    if args.user_configuration_path:
-        assert Path(args.user_configuration_path).is_file(), logging.error("Specified -c file is not a file or a directory")
-    assert str(args.recipe_name) in import_json(args.user_configuration_path), logging.error("recipe name doesn't exists or is not in user configuration file.")
-    if args.recipe_to_modify_path and args.user_configuration_path and args.recipe_name:
-        recipe_editor_instance = RecipeEditor(recipe=Path(args.recipe_to_modify_path),
-                                              json_conf=import_json(args.user_configuration_path),
+    if args.recipe_file:
+        assert Path(args.recipe_file).is_file(), \
+            logging.error("Specified -r file is not a file or a directory")
+    if args.config_file:
+        assert Path(args.config_file).is_file(), \
+            logging.error("Specified -c file is not a file or a directory")
+    assert str(args.recipe_name) in import_json(args.config_file), \
+        logging.error("recipe name doesn't exists or is not in user configuration file.")
+
+    if args.recipe_file and args.config_file and args.recipe_name:
+        recipe_editor_instance = RecipeEditor(recipe=Path(args.recipe_file),
+                                              json_conf=import_json(args.config_file),
                                               recipe_name_conf=str(args.recipe_name))
         result = recipe_editor_instance.run_recipe_edit()
         return result
@@ -152,7 +156,6 @@ def init_mode(args: argparse.Namespace) -> None:
 
 def manage_app_launch():
     """Read the command line and user config.json and launches the corresponding command"""
-    from .interfaces.tracker import global_data_tracker
     # TODO if several dict -> several recipe -> run several recipes
     # TODO make a checker of user_config.json before running the recipe
     logger_init()
@@ -163,19 +166,19 @@ def manage_app_launch():
         logging.warning("CLI app arguments should be executed as indicated in the helper below.")
         cli().print_help()
         sys.exit(1)
-    # if args.line_selection is not None:
-    #     args.line_selection = tuple(args.line_selection)
+    # if args.line_select is not None:
+    #     args.line_select = tuple(args.line_select)
     try:
         # running tracking in create_recipe for test/build modes
         match args.running_mode:
             case 'init':
-                global_data_tracker(parser=None, cli_arguments=vars(args))
+                global_data_tracker(parser=None, cli_args=args)
                 init_mode(args)
             case 'edit':
-                global_data_tracker(parser=None, cli_arguments=vars(args))
+                global_data_tracker(parser=None, cli_args=args)
                 edit_mode(args)
             case 'upload':
-                global_data_tracker(parser=None, cli_arguments=vars(args))
+                global_data_tracker(parser=None, cli_args=args)
                 upload_mode(args)
             case 'test':
                 test_mode(args)
@@ -188,14 +191,13 @@ def manage_app_launch():
         logging.exception(f'{e.__class__.__name__}')
 
 
-def create_recipe(json_conf: dict, upload=False, line_selection=None, output_measurement=False):
+def create_recipe(json_conf: dict, upload=False, line_select=None, output_measurement=False):
     """this is the real main function which runs the flow with the measure - "prod" function"""
     # lazy import for perf issue
     os.environ['ENV_TYPE'] = "PRODUCTION"  # workaround for MAPICore.runtime.Environment
 
     from .data_structure import Block
     from .interfaces import recipedirector as rcpd
-    from .interfaces.tracker import global_data_tracker
     from .export_hitachi.hss_creator import HssCreator
     from .measure.measure import Measure
     from .parsers import FileParser, get_parser, OPCFieldReverse
@@ -204,12 +206,8 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
     # Parser selection
     parser = get_parser(json_conf['coord_file'])
-    global_data_tracker(parser=parser.__name__, cli_arguments=vars(cli().parse_args()))
-    # user_tracker()
-    # cli_command_tracker(sys.argv[1:])
-    # launched_recipe_tracker()
-    # parser_tracker(parser.__name__)
-    # monitor_spqr_errors()
+    global_data_tracker(parser=parser.__name__, cli_args=cli().parse_args())
+ 
     if parser is None:
         raise ValueError("Your coordinate source may not be in a valid format")
     logging.info(f'parser is {parser.__name__}')
@@ -225,7 +223,7 @@ def create_recipe(json_conf: dict, upload=False, line_selection=None, output_mea
 
     # measurement
     measure_instance = Measure(selected_parser, block, json_conf['layers'],
-                               json_conf.get('offset'), row_range=line_selection)
+                               json_conf.get('offset'), row_range=line_select)
     output_measure = measure_instance.run_measure(output_dir=json_conf['output_dir'] if output_measurement else None,
                                                   recipe_name=json_conf['recipe_name'] if output_measurement else None)
 

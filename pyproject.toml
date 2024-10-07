@@ -44,6 +44,7 @@ pylint = "^3.0.3"
 pytest = "^7.4.3"
 pandas-stubs = "^2.2.2.240514"
 toml = "^0.10.2"
+distro = "^1.9.0"
 
 [tool.poetry.group.doc.dependencies]
 myst-parser = "^4.0.0"

@@ -46,6 +46,7 @@ venv/
 web/
 
 # logging
+log/
 *.log*
 
 # dev env

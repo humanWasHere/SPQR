@@ -1,8 +1,8 @@
 import logging
 import subprocess
 from pathlib import Path
+
 import pytest
-from unittest.mock import patch
 
 from app import __version__
 
@@ -18,7 +18,7 @@ def test_cli_help():
     result = run_cli_command('python -m app --help')
     logging.debug(f"CLI help output: {result.stdout}")
     assert result.returncode == 0
-    assert 'usage: spqr [-h] [-v] {init,edit,upload,test,build} ...' in result.stdout
+    assert 'usage: spqr [-h] [-v] {init,build,upload,test,edit} ...' in result.stdout
 
 
 def test_cli_version():
@@ -47,6 +47,7 @@ def test_upload_command_recipe():
     recipe_path = Path("../")
     command = f"python -m app upload -r {recipe_path}"
     result = run_cli_command(command)
+    print(result.stderr)
     assert 'SPQR running upload mode' in result.stderr
     assert f'Recipe {recipe_path} should be on RCPD machine!' in result.stderr
 
@@ -65,8 +66,8 @@ def test_edit_command_recipe():
     """Test the edit command of the CLI"""
     recipe_path = Path(__file__).resolve().parents[1] / "testfiles" / "test_env_genepy.csv"
     configuration_path = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
-    recipe_name_from_config = "genepy"
-    command = f"python -m app edit -r {recipe_path} -c {configuration_path} -n {recipe_name_from_config}"
+    recipe_name = "genepy"
+    command = f"python -m app edit -r {recipe_path} -c {configuration_path} -n {recipe_name}"
     result = run_cli_command(command)
     assert 'SPQR running edit mode' in result.stderr
     assert 'Which section do you want to modify (from the following list)?' in result.stderr

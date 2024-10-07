@@ -169,8 +169,6 @@ class HssCreator:
         logger.info('Other sections created')
         self.output_dataframe_to_csv()
         self.output_dataframe_to_json()
-        # if self.measurement_file.with_suffix(".csv").exists():
-        #     logger.info(f"measurement file created ! Find it at {self.measurement_file_path}.csv")
         # if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():
         #     logger.info("VENI VEDI VICI")
         return f"{self.recipe_output_file}.csv"

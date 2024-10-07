@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 from pathlib import Path
 
@@ -20,7 +21,7 @@ def mock_parser():
 
 @pytest.fixture
 def mock_cli_arguments():
-    return {'running_mode': 'init', 'recipe': 'test_recipe'}
+    return argparse.Namespace(running_mode='init', recipe='test_recipe')
 
 
 @pytest.fixture
@@ -31,7 +32,8 @@ def mock_csv_path(tmp_path):
 @patch('app.interfaces.tracker.define_file_path_from_env')
 @patch('app.interfaces.tracker.os.getlogin', return_value='test_user')
 @patch('app.interfaces.tracker.datetime')
-def test_global_data_tracker(mock_datetime, mock_getlogin, mock_define_file_path_from_env, mock_parser, mock_cli_arguments, mock_csv_path):
+def test_global_data_tracker(mock_datetime, mock_getlogin, mock_define_file_path_from_env,
+                             mock_parser, mock_cli_arguments, mock_csv_path):
     # Arrange
     mock_datetime.now.return_value = datetime(2023, 1, 1)
     mock_define_file_path_from_env.return_value = mock_csv_path
@@ -52,5 +54,9 @@ def test_global_data_tracker(mock_datetime, mock_getlogin, mock_define_file_path
 
     # Vérifier le contenu du DataFrame
     assert result_df['Username'].iloc[0] == 'test_user'
-    assert result_df['Parser'].iloc[0] == 'Unused in this case'
-    assert result_df['Commands'].iloc[0] == ['init', 'recipe-test_recipe']
+    assert result_df['Parser'].iloc[0] == 'NA'
+    assert result_df['Commands'].iloc[0] == ['init', 'recipe']
+
+# def test_rename_recipe() # TODO
+#     assert result_df['Parser'].iloc[0] == 'SSFileParser'
+#     assert result_df['Commands'].iloc[0] == ['test', 'recipe-genepy']

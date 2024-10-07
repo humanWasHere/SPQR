@@ -7,6 +7,9 @@ SEM Pro: Quick Recipe
 =====================
 SEM Pro: Quick Recipe (SPQR) - A tool for automating the generation of layout-based CD-SEM recipes.
 
+.. include:: ../README.md
+   :parser: myst
+
 User Documentation
 ==================
 In construction
@@ -23,6 +26,7 @@ Developer Documentation
 
    devops/deploy_procedure
    ./api_reference
+   ./release_notes
 
 
 Indices and tables
