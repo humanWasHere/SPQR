@@ -11,5 +11,3 @@ API Reference
    _apidoc/app.interfaces
    _apidoc/app.measure
    _apidoc/app.parsers
-   .. _apidoc/app
-   .. _apidoc/modules

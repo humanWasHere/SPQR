@@ -24,7 +24,6 @@ echo "Running auto-documentation..."
 pyreverse -A -o png app/  #  --ignore frontend
 # Sphinx
 # sphinx-quickstart  # first run
-# sphinx-apidoc -o ./spqr_doc ../app
 sphinx-apidoc -M -e -o docs/_apidoc .
 cd docs; make clean html
 

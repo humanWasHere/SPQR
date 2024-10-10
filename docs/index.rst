@@ -19,14 +19,19 @@ In construction
 Developer Documentation
 =======================
 
+:ref:`developers`
+
+.. Top menu
+
 .. toctree::
    :maxdepth: 4
    :titlesonly:
-   :caption: Developer Documentation
+   :hidden:
 
-   devops/deploy_procedure
-   ./api_reference
-   ./release_notes
+   user_guide/index
+   devops/index
+   api_reference
+   release_notes
 
 
 Indices and tables
