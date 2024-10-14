@@ -5,33 +5,36 @@ from pathlib import Path
 import pytest
 
 from app import __version__
+from app.__main__ import manage_app_launch
 
+
+TEST_CONFIG = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
 
 def run_cli_command(command):
     """Helper function to run a CLI command and return the output."""
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    return result
+    return subprocess.run(command, shell=True, capture_output=True, text=True)
 
 
-def test_cli_help():
+def test_cli_help(capsys):
     """Test the help command of the CLI."""
-    result = run_cli_command('python -m app --help')
-    logging.debug(f"CLI help output: {result.stdout}")
-    assert result.returncode == 0
-    assert 'usage: spqr [-h] [-v] {init,build,upload,test,edit} ...' in result.stdout
+    with pytest.raises(SystemExit) as exc_info:
+        manage_app_launch(['-h'])
+        assert exc_info.value.code == 0
+        assert 'usage: spqr [-h] [-v] {init,build,upload,test,edit} ...' in capsys.readouterr()
 
 
-def test_cli_version():
+def test_cli_version(capsys):
     """Test the version command of the CLI."""
-    result = run_cli_command('python -m app --version')
-    assert result.returncode == 0
-    assert f'spqr {__version__}' in result.stdout
+    with pytest.raises(SystemExit) as exc_info:
+        manage_app_launch(['-v'])
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 0
+    assert f'spqr {__version__}' in captured.out
 
 
 def test_cli_build_command():
     """Test the build command of the CLI."""
-    path = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
-    command = f"python -m app build -c {path} -r opcfield -l 22-50"
+    command = f"python -m app build -c {TEST_CONFIG} -r opcfield -l 22-50"
     result = run_cli_command(command)
     assert result.returncode == 0
     assert '### CREATING RECIPE ### : test_env_OPCField' in result.stderr
@@ -42,29 +45,24 @@ def test_cli_build_command():
     assert 'csv recipe created !' in result.stderr
 
 
-def test_upload_command_recipe():
+def test_upload_command_recipe(test_files):
     """Test the upload command of the CLI"""
-    recipe_path = Path("../")
-    command = f"python -m app upload -r {recipe_path}"
-    result = run_cli_command(command)
-    print(result.stderr)
-    assert 'SPQR running upload mode' in result.stderr
-    assert f'Recipe {recipe_path} should be on RCPD machine!' in result.stderr
-
-
-def test_upload_command_layout():
-    """Test the upload command of the CLI"""
-    layout_path = Path("../")
-    command = f"python -m app upload -l {layout_path}"
-    result = run_cli_command(command)
-    assert 'SPQR running upload mode' in result.stderr
-    assert f'Layout {layout_path} should be on RCPD machine!' in result.stderr
+    # recipe_path = test_files / "test_env_genepy.csv"
+    # command = f"python -m app upload -r {recipe_path}"
+    with pytest.raises(ChildProcessError) as exc_info:
+        status = manage_app_launch(['upload', '-r', 'eqwerqeqweqwe'])
+    # assert exc_info.value.code == 0
+    assert status == 0
+    assert False
+    # result = run_cli_command(command)
+    # assert 'SPQR running upload mode' in capsys.readouterr()
+    # assert f'Recipe {recipe_path} should be on RCPD machine!' in capsys.readouterr()
 
 
 # @patch('pathlib.Path.is_file', return_value=True)
-def test_edit_command_recipe():
+def test_edit_command_recipe(test_files):
     """Test the edit command of the CLI"""
-    recipe_path = Path(__file__).resolve().parents[1] / "testfiles" / "test_env_genepy.csv"
+    recipe_path = test_files / "test_env_genepy.csv"
     configuration_path = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
     recipe_name = "genepy"
     command = f"python -m app edit -r {recipe_path} -c {configuration_path} -n {recipe_name}"

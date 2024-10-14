@@ -6,16 +6,13 @@ from pydantic import ValidationError
 from app.interfaces.input_checker import BaseRecipe, CoordFile, OPCField
 
 
-TESTFILES = Path(__file__).resolve().parents[2] / "testfiles"
-
-
 @pytest.fixture
-def valid_recipe_data():
+def valid_recipe_data(test_files):
     return {
         'recipe_name': "test_recipe",
         'output_dir': "./",
-        'coord_file': str(TESTFILES / "ssfile_proto.txt"),
-        'layout': str(TESTFILES / "COMPLETED_TEMPLATE.gds"),
+        'coord_file': str(test_files / "ssfile_proto.txt"),
+        'layout': str(test_files / "COMPLETED_TEMPLATE.gds"),
         'layers': ["1.0"],
         'ap1_template': 'AP1_45K',
         'ap1_mag': 45000,
@@ -48,19 +45,19 @@ def test_recipe_with_all_fields(valid_recipe_data):
     assert True
 
 
-def test_recipe_with_minimum_fields():
+def test_recipe_with_minimum_fields(test_files):
     coordfile_recipe = {
-        'coord_file': str(TESTFILES / "ssfile_proto.txt"),
-        'layout': str(TESTFILES / "COMPLETED_TEMPLATE.gds"),
+        'coord_file': str(test_files / "ssfile_proto.txt"),
+        'layout': str(test_files / "COMPLETED_TEMPLATE.gds"),
         'layers': ["13.100"],
         'step': "PH",
         'magnification': "200000",
     }
     coordfile = CoordFile(**coordfile_recipe)
-    assert coordfile.coord_file == TESTFILES / "ssfile_proto.txt"
+    assert coordfile.coord_file == test_files / "ssfile_proto.txt"
     assert coordfile.recipe_name is None
     assert coordfile.output_dir == Path.cwd()
-    assert coordfile.layout == TESTFILES / "COMPLETED_TEMPLATE.gds"
+    assert coordfile.layout == test_files / "COMPLETED_TEMPLATE.gds"
     assert coordfile.layers == ["13.100"]
     assert coordfile.step == "PH"
     assert coordfile.magnification == 200_000

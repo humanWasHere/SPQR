@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Type
@@ -108,24 +109,6 @@ def test_csv(tmp_path):
 
 @pytest.mark.skip(reason="runtime")
 def test_json(tmp_path):
-    # json_conf = json_conf_maker(
-    #     recipe_name = "test_integration_json",
-    #     output_dir = TESTFILES / "recipe_output",
-    #     file_parser = "/work/opc/all/users/chanelir/spqr-assets/json_csv_recipes/test_env_genepy.json",
-    #     layout = "/work/opc/all/users/chanelir/spqr-assets/ssfile-genepy/out/COMPLETED_TEMPLATE.gds",
-    #     layers = ["1.0"],
-    #     ap1_template = "",
-    #     ap1_mag = "",
-    #     ep_template = "",
-    #     eps_template = "",
-    #     magnification = 200_000,
-    #     mp_template = "X90M_GATE_PH",
-    #     step = "PH",
-    #     origin_x_y = [],
-    #     step_x_y = [],
-    #     n_cols_rows = [],
-    #     ap1_offset = []
-    # )
     json_conf = app_config_content.get('json')
     json_conf.update(output_dir=tmp_path)
     run_recipe(
@@ -134,3 +117,15 @@ def test_json(tmp_path):
         rows=[[60, 70]]
     )
     assert True
+
+
+def test_upload_recipe(test_files, capsys, caplog):
+    """Test the upload command"""
+    from app.interfaces import recipedirector
+    caplog.set_level(logging.DEBUG)
+    recipe_path = test_files / "test_env_genepy.csv"
+    status = recipedirector.upload_csv(recipe_path, dry_run=True)
+    print(status, capsys.readouterr(), caplog.text)
+    assert status == 0
+    assert 'sent' in caplog.text
+    assert 'rsync error' not in caplog.text

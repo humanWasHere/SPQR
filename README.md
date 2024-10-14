@@ -1,7 +1,7 @@
-## Purpose
+# Purpose
 SEM Pro: Quick Recipe (SPQR) is meant to automate the generation of SEM recipes in order to ease RET user interactions with Recipe Director for OPC applications.
 
-### Main features
+## Main features
 At the moment, this tool performs the following actions:  
 * parse a coordinate source file among a variety of supported types (see #Input),
 * measure patterns in a layout at the intendend coordinates,
@@ -9,7 +9,7 @@ At the moment, this tool performs the following actions:
 * generate an HSS recipe file (.csv) and JSON recipe file,
 * export recipe and layout to Recipe Director.
 
-## Quick start
+# Quick start
 Usage:
 ```
 spqr build [-h] -c CONFIG [-r RECIPE] [-u] [-l RANGE [RANGE ...]] [-m]
@@ -30,7 +30,7 @@ edit                Edit a given HSS recipe (experimental).
 For detailed help on each command, run `spqr <command> -h`. For example: `spqr build --help`
 
 
-### Input & output
+# Input & output
 To use this software, you will need to enter the following informations:
 * Coordinate source (like Genepy ssfile, calibre rulers or first coordinates of an OPCField matrix)
 * layout
@@ -46,7 +46,7 @@ This software will :
 <!-- * some documentation (made with sphinx) -->
 <!-- * some template in .json format (that should be stored in a DB in order to reuse the created recipe afterwards) -->
 
-## Installation (to rework)
+# Installation (to rework)
 Move to a directory in which you want the project to be stored : 
 ```bash
 cd <your_folder_name>
@@ -72,7 +72,7 @@ python -m app
 ```
 Enjoy your free time ! SPQR is cooking a recipe for you !
 
-### Tree structure
+## Tree structure
 ```
 spqr - project root
 ├── app
@@ -150,7 +150,7 @@ spqr - project root
 └── .venv
 ```
 
-### Modules :
+## Modules :
 Here is a list of the main modules used in this app :
 * python - Version 3.10.4  
 * numpy - Version 1.23.0
@@ -159,11 +159,11 @@ Here is a list of the main modules used in this app :
 <!-- * pathlib - Version ? -->
 <!-- * subprocess - Version ? -->
 
-### Developers :
+# Developers :
 * Romain Chaneliere - DevOps apprentice @STMicroelectronics
 * Romain Bange - PhD @STMicroelectronics
 
-### Legal :
+# Legal :
 This software is intended for use by the STMicroelectronics' RET/OPC team at Crolles & Rousset and should only be used as part of this organization. Any use of this software outside of this organization is strictly prohibited.
 
 <!-- STMicroelectronics assumes no liability for any damages resulting from the use of this software outside of its intended purpose. -->

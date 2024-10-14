@@ -86,7 +86,7 @@ def test_output_measure(measure_instance):
     expected_csv = """name,x,y\ntest_name1,1,11\ntest_name2,2,22\ntest_name3,3,33\n"""
 
     # Act
-    measure_instance.output_measure(df=test_df, output_dir=test_output_dir, recipe_name=test_recipe_name)
+    measure_instance.output_measurement_file(df=test_df, output_dir=test_output_dir, recipe_name=test_recipe_name)
 
     # Assert
     print(expected_csv)

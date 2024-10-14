@@ -5,8 +5,9 @@ import shutil
 import sys
 from pathlib import Path
 
-from .interfaces.cli import cli
 from .interfaces.logger import logger_init  # import first
+from .interfaces.cli import cli, check_recipe, parse_intervals
+from .interfaces.input_checker import get_config_checker
 from .interfaces.tracker import global_data_tracker
 # log_metrics()
 
@@ -14,15 +15,12 @@ from .interfaces.tracker import global_data_tracker
 def build_mode(args: argparse.Namespace) -> None:
     """Main function that manages the build CLI arguments."""
     logging.info('SPQR running in production mode')
-    from .parsers.json_parser import import_json  # pandas is slow
-    from .interfaces.cli import check_recipe, parse_intervals
-    from .interfaces.input_checker import get_config_checker
+    from .parsers.json_parser import import_json  # lazy import because pandas is slow
 
     if not args.config.exists() or not args.config.is_file():
         raise ValueError(f'Path does not exist or is not a file: {args.config}')
     if args.config.stat().st_size == 0:
         raise ValueError(f'File is empty: {args.config}')
-
     user_config = import_json(args.config)
 
     # Recipe selection
@@ -30,6 +28,8 @@ def build_mode(args: argparse.Namespace) -> None:
     build_model = get_config_checker(build_config)
     logging.debug(repr(build_model))
     build_config = build_model.model_dump()
+
+    line_select = parse_intervals(args.line_select)
 
     if isinstance(build_config['step'], list):
         steps = build_config['step']
@@ -39,16 +39,15 @@ def build_mode(args: argparse.Namespace) -> None:
             copied_config = build_config.copy()
             copied_config['step'] = step
             copied_config['recipe_name'] = str(f"{build_config['recipe_name']}_{step}")
-            create_recipe(copied_config, args.upload_rcpd, parse_intervals(args.line_select), args.measure)
+            create_recipe(copied_config, args.upload_rcpd, line_select, args.measure)
     else:
-        create_recipe(build_config, args.upload_rcpd, parse_intervals(args.line_select), args.measure)
+        create_recipe(build_config, args.upload_rcpd, line_select, args.measure)
 
 
 def test_mode(args: argparse.Namespace) -> None:
     """Main function that manages the test CLI arguments."""
     logging.info('SPQR running in dev mode')
     from .parsers.json_parser import import_json  # pandas is slow
-    from .interfaces.input_checker import get_config_checker
 
     app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
     app_config = import_json(app_config_file)
@@ -95,13 +94,11 @@ def edit_mode(args: argparse.Namespace) -> None:
     from .parsers.json_parser import import_json
     logging.info('SPQR running edit mode')
     if args.recipe_file:
-        assert Path(args.recipe_file).is_file(), \
-            logging.error("Specified -r file is not a file or a directory")
+        assert Path(args.recipe_file).is_file(), f"Specified -r {args.recipe_file} is not a file."
     if args.config_file:
-        assert Path(args.config_file).is_file(), \
-            logging.error("Specified -c file is not a file or a directory")
+        assert Path(args.config_file).is_file(), f"Specified -c {args.config_file} is not a file."
     assert str(args.recipe_name) in import_json(args.config_file), \
-        logging.error("recipe name doesn't exists or is not in user configuration file.")
+        "Recipe name does not exist or is not in user configuration file."
 
     if args.recipe_file and args.config_file and args.recipe_name:
         recipe_editor_instance = RecipeEditor(recipe=Path(args.recipe_file),
@@ -132,10 +129,10 @@ def init_mode(args: argparse.Namespace) -> None:
         output.mkdir(parents=True, exist_ok=True)
         if output.is_dir():
             output = output / argument_info["default_file_name"]
-        # holds the logic for extension definition
-        if Path(argument_info["default_file_name"]).suffix == argument_info["extension"]:
-            output = Path(output).with_suffix(argument_info["extension"])
-        ex_user_config = Path(__file__).resolve().parents[1] / "assets" / "init" / argument_info["default_example_file_name"]
+        output = output.with_suffix(argument_info["extension"])
+        ex_user_config = (
+            Path(__file__).resolve().parents[1] / "assets" / "init"
+            / argument_info["default_example_file_name"])
         shutil.copy(ex_user_config, output)
         return output.resolve()
 
@@ -154,20 +151,12 @@ def init_mode(args: argparse.Namespace) -> None:
         logging.info(f'Coordinate file initialized at {file_path_two}')
 
 
-def manage_app_launch():
-    """Read the command line and user config.json and launches the corresponding command"""
+def manage_app_launch(argv=None):
+    """Read the command line and user config.json and launch the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
-    # TODO make a checker of user_config.json before running the recipe
     logger_init()
-    args = cli().parse_args()
+    args = cli().parse_args(argv)
 
-    # Post process args
-    if not args.running_mode:
-        logging.warning("CLI app arguments should be executed as indicated in the helper below.")
-        cli().print_help()
-        sys.exit(1)
-    # if args.line_select is not None:
-    #     args.line_select = tuple(args.line_select)
     try:
         # running tracking in create_recipe for test/build modes
         match args.running_mode:
@@ -189,6 +178,8 @@ def manage_app_launch():
         logging.error('Interrupted by user')
     except Exception as e:
         logging.exception(f'{e.__class__.__name__}')
+    
+    return 0
 
 
 def create_recipe(json_conf: dict, upload=False, line_select=None, output_measurement=False):
@@ -207,7 +198,7 @@ def create_recipe(json_conf: dict, upload=False, line_select=None, output_measur
     # Parser selection
     parser = get_parser(json_conf['coord_file'])
     global_data_tracker(parser=parser.__name__, cli_args=cli().parse_args())
- 
+
     if parser is None:
         raise ValueError("Your coordinate source may not be in a valid format")
     logging.info(f'parser is {parser.__name__}')
@@ -224,8 +215,9 @@ def create_recipe(json_conf: dict, upload=False, line_select=None, output_measur
     # measurement
     measure_instance = Measure(selected_parser, block, json_conf['layers'],
                                json_conf.get('offset'), row_range=line_select)
-    output_measure = measure_instance.run_measure(output_dir=json_conf['output_dir'] if output_measurement else None,
-                                                  recipe_name=json_conf['recipe_name'] if output_measurement else None)
+    output_measure = measure_instance.run_measure(
+        output_dir=json_conf['output_dir'] if output_measurement else None,
+        recipe_name=json_conf['recipe_name'] if output_measurement else None)
 
     # temp fix here --> marc support
     if json_conf['ap1_offset']:

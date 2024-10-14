@@ -2,6 +2,7 @@
 Interface with Hitachi DesignGauge RecipeDirector station
 """
 import getpass
+import logging
 import os
 import pexpect
 import socket
@@ -37,29 +38,35 @@ def get_pw(user: str) -> str | None:
     return os.getenv(user)
 
 
-def dg_transfer(source: str, destination: str, password=None):
+def dg_transfer(source: Path | str, destination: Path | str, password=None, dry_run=False):
     # Use rsync to copy with specific permissions
     user = get_username(destination) or get_username(source)
     if password is None:
         password = get_pw(user)
+    cmd = ['-v', '-t', '--perms', '--chmod=u+r,g+r,o+r', str(source), str(destination)]
+    if dry_run:
+        cmd.append('-n')
 
-    child = pexpect.spawn(f"rsync -v -t --perms --chmod=u+r,g+r,o+r {source} {destination}")
+    child = pexpect.spawn('rsync', cmd)
     child.expect("password:")
     child.sendline(password or getpass.getpass(f"{user}'s password: "))
-    output = child.read().decode()  # todo: status check
+    output = child.read().decode()  # waits EOF
     child.close()
     stdout = output.strip().replace('\r\n', '\n')
-    return stdout or True
+
+    if child.exitstatus != 0:
+        raise ChildProcessError(stdout)
+    logging.debug(stdout)
+    return child.exitstatus
 
 
-# TODO: raise exception if error (eg file not exist)
-def upload_csv(file_path, password=None):
-    _status = dg_transfer(file_path, RCPD_CSVUP, password)
+def upload_csv(file_path, password=None, dry_run=False):
+    _status = dg_transfer(file_path, RCPD_CSVUP, password, dry_run)
     return _status
 
 
-def upload_gds(file_path, password=None):
-    _status = dg_transfer(file_path, RCPD_DESIGNDATA, password)
+def upload_gds(file_path, password=None, dry_run=False):
+    _status = dg_transfer(file_path, RCPD_DESIGNDATA, password, dry_run)
     return _status
 
 

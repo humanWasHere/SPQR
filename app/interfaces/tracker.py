@@ -101,12 +101,12 @@ def extract_app_usage(username: str | None = None, include_all_commands: bool = 
         return f"app has been used {working_df.shape[0]} times by {'all users' if username is None else username} this year"
 
 
-def extract_environment(environment: str | None = None):
+def extract_environment(username: str | None = None):
     """extracts os and machine data from global_data_tracker df"""
     global_data_tracker_df = parse_global_data_tracker()
     index_as_a_column = global_data_tracker_df.reset_index()
     working_df = index_as_a_column[["Date", "OS", "Hostname"]]
-    return f"app has been used {working_df.shape[0]} times by {'all users' if username is None else username} this year"
+    return f"app has been used {working_df.shape[0]} times by {username or 'all users'} this year"
 
 
 def extract_parser_usage():
@@ -114,6 +114,7 @@ def extract_parser_usage():
     global_data_tracker_df = parse_global_data_tracker()
     index_as_a_column = global_data_tracker_df.reset_index()
     working_df = index_as_a_column[["Date", "Parser"]]
+    return working_df
 
 
 # def extract_launched_recipe_number() -> pd.DataFrame:

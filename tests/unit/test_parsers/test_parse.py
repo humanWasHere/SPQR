@@ -6,22 +6,20 @@ import pytest
 from app.parsers.parse import OPCFieldReverse, get_parser
 from app.parsers import (CalibreXMLParser, HSSParser, JSONParser, SSFileParser, TACRulerParser)
 
-TESTFILES = Path(__file__).resolve().parents[2] / "testfiles"
-
 
 @pytest.fixture
 def opcfield():
     return OPCFieldReverse(0, 0, 15, 15, 1, 2, 0, 5, 'B', 2)
 
 
-def test_get_parser():
-    testfiles = Path('/work/opc/all/users/banger/dev/semchef/examples/')
+def test_get_parser(test_files):
+    other_testfiles = Path('/work/opc/all/users/banger/dev/semchef/examples/')
     assert get_parser('') is OPCFieldReverse
-    assert get_parser(testfiles / 'banger_MP03K_ACTI_scanmat_PH.csv') is HSSParser
-    assert get_parser(testfiles / 'tacx_rulers.txt') is TACRulerParser
-    assert get_parser(testfiles / 'calibre_rulers.xml') is CalibreXMLParser
-    assert get_parser(TESTFILES / 'test_template.json') is JSONParser
-    assert get_parser(TESTFILES / 'ssfile_proto.txt') is SSFileParser
+    assert get_parser(other_testfiles / 'banger_MP03K_ACTI_scanmat_PH.csv') is HSSParser
+    assert get_parser(other_testfiles / 'tacx_rulers.txt') is TACRulerParser
+    assert get_parser(other_testfiles / 'calibre_rulers.xml') is CalibreXMLParser
+    assert get_parser(test_files / 'test_template.json') is JSONParser
+    assert get_parser(test_files / 'ssfile_proto.txt') is SSFileParser
 
 
 def test_opcfield_reverse_base_dataframe(opcfield):
