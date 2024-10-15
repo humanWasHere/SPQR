@@ -7,6 +7,8 @@ dist/
 setup.py
 docs/_build
 docs/_apidoc
+docs/coverage
+docs/mypy
 
 # Compiled / IDE
 __pycache__/
@@ -21,7 +23,6 @@ __pycache__/
 htmlcov/
 .coverage
 .coveragerc
-sphinx/
 coverage.json
 
 # Environments

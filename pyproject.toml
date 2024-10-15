@@ -28,28 +28,28 @@ cx-oracle = "^8.3.0"
 lxml = "^4.9.4"
 numpy = "^1.26.2"
 pandas = "^2.1.4"
-pandera = "^0.19.3"
+pandera = "^0.20.4"
 pexpect = "^4.9.0"
-pydantic = "^2.8.2"
+pydantic = "^2.9.2"
 python-dotenv = "^1.0.1"
 sqlalchemy = "^2.0.23"
 
 [tool.poetry.group.dev.dependencies]
-coverage = "^7.3.4"
-flake8 = "^6.1.0"
+coverage = "^7.6"
+distro = "^1.9.0"
+flake8 = "^7.1"
 ipython = "^8.26.0"
 lxml-stubs = "^0.5.1"
-mypy = "^1.10.0"
-pylint = "^3.0.3"
-pytest = "^7.4.3"
-pandas-stubs = "^2.2.2.240514"
+mypy = "^1.12"
+pandas-stubs = "^2.1.4"
+pylint = "^3.0"
+pytest = "^8.3"
 toml = "^0.10.2"
-distro = "^1.9.0"
 
 [tool.poetry.group.doc.dependencies]
 myst-parser = "^4.0.0"
 pydata-sphinx-theme = "^0.15.4"
-sphinx = "^8.0.2"
+sphinx = "^8.1"
 
 [tool.poetry.group.ext.dependencies]
 pyparsing = "^3.1.2"
@@ -63,6 +63,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 tmp_path_retention_policy = "failed"
 addopts = "--basetemp=tests/tmp"
+log_level = "info"
 testpaths = [
     "tests",
 ]
@@ -90,10 +91,13 @@ exclude_lines = [
 skip_empty = true
 ignore_errors = true
 
+[tool.coverage.html]
+directory = "docs/coverage"
 
 [tool.mypy]
 ignore_missing_imports = true
 packages = "app"
+html_report = "docs/mypy"
 plugins = [
   "pydantic.mypy"
 ]
