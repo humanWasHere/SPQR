@@ -2,7 +2,6 @@ import argparse
 import logging
 import os
 import shutil
-import sys
 from pathlib import Path
 
 from .interfaces.logger import logger_init  # import first
@@ -113,20 +112,19 @@ def init_mode(args: argparse.Namespace) -> None:
     def init_function(output: Path, file_type: str) -> None:
         dict_info_condition = {
             "configuration": {
-                "default_file_name": "default_config.json",
                 "default_example_file_name": "user_config_ex.json",
+                "default_file_name": "default_config.json",
                 "extension": ".json"
             },
             "coordinate": {
-                "default_file_name": "default_coord_file.txt",
                 "default_example_file_name": "coordinate_file_ex.txt",
+                "default_file_name": "default_coord_file.txt",
                 "extension": ".txt"
             }
         }
 
         argument_info = dict_info_condition[file_type]
 
-        output.mkdir(parents=True, exist_ok=True)
         if output.is_dir():
             output = output / argument_info["default_file_name"]
         output = output.with_suffix(argument_info["extension"])
@@ -154,7 +152,7 @@ def init_mode(args: argparse.Namespace) -> None:
 def manage_app_launch(argv=None):
     """Read the command line and user config.json and launch the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
-    logger_init()
+    logger = logger_init()
     args = cli().parse_args(argv)
 
     try:
@@ -177,8 +175,10 @@ def manage_app_launch(argv=None):
     except KeyboardInterrupt:
         logging.error('Interrupted by user')
     except Exception as e:
+        logger.removeHandler(logger.console_handler)  # to avoid double printing with the raise
         logging.exception(f'{e.__class__.__name__}')
-    
+        raise
+
     return 0
 
 

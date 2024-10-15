@@ -33,7 +33,7 @@ def layout_peek(layout, *options: str) -> str:
 
 
 def get_layout_precision(layout: str | Path) -> int:
-    """get_layout_precision is a function that calls pyter.calibre to retrieve precision from a layout."""
+    """Calls pyter.calibre to retrieve precision from a layout."""
     design = DesignControlerRet(str(layout))
     result = design.getPrecisionNumber()
     return int(float(result))

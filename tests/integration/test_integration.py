@@ -11,7 +11,8 @@ from app.data_structure import Block
 from app.export_hitachi.hss_creator import HssCreator
 from app.interfaces import recipedirector as rcpd
 from app.measure.measure import Measure
-from app.parsers import FileParser, CalibreXMLParser, SSFileParser, OPCFieldReverse, HSSParser, JSONParser
+from app.parsers import (FileParser, CalibreXMLParser, SSFileParser,
+                         OPCFieldReverse, HSSParser, JSONParser)
 
 # TODO: internalize test sfiles
 APP_CONFIG = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
@@ -26,8 +27,9 @@ def run_recipe(json_conf, parser: Type[FileParser], upload=False, rows=None) -> 
         step_x, step_y = json_conf['step_x_y']
         n_rows, n_cols = json_conf['n_cols_rows']
         ap_x, ap_y = json_conf['ap1_offset']
-        parser_instance = OPCFieldReverse(origin_x=origin_x, origin_y=origin_y, step_x=step_x, step_y=step_y,
-                                          n_rows=n_rows, n_cols=n_cols, ap_x=ap_x, ap_y=ap_y)
+        parser_instance = OPCFieldReverse(
+            origin_x=origin_x, origin_y=origin_y, step_x=step_x, step_y=step_y,
+            n_rows=n_rows, n_cols=n_cols, ap_x=ap_x, ap_y=ap_y)
     else:
         parser_instance = parser(json_conf['coord_file'])
 

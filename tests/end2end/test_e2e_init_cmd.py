@@ -1,86 +1,43 @@
 # import subprocess
 import pytest
+from pathlib import Path
 
-from tests.end2end.test_e2e import run_cli_command
-
-
-@pytest.fixture()
-def output_dir(tmp_path):
-    return tmp_path / "init_outputs"
+from app.__main__ import manage_app_launch
 
 
-def test_cli_init_command_c_default(output_dir):
-    """Test the init command of the CLI."""
+@pytest.mark.parametrize("value, expected", [
+    ('', 'default_config.json'),
+    ('test_e2e_init_c.json', 'test_e2e_init_c.json'),
+])
+def test_cli_init_config(tmp_path, value, expected, caplog):
+    """Test the initialization of a configuration file."""
     # Arrange
-    path = output_dir
+    source = Path(__file__).resolve().parents[2] / "assets" / "init" / "user_config_ex.json"
+    target_path = tmp_path / value
+    expected_path = tmp_path / expected
     # Act
-    command = f"python -m app init -c {path}"
-    result = run_cli_command(command)
+    status = manage_app_launch(['init', '-c', str(target_path)])
     # Assert
-    assert result.returncode == 0
-    assert 'SPQR running init mode' in result.stderr
-    assert f'Configuration file initialized at {path}/default_config.json' in result.stderr
+    assert status == 0
+    assert 'SPQR running init mode' in caplog.text
+    assert f'Configuration file initialized at {expected_path}' in caplog.text
+    assert source.read_text() == expected_path.read_text()
 
 
-def test_cli_init_command_x_default(output_dir):
-    """Test the init command of the CLI."""
+@pytest.mark.parametrize("value, expected", [
+    ('', 'default_coord_file.txt'),
+    ('test_e2e_init_x.txt', 'test_e2e_init_x.txt'),
+])
+def test_cli_init_coordfile(tmp_path, value, expected, caplog):
+    """Test the initialization of a coordinate file."""
     # Arrange
-    path = output_dir
+    source = Path(__file__).resolve().parents[2] / "assets" / "init" / "coordinate_file_ex.txt"
+    target_path = tmp_path / value
+    expected_path = tmp_path / expected
     # Act
-    command = f"python -m app init -x {path}"
-    result = run_cli_command(command)
-
+    status = manage_app_launch(['init', '-x', str(target_path)])
     # Assert
-    assert result.returncode == 0
-    assert 'SPQR running init mode' in result.stderr
-    assert f'Coordinate file initialized at {path}/default_coord_file.txt' in result.stderr
-
-
-def test_cli_init_command_c(output_dir):
-    """Test the init command of the CLI."""
-    # Arrange
-    path = output_dir / "test_e2e_init_c.json"
-    # Act
-    command = f"python -m app init -c {path}"
-    result = run_cli_command(command)
-    # Assert
-    assert result.returncode == 0
-    assert 'SPQR running init mode' in result.stderr
-    assert f'Configuration file initialized at {path}' in result.stderr
-
-
-def test_cli_init_command_x(output_dir):
-    """Test the init command of the CLI."""
-    # Arrange
-    path = output_dir / "test_e2e_init_x.txt"
-    # Act
-    command = f"python -m app init -x {path}"
-    result = run_cli_command(command)
-    # Assert
-    assert result.returncode == 0
-    assert 'SPQR running init mode' in result.stderr
-    assert f'Coordinate file initialized at {path}' in result.stderr
-
-
-# def test_cli_init_command_c_bad_file_ext():
-#     """Test the init command of the CLI."""
-#     # Arrange
-#     path = Path(__file__).resolve().parents[1] / "testfiles" / "init_outputs" / "test_e2e_init_c.txt"
-#     # Act
-#     command = f"python -m app init -c {path}"
-#     result = run_cli_command(command)
-#     # Assert
-#     assert result.returncode == 0
-#     assert f'ValueError: File should be in .json format: {path}' in result.stderr
-
-
-# def test_cli_init_command_x_bad_file_ext():
-#     """Test the init command of the CLI."""
-#     # Arrange
-#     path = Path(__file__).resolve().parents[1] / "testfiles" / "init_outputs" / "test_e2e_init_x.json"
-#     # Act
-#     command = f"python -m app init -x {path}"
-#     result = run_cli_command(command)
-#     # Assert
-#     assert result.returncode == 0
-#     assert f'ValueError: File should be in .txt format: {path}' in result.stderr
+    assert status == 0
+    assert 'SPQR running init mode' in caplog.text
+    assert f'Coordinate file initialized at {expected_path}' in caplog.text
+    assert source.read_text() == expected_path.read_text()
