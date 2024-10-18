@@ -3,19 +3,19 @@ SEM Pro: Quick Recipe v0.2.1
 Last update: 15/10/2024
 
 ## Table of matters
-1. [What is SPQR?](#what-is-SPQR)  
+1. [What is SPQR?](#what-is-spqr)  
     a. [Context and field of application](#context-and-field-of-application)  
     b. [Current advancement](#current-advancement)  
-    c. [Tree structure of a recipe](#Tree-structure-of-a-recipe)  
+    c. [Tree structure of a recipe](#tree-structure-of-a-spqr-recipe)  
 2. [Quick start](#quick-start)  
     a. [Configuration file generation](#configuration-file-generation)  
     b. [Recipe generation](#recipe-generation)   
 3. [Coordinate file sources](#coordinate-file-sources)  
 4. [User configuration file](#user-configuration-file)  
     a. [Syntax and format](#syntax-and-format)  
-    b. [Example of JSON configuration file](#example-of-JSON-configuration-file)  
-    c. [User configuration file - Coordinate files](#user-configuration-file---Coordinate-files)  
-    d. [User configuration file - OPCField](#user-configuration-file---OPCField)    
+    b. [Example of JSON configuration file](#example-of-json-configuration-file)  
+    c. [User configuration file - Coordinate files](#user-configuration-file---coordinate-files)  
+    d. [User configuration file - OPCField](#user-configuration-file---opcfield)    
 5. [Commands](#commands)  
     a. [Init](#init)  
     b. [Build](#build)  
@@ -393,11 +393,11 @@ OPCField (depends on the type of recipe you make – opposed to file-based recip
 
 For OPCField recipes, all last 6 values are mandatory. No parser is required but the global mandatory values are still mandatory. All these values should be float or int if not empty like below. 
 
-- **origin_x/y**: coordinates of the pattern on the bottom left corner (SEM referential ?) → `list of float`
+- **origin_x/y**: coordinates of the pattern on the bottom left corner (SEM referential?) → `list of float`
 - **step_x/y**: distance of a period, distance of a pattern to another (in um) → `list of int` 
 - **n_cols/n_rows**: number of rows and columns of patterns in the opcfield → `list of int`
 
-In the case of an opcfield, here are the mandatory values (red boxes):
+In the case of an opcfield, here are the mandatory values (red boxes):  
 ![image showing importance of different parameters in json configuration](./pictures/Picture3.png "opcfield json conf")
 
 ## Commands 
@@ -411,18 +411,18 @@ Creates either a generic configuration file for spqr, a coordinate file example 
 This command can be launched without argument, one of them two or both.
 
 > **_NOTE:_**
-Both commands will either generate a default file if a directory path is inputed as argument or create a file with given name if a file path is inputed as argument
+Both commands will either generate a default file if a directory path is inputted as argument or create a file with given name if a file path is inputted as argument
 
 We note 2 subcommands :
 
 - `-c`, `--config_file`  
 Taking a file or directory path.  
 Creates a configuration file in JSON.  
-Example : ```spqr upload -r /path/to/your/recipe.csv``` or ```spqr upload -r /directory/to/store/my/file/```
+Example: ```spqr upload -r /path/to/your/recipe.csv``` or ```spqr upload -r /directory/to/store/my/file/```
 - `-x`, `--coordinate_file`  
 Taking a file or directory path.  
 Path (file or directory) to write a generic coordinate file (genepy format).  
-Example : ```spqr upload -r /path/to/your/recipe.csv``` or ```spqr upload -r /directory/to/store/my/file/```
+Example: ```spqr upload -r /path/to/your/recipe.csv``` or ```spqr upload -r /directory/to/store/my/file/```
 
 > **_NOTE:_**
 By default, file are located in the directory you are running the command
@@ -435,21 +435,21 @@ This command should be launched, at least, with `-c` / `--user_config` argument.
 We note 5 subcommands :
 
 1) You are forced to use the `-c` / `--user_config` attribute since it should point to the file path where your recipe parameters are stored. The app manages if one or more recipes are stored in the file. It works without `-r` / `--user_recipe` only if one recipe is in the configuration file.  
-Example : ```spqr build -c /path/to/your/conf_file.json```  
+Example: ```spqr build -c /path/to/your/conf_file.json```  
 
 2) As soon as you have 2 recipes parameters stored in your `-c` file, you will need to define the `-r` / `--user_recipe` argument (to know which recipe config to launch). That is why this attribute is optional.  
-The name provided here should match to the key of the dictionary referenced in your configuration file. Corresponding to your recipe with all its parameters in the curly brackets (pairs of key-value).  
-Example : ```spqr build -c /path/to/your/conf_file.json -r P18_FGAT```
+The name provided here should match the key to the dictionary referenced in your configuration file. Corresponding to your recipe with all its parameters in the curly brackets (pairs of key-value).  
+Example: ```spqr build -c /path/to/your/conf_file.json -r P18_FGAT```
 
 3) The `-l` / `--line_selection` attribute allows user to create a recipe based on one or more intervals.  
 For example, if you want to select only the measurement points 50 to 60 (both included) you will need to write `-l 50-60`. If you want to add 70 to 80 you must write `-l 50-60 70-80`.  
-Minimal example : ```spqr build -c /path/to/your/conf_file.json -l 50-60```  
+Minimal example: ```spqr build -c /path/to/your/conf_file.json -l 50-60```  
 
 4) The `-m` / `--measurement_file` attribute allows user to export the measurements as a csv file in the same directory as the exported recipe.  
-Minimal example : ```spqr build -c /path/to/your/conf_file.json -m```
+Minimal example: ```spqr build -c /path/to/your/conf_file.json -m```
 
 5) The `-u` / `--upload_rcpd` attribute allows user to upload the recipe created and the layout to RCPD.  
-Minimal example : ```spqr build -c /path/to/your/conf_file.json -u```  
+Minimal example: ```spqr build -c /path/to/your/conf_file.json -u```  
 
 To sum up, you will at least use: 
 ```bash
@@ -468,7 +468,7 @@ Using example above, `my_recipe` should be a flag of recipe configuration in `./
 
 ### Edit
 
-The edit commands can help user modify a recipe on the fly. You can edit columns iterativelly in CLI by interaction. Editing columns in a specific row or the whole column.  
+The edit commands can help the user modify a recipe on the fly. You can edit columns iterativelly in CLI by interaction. Editing columns in a specific row or the whole column.  
 This command should be launched with all three arguments (`-r`, `-c` and `-n`).
 
 We note 3 subcommands :  
@@ -482,14 +482,14 @@ Gets info of previously generated recipe / recipe you want to make.
 Takes a string name of the recipe to edit (from config file).    
 Selets the recipe within the configuration file.  
 
-Example : ```spqr edit -r /path/to/your/recipe.csv -c ../path/to/your/config_file.json -n config_recipe_name```
+Example: ```spqr edit -r /path/to/your/recipe.csv -c ../path/to/your/config_file.json -n config_recipe_name```
 
 > **_NOTE:_**
-Each change on the recipe will have an impact on the naming of the edited recipe outputed (based on all the recipes in the folder). Adding one to the recipe version to differentiate them. If given recipe name is `recipe_name.csv` outputed name will be `recipe_name_1.csv`.
+Each change on the recipe will have an impact on the naming of the edited recipe outputed (based on all the recipes in the folder). Adding one to the recipe version to differentiate them. If the given recipe name is `recipe_name.csv` outputed name will be `recipe_name_1.csv`.
 
 ### Upload
 
-The upload commands eases the sending process to RCPDirector machine (remote) for layouts or recipes.
+The upload commands ease the sending process to RCPDirector machine (remote) for layouts or recipes.
 This command should be launched by one of the two arguments (`-r` or `-l`).
 
 > **_NOTE:_**
@@ -499,14 +499,14 @@ We note 2 subcommands :
 - `-r`, `--recipe`  
 Taking path to recipe.  
 Uploads the given recipe to RCPDirector.  
-Example : ```spqr upload -r /path/to/your/recipe.csv```
+Example: ```spqr upload -r /path/to/your/recipe.csv```
 - `-l`, `--layout`  
 Taking path to layout.
 Uploads the given layout to RCPDirector.  
-Example : ```spqr upload -l /path/to/your/layout.gds```
+Example: ```spqr upload -l /path/to/your/layout.gds```
 
 ### Test
-Originally intended for development purpose, the test command can help detect a bug in the recipe generation.
+Originally intended for development purposes, the test command can help detect bugs in the recipe generation.
 
 > **_NOTE:_**
 The test command generates files from defined configuration files.
@@ -515,12 +515,12 @@ We note 2 subcommands :
 - `-r` / `--recipe`  
 Taking arguments from `genepy`, `calibre_rulers`, `opcfield`, `csv` or `json`.  
 Runs the selected recipe type in testing mode.  
-Example : ```spqr test -r calibre_rulers```
+Example: ```spqr test -r calibre_rulers```
 
 - `-a`, `--all_recipes`  
 Taking no arguments.  
-Runs all (genepy,calibre_rulers,opcfield,csv,json) recipes types in testing mode.  
-Example : ```spqr test -a```
+Runs all (genepy,calibre_rulers,opcfield,csv,json) recipe types in testing mode.  
+Example: ```spqr test -a```
 
 ## FAQ
 

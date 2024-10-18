@@ -12,7 +12,7 @@ SEM Pro: Quick Recipe (SPQR) - A tool for automating the generation of layout-ba
 
 User Documentation
 ==================
-:ref:`user_guide`
+:ref:`user_documentation`
 
 ---------
 
@@ -28,7 +28,7 @@ Developer Documentation
    :titlesonly:
    :hidden:
 
-   user_guide/index
+   user_documentation/index
    devops/index
    api_reference
    release_notes

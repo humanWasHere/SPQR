@@ -1,4 +1,5 @@
 from pathlib import Path
+import socket
 import subprocess
 
 from pyter.calibre import DesignControlerRet
@@ -22,6 +23,13 @@ def find_host() -> str:
 
 def layout_peek(layout, *options: str) -> str:
     """Run Calibre DRV layout peek through SSH using find_host (fastlinux)."""
+    # hostname = socket.gethostname()
+    # if hostname == "cr2sx03056":
+    #     precision_layout_peek_crolles = f'qrsh -P ret "source /sw/st/itcad/setup/global/sw calibre 2023.4_17; calibredrv -a puts [layout peek {layout}]"'
+    #     return precision_layout_peek_crolles
+    # else:
+    #     precision_layout_peek_cfi05 = "bsub -Ip -q term tcsh -c 'sw calibre 2023.4_17 && calibredrv -a puts [layout peek {layout}]'"
+    #     return precision_layout_peek_cfi05
     # Add dash to options if needed
     options = tuple('-'+opt if not opt.startswith('-') else opt for opt in options)
     # assert set(options).issubset({"-precision", "-topcell", "-layers", "-bbox"})

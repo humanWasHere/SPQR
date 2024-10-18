@@ -80,7 +80,7 @@ def upload_mode(args: argparse.Namespace) -> None:
     if args.recipe:
         rcpd.upload_csv(args.recipe)
         logging.info(f'Recipe {args.recipe} should be on RCPD machine!')
-    elif args.layout:
+    if args.layout:
         rcpd.upload_gds(args.layout)
         logging.info(f'Layout {args.layout} should be on RCPD machine!')
     else:
@@ -178,7 +178,6 @@ def manage_app_launch(argv=None):
         logger.removeHandler(logger.console_handler)  # to avoid double printing with the raise
         logging.exception(f'{e.__class__.__name__}')
         raise
-
     return 0
 
 
