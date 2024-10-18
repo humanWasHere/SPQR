@@ -1,7 +1,7 @@
 import json
 import logging
-from pathlib import Path
 import re
+from pathlib import Path
 
 import pandas as pd
 
@@ -17,10 +17,11 @@ from ..parsers.json_parser import JSONParser
 # faire un checker pour csv ET hss -> intégrer le tool d'alex -> recipe checker
 
 logger = logging.getLogger(__name__)
+ASSETS = Path(__file__).resolve().parents[2] / "assets"
 
 
 class HssCreator:
-    """this class is meant to create the final version of the recipe (through section making)."""
+    """Create the final version of the recipe in Hitachi format (HSS) through section making."""
     def __init__(self, core_data: pd.DataFrame, block: Block, json_conf: dict,
                  polarity: str = 'clear', template=None):
         self.layout = block.layout_path
@@ -29,23 +30,19 @@ class HssCreator:
         self.polarity = polarity
         self.main_layer = int(json_conf['layers'][0].split('.')[0])
         self.step = json_conf['step']
-        if json_conf['output_dir'] == "":
-            self.recipe_output_dir = Path(__file__).resolve().parents[2] / "recipe_output"
-        else:
-            self.recipe_output_dir = Path(json_conf['output_dir'])
-        self.recipe_output_file: str
-        if json_conf['recipe_name'] == "":
-            self.recipe_output_file = self.recipe_output_dir / "recipe"
-        else:
-            self.recipe_output_file = self.recipe_output_dir / str(json_conf['recipe_name'])
-        assert re.match(r'^[a-zA-Z0-9_-]{0,37}$', str(json_conf['recipe_name'])), "String does not meet the requirements"
+        self.recipe_output_dir = Path(json_conf['output_dir'])  # default: cwd (Pydantic model)
+        recipe_name = json_conf['recipe_name'] or 'recipe'
+        self.recipe_output_file = self.recipe_output_dir / recipe_name
+        assert re.match(r'^[a-zA-Z0-9_-]{1,37}$', recipe_name), \
+            "Invalid recipe name: allowed characters [a-zA-Z0-9_-], max. 37 characters"
 
         if template is None:
-            self.json_template = Path(__file__).resolve().parents[2] / "assets" / "template_SEM_recipe.json"
+            self.json_template = ASSETS / "template_SEM_recipe.json"
         sections = JSONParser(self.json_template).json_to_section_dicts()
         self.constant_sections: dict[str, str] = sections.constant_sections
         self.table_sections: dict[str, pd.DataFrame] = sections.table_sections
-        templates = {key: json_conf[key] for key in ['ap1_template', 'ep_template', 'eps_template', 'mp_template']}
+        templates = {key: json_conf[key]
+                     for key in ['ap1_template', 'ep_template', 'eps_template', 'mp_template']}
         eps_data = EPSData(core_data, json_conf['step'], json_conf['magnification'],
                            json_conf['ap1_mag'], templates, sections.table_sections['<EPS_Data>'],
                            field_tone=polarity)
@@ -169,6 +166,7 @@ class HssCreator:
         logger.info('Other sections created')
         self.output_dataframe_to_csv()
         self.output_dataframe_to_json()
-        # if self.recipe_output_file.with_suffix(".csv").exists() and self.recipe_output_file.with_suffix(".json").exists():
+        # if (self.recipe_output_file.with_suffix(".csv").exists()
+        #     and self.recipe_output_file.with_suffix(".json").exists()):
         #     logger.info("VENI VEDI VICI")
         return f"{self.recipe_output_file}.csv"

@@ -53,20 +53,22 @@ def get_parser(value: str) -> Type[FileParser] | None:
         return JSONParser
     except json.JSONDecodeError:
         pass
-    return None  # TODO return instance
+    return None
 
 
 class OPCFieldReverse(FileParser):
-    def __init__(self, origin_x: float, origin_y: float, step_x: float, step_y: float,
-                 n_rows: int, n_cols: int, ap_x: float, ap_y: float,
-                 origin_letter="A", origin_number=1) -> None:
+    def __init__(self,
+                 origin_x: float, origin_y: float,
+                 step_x: float, step_y: float,
+                 n_cols: int, n_rows: int,
+                 origin_letter="A", origin_number=1
+                 ) -> None:
         self.origin_x = origin_x
         self.origin_y = origin_y
         self.step_x = step_x
         self.step_y = step_y
         self.n_cols = n_cols
         self.n_rows = n_rows
-        self.ap_offset = ap_x, ap_y
         self.origin_letter = origin_letter
         self.origin_number = origin_number
         self.data = pd.DataFrame()
@@ -109,7 +111,7 @@ class OPCFieldReverse(FileParser):
         logger = logging.getLogger(__name__)
         logger.info("1. Running OPCField reverse gen")
         self.data = self.opcfield_reverse()
-        self.data[['x_ap', 'y_ap']] = self.ap_offset
+        self.data[['x_ap', 'y_ap']] = np.nan, np.nan
         if not self.data.empty:
             logger.info('OPCField reverse done')
         return self.data

@@ -6,17 +6,21 @@ from typing import Type
 
 import pytest
 
+from app.__main__ import model_to_parser
 from app.data_structure import Block
 # from app.export_hitachi.eps_data import EPSData
 from app.export_hitachi.hss_creator import HssCreator
-from app.interfaces import recipedirector as rcpd
+from app.interfaces.input_checker import validate_config_model
 from app.measure.measure import Measure
 from app.parsers import (FileParser, CalibreXMLParser, SSFileParser,
                          OPCFieldReverse, HSSParser, JSONParser)
 
+
 # TODO: internalize test sfiles
-APP_CONFIG = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
-app_config_content = json.loads(APP_CONFIG.read_text())
+@pytest.fixture
+def app_config():
+    config_path = Path(__file__).resolve().parents[2] / "assets" / "app_config.json"
+    return json.loads(config_path.read_text())
 
 
 def run_recipe(json_conf, parser: Type[FileParser], upload=False, rows=None) -> None:
@@ -25,11 +29,11 @@ def run_recipe(json_conf, parser: Type[FileParser], upload=False, rows=None) -> 
     if parser == OPCFieldReverse:
         origin_x, origin_y = json_conf['origin_x_y']
         step_x, step_y = json_conf['step_x_y']
-        n_rows, n_cols = json_conf['n_cols_rows']
-        ap_x, ap_y = json_conf['ap1_offset']
+        n_cols, n_rows = json_conf['n_cols_rows']
         parser_instance = OPCFieldReverse(
-            origin_x=origin_x, origin_y=origin_y, step_x=step_x, step_y=step_y,
-            n_rows=n_rows, n_cols=n_cols, ap_x=ap_x, ap_y=ap_y)
+            origin_x=origin_x, origin_y=origin_y,
+            step_x=step_x, step_y=step_y,
+            n_cols=n_cols, n_rows=n_rows)
     else:
         parser_instance = parser(json_conf['coord_file'])
 
@@ -56,8 +60,8 @@ def run_recipe(json_conf, parser: Type[FileParser], upload=False, rows=None) -> 
         rcpd.upload_gds(json_conf['layout'])
 
 
-def test_genepy(tmp_path):
-    json_conf = app_config_content.get('genepy')
+def test_genepy(app_config, tmp_path):
+    json_conf = app_config.get('genepy')
     json_conf.update(output_dir=tmp_path)
     run_recipe(
         json_conf=json_conf,
@@ -74,8 +78,8 @@ def test_genepy(tmp_path):
         assert file.exists(), f"Expected output file {file} does not exist"
 
 
-def test_rulers(tmp_path):
-    json_conf = app_config_content.get('calibre_rulers')
+def test_rulers(app_config, tmp_path):
+    json_conf = app_config.get('calibre_rulers')
     json_conf.update(output_dir=tmp_path)
     run_recipe(
         json_conf=json_conf,
@@ -85,8 +89,8 @@ def test_rulers(tmp_path):
     assert True
 
 
-def test_opcfield(tmp_path):
-    json_conf = app_config_content.get('opcfield')
+def test_opcfield(app_config, tmp_path):
+    json_conf = app_config.get('opcfield')
     json_conf.update(output_dir=tmp_path)
     run_recipe(
         json_conf=json_conf,
@@ -97,9 +101,21 @@ def test_opcfield(tmp_path):
     assert True
 
 
+# def test_opcfield_measure_and_rename(app_config, tmp_path):
+#     config = app_config.get('opcfield')
+#     config.update(output_dir=tmp_path)
+#     model = validate_config_model(config)
+#     parser = model_to_parser(config)
+#     block = Block(model.layout)
+#     measure = Measure(parser, block, model.layers, row_range=[[1, 10]])
+#     output_measure = measure.run_measure(model.output_dir, model.recipe_name)
+#     # TODO test post-measure
+#     assert True
+
+
 # @pytest.mark.skip(reason="runtime")
-def test_csv(tmp_path):
-    json_conf = app_config_content.get('csv')
+def test_csv(app_config, tmp_path):
+    json_conf = app_config.get('csv')
     json_conf.update(output_dir=tmp_path)
     run_recipe(
         json_conf=json_conf,
@@ -110,8 +126,8 @@ def test_csv(tmp_path):
 
 
 @pytest.mark.skip(reason="runtime")
-def test_json(tmp_path):
-    json_conf = app_config_content.get('json')
+def test_json(app_config, tmp_path):
+    json_conf = app_config.get('json')
     json_conf.update(output_dir=tmp_path)
     run_recipe(
         json_conf=json_conf,

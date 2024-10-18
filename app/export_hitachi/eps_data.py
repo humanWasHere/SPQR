@@ -59,7 +59,7 @@ class EPSData:
                  eps_columns: pd.DataFrame, field_tone: str = "clear"):
         # TODO: validate data (columns, type, nan...) -> validator -> see when to validate in flow
         self.core_data = core_data.astype(dict(x=int, y=int, x_ap=int, y_ap=int), errors="ignore")
-        assert step in {"PH", "ET", "PH_HR", "ET_HR"}
+        assert step in {"PH", "ET", "PH_HR", "ET_HR"}  # already covered by Pydantic model
         self.step = step
         self.mag = mag
         self.ap_mag = ap_mag
@@ -104,11 +104,13 @@ class EPSData:
         # MP_Template according to CD/SPACE in self.core_data
         self.eps_data[f'MP{mp_no}_Template'] = template or self.get_mp_template()
 
-    def get_mp_template(self) -> pd.Series:
+    def get_mp_template(self) -> np.ndarray:
         """get_mp_template is the logic that defines the MP_Template value for each row."""
         template = self.templates['mp_template']
+
+        # Unique value: fill the entire column
         if isinstance(template, str):
-            return pd.Series([template] * len(self.core_data))
+            return np.array([template] * len(self.core_data))
 
         # Column operations to apply resist line or space template
         polygon: pd.Series = self.core_data['polygon_tone'].apply(Tone.__getitem__)

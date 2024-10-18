@@ -105,7 +105,7 @@ def cli() -> argparse.ArgumentParser:
     return parser
 
 
-def check_recipe(full_config: dict[str, dict], recipe_name: str) -> dict:
+def check_recipe(full_config: dict[str, dict], recipe_name: str | None) -> dict:
     """Verifies that the configuration file and CLI command match in different cases."""
     if len(full_config) == 0:
         raise ValueError("The provided configuration file does not contain any recipe.")

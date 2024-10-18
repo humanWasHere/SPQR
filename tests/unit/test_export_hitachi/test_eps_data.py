@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -18,23 +19,26 @@ class TestEpsData:
 
     @pytest.fixture
     def eps_data_instance(self, eps_data_columns) -> EPSData:
-        data_instance = pd.DataFrame({'name': ['gauge1', 'gauge2', 'gauge3'],
-                                      'x': [10, 20, 30],
-                                      'y': [100, 200, 300],
-                                      'x_ap': [10, 20, 30],
-                                      'y_ap': [30, 20, 10],
-                                      'x_dim': [3000, 3000, 3000],
-                                      'y_dim': [3000, 3000, 3000],
-                                      'orientation': ['Y', 'Y', 'Y']})
+        data_instance = pd.DataFrame({
+            'name': ['gauge1', 'gauge2', 'gauge3'],
+            'x': [10, 20, 30],
+            'y': [100, 200, 300],
+            'x_ap': [10, 20, 30],
+            'y_ap': [30, 20, 10],
+            'x_dim': [3000, 3000, 3000],
+            'y_dim': [3000, 3000, 3000],
+            'orientation': ['Y', 'Y', 'Y'],
+            'polygon_tone': ['LINE', 'LINE', 'SPACE'],
+        })
         template_config = {
             "ap1_template": "",
             "ep_template": "",
             "eps_template": "EPS_Template",
             "mp_template": "X90M_GATE_PH",
         }
-        test_ex_gauge_df = EPSData(core_data=data_instance, step='PH', mag=200000, ap_mag=50000,
-                                   templates=template_config, eps_columns=eps_data_columns)
-        return test_ex_gauge_df
+        return EPSData(core_data=data_instance, step='PH', mag=200000, ap_mag=50000,
+                       templates=template_config, eps_columns=eps_data_columns)
+
 
     def test_add_mp_width(self, eps_data_instance):
         '''checks wether add_mp_width method fills data as expected'''
@@ -251,3 +255,11 @@ class TestEpsData:
         # Assert
         assert isinstance(result, pd.DataFrame)
         pd.testing.assert_frame_equal(result_subset, expected_data_df)
+
+    def test_get_mp_template(self, eps_data_instance):
+        eps_data_instance.templates.update(
+            mp_template={'line': 'AMP_C028POLY_Line', 'space': 'AMP_C028POLY_Space'})
+        expected = np.array(['AMP_C028POLY_Line', 'AMP_C028POLY_Line', 'AMP_C028POLY_Space'])
+        actual = eps_data_instance.get_mp_template()
+        np.testing.assert_equal(expected, actual)
+        # assert expected == actual

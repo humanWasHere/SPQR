@@ -7,7 +7,7 @@ StepType = Literal["PH", "ET", "PH_HR", "ET_HR"]
 
 
 class BaseRecipe(BaseModel):
-    """BaseRecipe is the mother class of different recipes (OPCField or CoordFile recipes)."""
+    """Common Pydantic model for user configuration. Child-models: OPCField, CoordFile."""
     recipe_name: Optional[str] = None
     output_dir: Optional[DirectoryPath] = Path.cwd()
     layout: FilePath
@@ -30,19 +30,19 @@ class BaseRecipe(BaseModel):
 
 
 class OPCField(BaseRecipe):
-    """OPCField is a kind of recipe that takes no coordinate files in input (opposed to CoordFile recipes)."""
-    coord_file: Optional[str] = ''
+    """Pydantic model for OPCField recipes without a coordinate file, using matrix parameters."""
+    coord_file: Optional[str] = None
     origin_x_y: list[float] = Field(min_length=2, max_length=2)
     step_x_y: list[float] = Field(min_length=2, max_length=2)
     n_cols_rows: list[int] = Field(min_length=2, max_length=2)
 
 
 class CoordFile(BaseRecipe):
-    """CoordFile is a kind of recipe that takes coordinate files in input (opposed to OPCField recipes)."""
+    """Pydantic model for recipes with an input coordinate file."""
     coord_file: FilePath
 
 
-def get_config_checker(config_recipe: dict) -> BaseModel:
+def validate_config_model(config_recipe: dict) -> BaseModel:
     """Determine the recipe kind and return the corresponding validated model."""
     if 'coord_file' in config_recipe and config_recipe['coord_file']:
         return CoordFile(**config_recipe)

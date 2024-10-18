@@ -11,26 +11,23 @@ from app.parsers.parse import FileParser
 
 
 class FakeParser(FileParser):
+    """Mock a FileParser implementation by wrapping an input dataframe."""
     unit: str = "um"
-    def __init__(self, df: pd.DataFrame) -> None: self.data = df
+    def __init__(self, data: pd.DataFrame) -> None: self.data = data
     def parse_data(self) -> pd.DataFrame: return self.data
 
 
-LAYOUT = Path(__file__).resolve().parents[1] / "testfiles" / "COMPLETED_TEMPLATE.gds"
-LAYERS = ["1.0"]
-
-
 @pytest.fixture
-def measure_instance():
+def measure_instance(test_files):
     parser_input = FakeParser(
         pd.DataFrame({"name": ["gauge_name1", "gauge_name2", "gauge_name3", "gauge_name4"],
                       "x": [12, None, 13, 14],
                       "y": [22, 12, 42, None]}))
     mock_block = mock.create_autospec(Block, instance=True)
-    mock_block.layout_path = LAYOUT
+    mock_block.layout_path = test_files / "COMPLETED_TEMPLATE.gds"
     mock_block.topcell = "TOP"
     mock_block.precision = 1000
-    return Measure(parser_input, mock_block, LAYERS)
+    return Measure(parser_input, mock_block, ["1.0"])
 
 
 def test_creation_script_tmp(measure_instance):
@@ -71,7 +68,7 @@ def test_run_measure(measure_instance, monkeypatch):
     # assert result.shape == expected_shape
 
 
-def test_output_measure(measure_instance):
+def test_output_measure(measure_instance, tmp_path):
     # Arrange
     test_df = pd.DataFrame({
         'name': ['test_name1', 'test_name2', 'test_name3'],
@@ -79,23 +76,14 @@ def test_output_measure(measure_instance):
         'y': [11, 22, 33],
     })
 
-    test_output_dir = (Path(__file__).parents[1] / "testfiles")
-    test_recipe_name = "test_output_recipe_name"
-    expected_path = test_output_dir / f"measure_{test_recipe_name}.csv"
+    recipe_name = "test_output_recipe"
+    expected_path = tmp_path / f"measure_{recipe_name}.csv"
 
     expected_csv = """name,x,y\ntest_name1,1,11\ntest_name2,2,22\ntest_name3,3,33\n"""
 
     # Act
-    measure_instance.output_measurement_file(df=test_df, output_dir=test_output_dir, recipe_name=test_recipe_name)
+    measure_instance.write_measurement(df=test_df, output_dir=tmp_path, recipe_name=recipe_name)
 
     # Assert
-    print(expected_csv)
-    print(expected_path.read_text())
-    try:
-        assert expected_path.exists()
-        assert expected_path.read_text() == expected_csv
-    finally:
-        if expected_path.exists():
-            expected_path.unlink()
-        else:
-            print('file did not even create')
+    assert expected_path.exists()
+    assert expected_path.read_text() == expected_csv

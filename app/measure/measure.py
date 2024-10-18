@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Measure:
-    """this class returns a dataframe with measurement information."""
+    """Measure dimensions in a layout at a set of coordinates using a TCL/Calibre script."""
     def __init__(self, parser_input: FileParser, block: Block, layers: list[str],
                  offset: dict | None = None, tcl_script: Optional[str | Path] = None,
                  row_range: Optional[list[list]] = None):
@@ -48,16 +48,14 @@ class Measure:
             self.parser_df = self.parser_df.iloc[combined_indices, :]
 
     def apply_offset(self) -> None:
-        """method that applies an offset from configuration file ?
-        Not implemented yet."""
+        """Apply an offset to shift the source coordinates only (not the layout)."""
         # workaround if coords are not in same coord as layout. should be in parser's original unit
         self.parser_df.loc[:, 'x'] += self.offset['x']
         self.parser_df.loc[:, 'y'] += self.offset['y']
 
     def creation_script_tmp(self, output: str | Path, search_area=5) -> Path:
-        """this method creates a temporary script using a TCL script template and input data."""
-        # TODO this method must close temp file ?
-        # TODO rationnaliser l'emplacement des fichiers temporaires
+        """Create a temporary TCL script from template and input data."""
+        # TODO rationnaliser emplacement et fermeture des fichiers temporaires
         # Place temporary script in user's home because /tmp is not shared across farm
         tmp_script = Path.home() / "tmp" / "Script_tmp.tcl"
         # tmp_script = tempfile.NamedTemporaryFile(suffix=".tcl", dir=Path.home()/"tmp")
@@ -73,8 +71,7 @@ class Measure:
         )
         logging.debug(f'First point: {coordonnees.iloc[0]}')
         # Paths must be passed as str
-        with (open(self.tcl_script, "r") as template,
-              open(tmp_script, "w") as script):
+        with (open(self.tcl_script, "r") as template, open(tmp_script, "w") as script):
             texte = template.read()
             texte = texte.replace("FEED_ME_LAYER", ' '.join(self.layers))
             texte = texte.replace("FEED_ME_SEARCH_AREA", str(search_area))
@@ -87,7 +84,7 @@ class Measure:
         return tmp_script
 
     def process_results(self, output_path: str) -> pd.DataFrame:
-        """docstring"""  # TODO
+        """Read the measurement output of the TCL script and convert it to target format."""
         meas_df = pd.read_csv(output_path, index_col=False, na_values="unknown")
         # TODO : rename in tcl file?
         meas_df.rename(columns={'Gauge ': "name", ' Layer ': "layer",
@@ -107,8 +104,8 @@ class Measure:
 
         return meas_df
 
-    def output_measurement_file(self, df, output_dir, recipe_name) -> None:
-        """docstring"""  # TODO
+    def write_measurement(self, df, output_dir, recipe_name) -> None:
+        """Output the measurement results to a file on disk (CSV)."""
         try:
             # output_measure_df = df[['name', 'x', 'y']].copy()
             # output_measure_df['magnification'] = json_conf["magnification"]
@@ -117,14 +114,12 @@ class Measure:
             if measure_output_file.exists():
                 logger.info(f"Measurement file saved successfully at {measure_output_file}")
         except Exception as e:
-            logger.error(f"An error occurred while saving the file: {e}")
+            logger.error(f"An error occurred while saving the measurement file: {e}")
 
     def run_measure(self, output_dir: Path = None, recipe_name: str = None) -> pd.DataFrame:
-        """run_measure is a method that calls all the requirement from mesure."""
+        """Main sequence to measure, process intermediate files, and merge results."""
         self.apply_offset()
-        measure_tempfile = tempfile.NamedTemporaryFile(
-            dir=Path.home() / "tmp")
-        # TODO where to store tmp files (script + results)
+        measure_tempfile = tempfile.NamedTemporaryFile(dir=Path.home() / "tmp")
 
         tmp = self.creation_script_tmp(measure_tempfile.name)
         logger.info('2. measurement')
@@ -147,7 +142,7 @@ class Measure:
         # (Path(__file__).parents[2]/"recipe_output"/"measure_output.csv").write_text(results)
         measure_tempfile.close()  # remove temporary script
         if output_dir and recipe_name is not None:
-            self.output_measurement_file(merged_dfs, output_dir, recipe_name)
+            self.write_measurement(merged_dfs, output_dir, recipe_name)
         if not merged_dfs.empty:
             logger.info('Measurement done')
         # logger.debug(merged_dfs.columns)

@@ -6,9 +6,26 @@ from pathlib import Path
 
 from .interfaces.logger import logger_init  # import first
 from .interfaces.cli import cli, check_recipe, parse_intervals
-from .interfaces.input_checker import get_config_checker
+from .interfaces.input_checker import validate_config_model, OPCField, CoordFile
 from .interfaces.tracker import global_data_tracker
+from .parsers import FileParser, get_parser, OPCFieldReverse
+
 # log_metrics()
+ASSETS = Path(__file__).resolve().parents[1] / "assets"
+
+
+def model_to_parser(recipe_model: CoordFile | OPCField) -> FileParser | OPCFieldReverse:
+    if isinstance(recipe_model, CoordFile):
+        file_parser = get_parser(recipe_model.coord_file)
+        if file_parser is None:
+            raise ValueError("Your coordinate source may not be in a valid format")
+        return file_parser(recipe_model.coord_file)
+    if isinstance(recipe_model, OPCField):
+        return OPCFieldReverse(
+            *recipe_model.origin_x_y,
+            *recipe_model.step_x_y,
+            *recipe_model.n_cols_rows,
+        )
 
 
 def build_mode(args: argparse.Namespace) -> None:
@@ -20,27 +37,31 @@ def build_mode(args: argparse.Namespace) -> None:
         raise ValueError(f'Path does not exist or is not a file: {args.config}')
     if args.config.stat().st_size == 0:
         raise ValueError(f'File is empty: {args.config}')
-    user_config = import_json(args.config)
 
     # Recipe selection
-    build_config = check_recipe(user_config, args.recipe)
-    build_model = get_config_checker(build_config)
-    logging.debug(repr(build_model))
-    build_config = build_model.model_dump()
+    user_config = import_json(args.config)
+    recipe_config = check_recipe(user_config, args.recipe)
 
+    build_model = validate_config_model(recipe_config)
+    logging.debug(repr(build_model))
+    data_parser = model_to_parser(build_model)
+    logging.info(f'Data parser used: {type(data_parser).__name__}')
+    global_data_tracker(parser=type(data_parser).__name__, cli_args=args)
+
+    build_config = build_model.model_dump()
     line_select = parse_intervals(args.line_select)
 
-    if isinstance(build_config['step'], list):
-        steps = build_config['step']
+    if isinstance(build_model.step, list):
+        steps = build_model.step
         for part, step in enumerate(steps):
-            logging.info(f"creating recipe {build_config['recipe_name']} "
+            logging.info(f"creating recipe {build_model.recipe_name} "
                          f"{part+1}/{len(steps)}: {step} from {steps}")
             copied_config = build_config.copy()
             copied_config['step'] = step
-            copied_config['recipe_name'] = str(f"{build_config['recipe_name']}_{step}")
-            create_recipe(copied_config, args.upload_rcpd, line_select, args.measure)
+            copied_config['recipe_name'] = str(f"{build_model.recipe_name}_{step}")
+            create_recipe(data_parser, copied_config, args.upload_rcpd, line_select, args.measure)
     else:
-        create_recipe(build_config, args.upload_rcpd, line_select, args.measure)
+        create_recipe(data_parser, build_config, args.upload_rcpd, line_select, args.measure)
 
 
 def test_mode(args: argparse.Namespace) -> None:
@@ -48,26 +69,29 @@ def test_mode(args: argparse.Namespace) -> None:
     logging.info('SPQR running in dev mode')
     from .parsers.json_parser import import_json  # pandas is slow
 
-    app_config_file = Path(__file__).resolve().parents[1] / "assets" / "app_config.json"
-    app_config = import_json(app_config_file)
-    if not app_config:
-        raise ValueError(f"File {app_config_file.name} does not exist or is empty.")
+    app_config = import_json(ASSETS / "app_config.json")
 
     if args.recipe:
         test_env_config = app_config[args.recipe]
-        test_env_config = get_config_checker(test_env_config).model_dump()
+        test_env_model = validate_config_model(test_env_config)
+        data_parser = model_to_parser(test_env_model)
+        global_data_tracker(parser=type(data_parser).__name__, cli_args=args)
+        test_env_config = test_env_model.model_dump()
         if args.recipe == "calibre_rulers":
-            create_recipe(test_env_config, line_select=[[10, 20]])
+            create_recipe(data_parser, test_env_config, line_select=[[10, 20]])
         else:
-            create_recipe(test_env_config, line_select=[[100, 110]])
+            create_recipe(data_parser, test_env_config, line_select=[[100, 110]])
     elif args.all_recipes:
         for recipe_name in app_config:
             logging.info(f"running {recipe_name} recipe")
-            recipe_config = get_config_checker(app_config[recipe_name]).model_dump()
+            recipe_model = validate_config_model(app_config[recipe_name])
+            data_parser = model_to_parser(recipe_model)
+            global_data_tracker(parser=type(data_parser).__name__, cli_args=args)
+            recipe_config = recipe_model.model_dump()
             if recipe_name == "calibre_rulers":
-                create_recipe(recipe_config, line_select=[[10, 20]])
+                create_recipe(data_parser, recipe_config, line_select=[[10, 20]])
             else:
-                create_recipe(recipe_config, line_select=[[100, 110]])
+                create_recipe(data_parser, recipe_config, line_select=[[100, 110]])
     # Draft auto mode (override args and use build)
     # build_mode(cli().parse_args(
     #     ['build', '-c', str(app_config_file), '-r', 'calibre_rulers', '-l', '10-20']))
@@ -129,7 +153,7 @@ def init_mode(args: argparse.Namespace) -> None:
             output = output / argument_info["default_file_name"]
         output = output.with_suffix(argument_info["extension"])
         ex_user_config = (
-            Path(__file__).resolve().parents[1] / "assets" / "init"
+            ASSETS / "init"
             / argument_info["default_example_file_name"])
         shutil.copy(ex_user_config, output)
         return output.resolve()
@@ -149,7 +173,7 @@ def init_mode(args: argparse.Namespace) -> None:
         logging.info(f'Coordinate file initialized at {file_path_two}')
 
 
-def manage_app_launch(argv=None):
+def manage_app_launch(argv: list[str] | None = None) -> int:
     """Read the command line and user config.json and launch the corresponding command"""
     # TODO if several dict -> several recipe -> run several recipes
     logger = logger_init()
@@ -181,38 +205,21 @@ def manage_app_launch(argv=None):
     return 0
 
 
-def create_recipe(json_conf: dict, upload=False, line_select=None, output_measurement=False):
+def create_recipe(data_parser: FileParser, json_conf: dict, upload=False, line_select=None,
+                  output_measurement=False):
     """this is the real main function which runs the flow with the measure - "prod" function"""
     # lazy import for perf issue
     os.environ['ENV_TYPE'] = "PRODUCTION"  # workaround for MAPICore.runtime.Environment
-
     from .data_structure import Block
     from .interfaces import recipedirector as rcpd
     from .export_hitachi.hss_creator import HssCreator
     from .measure.measure import Measure
-    from .parsers import FileParser, get_parser, OPCFieldReverse
     block = Block(json_conf['layout'])
 
     logging.info(f"### CREATING RECIPE ### : {json_conf['recipe_name']}")
-    # Parser selection
-    parser = get_parser(json_conf['coord_file'])
-    global_data_tracker(parser=parser.__name__, cli_args=cli().parse_args())
-
-    if parser is None:
-        raise ValueError("Your coordinate source may not be in a valid format")
-    logging.info(f'parser is {parser.__name__}')
-    selected_parser: FileParser | OPCFieldReverse
-    if issubclass(parser, OPCFieldReverse):
-        selected_parser = parser(
-            json_conf['origin_x_y'][0], json_conf['origin_x_y'][1],
-            json_conf['step_x_y'][0], json_conf['step_x_y'][1],
-            json_conf['n_cols_rows'][0], json_conf['n_cols_rows'][1],
-            json_conf['ap1_offset'][0], json_conf['ap1_offset'][1])
-    else:
-        selected_parser = parser(json_conf['coord_file'])
 
     # measurement
-    measure_instance = Measure(selected_parser, block, json_conf['layers'],
+    measure_instance = Measure(data_parser, block, json_conf['layers'],
                                json_conf.get('offset'), row_range=line_select)
     output_measure = measure_instance.run_measure(
         output_dir=json_conf['output_dir'] if output_measurement else None,
@@ -224,7 +231,7 @@ def create_recipe(json_conf: dict, upload=False, line_select=None, output_measur
         output_measure['y_ap'] = int(json_conf['ap1_offset'][1] * 1000)
 
     # renaming of measure points  # TODO not here
-    if isinstance(selected_parser, OPCFieldReverse):
+    if isinstance(data_parser, OPCFieldReverse):
         import numpy as np
 
         cd_space = (output_measure["polygon_tone"].str[:2]
@@ -240,7 +247,7 @@ def create_recipe(json_conf: dict, upload=False, line_select=None, output_measur
     recipe_path = runHssCreation.write_in_file()
     if upload:
         rcpd.upload_csv(recipe_path)
-        rcpd.upload_gds(json_conf['layout'])
+        rcpd.upload_gds(block.layout_path)
         # TODO if file already exists on remote, check if new file is changed
         logging.info(f"recipe named {json_conf['recipe_name']} should be on RCPD machine!")
     logging.info("### END RECIPE CREATION ###\n")

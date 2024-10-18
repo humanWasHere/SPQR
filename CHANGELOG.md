@@ -1,10 +1,11 @@
 # Version 1.0.0
 <!-- sum up all previous main changes from v0 to v1-->
 
-## Version 0.2.1
+## Version 0.3
+
 Released 17/10/2024  
 ### **TL; DR**
-Main changes coming with SPQR v0.2.1:  
+Main changes coming with SPQR v0.3.0:  
 - **CLI - 3 new commands (init, edit, upload)**  
 - **Documentation and auto-documentation**  
 
@@ -13,13 +14,14 @@ See detail below.
 ---
 
 ### New features (functional)
-SPQR version 0.2.1 welcomes new features (functional):  
+SPQR version 0.3.0 welcomes new features (functional):  
 - **CLI - `init` command**: Creates either configuration file, coordinate file (ssfile genepy like) or both. New default files in app source code.
 - **CLI - `edit` command**: Edits a recipe interactively. Needs a recipe, configuration file and recipe name according to the configuration file. Generates a recipe with formatted name.
 - **CLI - `upload` command**: Uploads either a given recipe, a given layout or both. 
 
 ### Changes and improvements
 As well as some changes:  
+- Fixed number of rows and columns in OPCField reverse matricing.
 - CLI - `start` command renamed to `test`.  
 - Enhance short command names (more logical usage).
 - Enhancing test quality (file storage and test process). Up to 104 tests.  
