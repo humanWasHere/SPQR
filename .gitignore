@@ -36,8 +36,11 @@ venv/
 .mypy_cache
 
 # Other
-*.png
 .*.GTCheck
+
+# Images
+*.png
+!docs/user_documentation/pictures/*.png
 
 # may be temp
 web/
