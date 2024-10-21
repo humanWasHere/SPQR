@@ -1,21 +1,21 @@
-# SPQR - User’s documentation
-SEM Pro: Quick Recipe v0.2.1  
+# User Guide
+SEM Pro: Quick Recipe v0.3.0  
 Last update: 15/10/2024
 
-## Table of matters
+<!--
+## Table of contents
 1. [What is SPQR?](#what-is-spqr)  
     a. [Context and field of application](#context-and-field-of-application)  
     b. [Current advancement](#current-advancement)  
-    c. [Tree structure of a recipe](#tree-structure-of-a-spqr-recipe)  
 2. [Quick start](#quick-start)  
     a. [Configuration file generation](#configuration-file-generation)  
     b. [Recipe generation](#recipe-generation)   
 3. [Coordinate file sources](#coordinate-file-sources)  
-4. [User configuration file](#user-configuration-file)  
+4. [Recipe configuration file](#recipe-configuration-file)  
     a. [Syntax and format](#syntax-and-format)  
     b. [Example of JSON configuration file](#example-of-json-configuration-file)  
-    c. [User configuration file - Coordinate files](#user-configuration-file---coordinate-files)  
-    d. [User configuration file - OPCField](#user-configuration-file---opcfield)    
+    c. [User configuration file - Coordinate files](#recipe-configuration---coordinate-files)  
+    d. [User configuration file - OPCField](#recipe-configuration---opcfield)    
 5. [Commands](#commands)  
     a. [Init](#init)  
     b. [Build](#build)  
@@ -23,6 +23,7 @@ Last update: 15/10/2024
     d. [Upload](#upload)  
     e. [Test](#test)  
 6. [FAQ](#faq)  
+-->
 
 ## What is SPQR?
 
@@ -43,149 +44,26 @@ SPQR takes several types of coordinate sources for recipe creation:
 - OPCField matrix generation (no file)
 - HSS file (recipe) → .csv
 - Json file (recipe outputed from SPQR) → .json
-- Calibre ruler file → .xml
+- Calibre ruler files & clip files → .xml
 
-These are part of the configuration file (.json) needed to create a recipe 
+These are specified in the configuration file (.json) needed to create a recipe 
 
 Its outputs:
 - A HSS recipe → .csv
 - A JSON recipe → .json
 - (optional) a measurement file (saved as `measure_<your_recipe_name>`) → .csv
 
-### Tree structure of a SPQR recipe
-
-In order to have a better understanding of the structure of a recipe, we propose a tree structure to visualize more. These names correspond to flags or column names in which you can add different values.
-
-The first 3 are constants which you should not modify (they only have one sublevel): `<FileID>`, `<Version>`, and `<Revision>`.
-
-Here is the tree structure announced:
-
-```bash
-<CoordinateSystem>
-    Type
-    ACD_Type
-<GPCoordinateSystem>
-    Type
-<Unit>
-    Coordinate
-    MP_Box
-<GP_Data>
-    GP_ID
-    Type
-    GP_X
-    GP_Y
-    GP_Template
-    GP_Mag
-    GP_Rot
-    GP_Acceptance
-<EPS_Data>
-    EPS_ID, Type1, Move_X, Move_Y, Mode, EPS_Name, Ref_EPS_ID, EPS_Template, AP1_Template, AP2_Template, EP_Template, Type2, AP1_X, AP1_Y, AP1_Mag, AP1_Rot, Type3, AP1_AF_X, AP1_AF_Y, AP1_AF_Mag, Type4, AP1_AST_X, AP1_AST_Y, AP1_AST_Mag, Type5, AP2_X, AP2_Y, AP2_Mag, AP2_Rot, Type6, AP2_AF_X, AP2_AF_Y, AP2_AF_Mag, Type7, AP2_AST_X, AP2_AST_Y, AP2_AST_Mag, EP_Mag_X, EP_Mag_Y, EP_Rot, Type8, EP_AF_X, EP_AF_Y, EP_AF_Mag, Type9, EP_AST_X, EP_AST_Y, EP_AST_Mag, Type10, EP_ABCC_X, EP_ABCC_Y, Type11, MP1_X, MP1_Y, MP1_Template, MP1_PNo, MP1_DNo1, MP1_DNo2, MP1_Name, MP1_TargetCD, MP1_PosOffset, MP1_SA_In, MP1_SA_Out, MP1_MeaLeng, MP1_Direction, Type12, MP2_X, MP2_Y, MP2_Template, MP2_PNo, MP2_DNo1, MP2_DNo2, MP2_Name, MP2_TargetCD, MP2_PosOffset, MP2_SA_In, MP2_SA_Out, MP2_MeaLeng, MP2_Direction, Type13, MP3_X, MP3_Y, MP3_Template, MP3_PNo, MP3_DNo1, MP3_DNo2, MP3_Name, MP3_TargetCD, MP3_PosOffset, MP3_SA_In, MP3_SA_Out, MP3_MeaLeng, MP3_Direction, Type14, MP4_X, MP4_Y, MP4_Template, MP4_PNo, MP4_DNo1, MP4_DNo2, MP4_Name, MP4_TargetCD, MP4_PosOffset, MP4_SA_In, MP4_SA_Out, MP4_MeaLeng, MP4_Direction
-<GPA_List>
-    GPA_No
-    Chip_X
-    Chip_Y
-    GP_ID
-<GP_Offset>
-    Offset_X
-    Offset_Y
-<EPA_List>
-    EPA_No
-    Chip_X
-    Chip_Y
-    EPS_ID
-    Move_Mode
-<IDD_Cond>
-    DesignData
-    CellName
-    DCRot
-    DCOffsetX
-    DCOffsetY
-    Tone
-<IDD_Layer_Data>
-    LayerNo
-    DataType
-    Type
-    Level
-    DUMMY
-    Tone
-    ColorNo
-    FillNo
-    LayerName 
-<ImageEnv>
-    Type
-    Size
-    CompressSW
-    Quality
-    MeasCur
-    CrossCur
-    AreaCur
-    DDS
-    MeasVal
-    LinePro
-    umMark
-<Recipe>
-    ClassName
-    SEMCondNo
-    WaferProperty
-    SlotNum
-    SlotNo1SW
-    SlotNo2SW
-    SlotNo3SW
-    SlotNo4SW
-    SlotNo5SW
-    SlotNo6SW
-    SlotNo7SW
-    SlotNo8SW
-    SlotNo9SW
-    SlotNo10SW
-    SlotNo11SW
-    SlotNo12SW
-    SlotNo13SW
-    SlotNo14SW
-    SlotNo15SW
-    SlotNo16SW
-    SlotNo17SW
-    SlotNo18SW
-    SlotNo19SW
-    SlotNo20SW
-    SlotNo21SW
-    SlotNo22SW
-    SlotNo23SW
-    SlotNo24SW
-    SlotNo25SW
-    SlotNo26SW
-    AutoCalibrationSW 
-<MeasEnv_Exec>
-    WA_ExecMode
-    MA_ExecMode
-    ME_ExecMode
-    WA_ManualAssist
-    MA_ManualAssist
-    ME_ManualAssist
-    WA_ImageSave
-    MA_ImageSave
-    ME_ImageSave
-<MeasEnv_MeasRes>
-    DiskSave
-    SendToHost
-    PrintOut
-    NetTransfer
-    Confirm
-    Method
-    LimitCheck
-    hiFrame
-```
 
 ## Quick start  
 
 **What's needed to use SPQR**
-- A configuration file in json following our internal structure and format
+- A recipe configuration file in JSON format following our internal structure and format
 - A coordinate file (or OPCField case)
 
 ### Configuration file generation
 Represented by the **`init`** command, generates either a generic configuration file for spqr, a coordinate file example or both. 
 ```bash
-spqr init --help
+spqr init
 ```
 ```bash
 usage: spqr init [-h] [-c CONFIG_FILE] [-x COORDINATE_FILE]
@@ -198,18 +76,15 @@ options:
                         Path (file or directory) to write a generic coordinate file (genepy format).
 ```
 
-Example of configuration file generation: 
-```bash
-spqr init -c -x
-```
-
 ### Recipe generation
-Represented by the **`build`** command, generates a recipe.
+The main command **`build`** generates a recipe from a configuration file.  
 
+Example of build command usage:
 ```bash
-spqr build --help
+spqr build -c ./my_config.json -r my_recipe1 --upload -m
 ```
-```bash
+
+```
 usage: spqr build [-h] -c CONFIG [-r RECIPE] [-u] [-l RANGE [RANGE ...]] [-m]
 
 Build a SEM recipe from a configuration file and coordinates. See `spqr init` command to get templates.
@@ -226,52 +101,61 @@ options:
   -m, --measure         Write the raw data measured from layout to recipe output directory
 ```
 
-Example of build command usage
-```bash
-spqr build -c ./my_config.json -r my_recipe1 --upload -m
-```
+
 
 ## Coordinate file sources 
 1) OPCField matrix generation (OPCField Reverse)  
-Actually not a coordinate file, you will need to input information about your OPCField in the [configuration file section](#user-configuration-file)
+Actually not a coordinate file, you will need to input information about your OPCField in the [configuration file section](#recipe-configuration---opcfield)
 
 2) Genepy OPCField file / "SSfile"  
-Currently, only OPCfield field generated by Genepy or manually created ssfile (matching the Genepy format) are supported by the application. Please, conform to this format. **With tabulation and .csv extension.**  
-You should, at least, have these columns name: `Name`, `X_coord_Pat`, `Y_coord_Pat`, `X_coord_Addr`, `Y_coord_Addr`.  
+Currently, only OPCfield field generated by Genepy or manually created ssfile (matching the Genepy format) are supported by the application. Please, conform to this format. **With tabulation separators.**  
+You should, at least, have these columns names: `Name`, `X_coord_Pat`, `Y_coord_Pat`, `X_coord_Addr`, `Y_coord_Addr`.  
 `UNIT_COORD` column is optional and defaults to `nm`. 
 
-3) Calibre rulers  
+3) HSS file (Hitachi)   
+These are CSV recipes that are meant to be reused as input for a new recipe.  
+Currently, only coordinate information is used (EPS_Data section): EP Name, Move X/Y, AP1 X/Y. 
+
+4) Calibre rulers  
 Calibre ruler files are fully supported. You can select points manually in Calibre using the option "allow multiple rulers" and the “ruler palette” and export them in an XML file. The center of the rulers will be used for pattern coordinate, and the ruler comment for pattern name (more documentation coming soon).  
 
 > **_NOTE:_**
-Calibre rulers with or without `<comment>` section is supported (corresponds to the name of the ruler).
+Calibre rulers can have a `<comment>` section, which will be used as the name of the ruler. Otherwise, a generic name will be used.
 
-4) HSS file (.csv)  
-These are recipes that are meant to be reused as input for a new recipe.  
-Existing recipes can be parsed.
-<!-- Currently, only coordinate information is used (EPS_Data section).  -->
 
 5) JSON recipe  
 Json recipes are also existing recipes meant to be input for a new recipe.  
 These JSON recipes should come from SPQR output since they should match our internal structure.  
 <!-- Currently, only coordinate information is used (EPS_Data section).  -->
 
-## User configuration file
+## Recipe configuration file
 
-This part is meant to explain the different possibilities of setting up a user config file in json. We have two main case flow. The case where a list of `coordinate source` is provided and the case of an `OPCField` (where coordinate matrix will be recreated). 
+This part is meant to explain the different possibilities of setting up a recipe configuration file in JSON. There are two main case flows:
+- The case where a list of `coordinate source` (file) is provided
+- The case of an `OPCField` (where coordinate matrix will be recreated).
 
-> **_NOTE:_**
-You can have parameters for several recipes in this file since we launch the recipe according to the global key (flag).
+<!-- > **_NOTE:_** -->
+:::{note}
+You can have parameters for several recipes in the same file, since we select a recipe for `build` with the `-r` flag.
+:::
 
-### Syntax and format  
-We advise users to use an IDE or any text editor which will check about the validity of the json. Also, you can first check about the validity of your JSON with online tools like: https://jsonformatter.curiousconcept.com/ .  
+### Syntax and format
 
-You file must :
-- always match JSON format.
-- use empty values must be noted as `“”` (double quotation marks).  
-- use `dots` for floating values and commas are data separators.
-- write all your coordinate and measurement values in `um`.
+Your recipe configuration file must:
+- always match JSON format (see below),
+- use `""` (double quotation marks) for text values,
+- use `.` (dot) for decimals and `,` (comma) are data separators,
+- write all your coordinates and measurement values in `um`.
 
+### JSON compliance
+
+We advise users to use an IDE or a text editor that can check the validity of the JSON in real-time.  
+SPQR will also assist in locating errors in JSON:
+```
+[ERROR] __main__ The file debug/fake.json contains invalid JSON:
+        Expecting ',' delimiter: line 4 column 9 (char 69).
+```
+You can also use the UNIX command: `cat config.json | json_verify`
 ### Example of JSON configuration file
 
 ```json
@@ -285,6 +169,12 @@ You file must :
 
         "coord_file": "", 
 
+        "origin_x_y": [6216.487, 29885.021], 
+
+        "step_x_y": [6, 8.4], 
+
+        "n_cols_rows": [4, 12], 
+
         "layout": "/work/opc/all/users/banger/X90M/GATE/HERMES_MPW/X901A_FR_TOPRIGHT_ALL_cropped_for_SEM.oas", 
 
         "layers": ["0.400"], 
@@ -295,21 +185,11 @@ You file must :
 
         "ap1_mag": 45000, 
 
-        "ep_template": "", 
-
-        "eps_template": "", 
-
         "magnification": 200000, 
 
         "mp_template": "X90M_GATE_PH", 
 
-        "step": ["PH", "ET"], 
-
-        "origin_x_y": [6216.487,29885.021], 
-
-        "step_x_y": [6, 8.4], 
-
-        "n_cols_rows": [4, 12] 
+        "step": ["PH", "ET"]
 
     }, 
 
@@ -341,119 +221,124 @@ You file must :
 
         "step": "PH", 
 
-        "origin_x_y": "", 
-
-        "step_x_y": "", 
-
-        "n_cols_rows": "" 
-
     } 
 
 } 
 ```
-Also find it here: <mark>example_config.json</mark>
+<!-- Also find it here: <mark>example_config.json</mark> -->
+For convenience, use [spqr init](#init) to generate an up-to-date template of configuration file in your working directory.
 
-### User configuration file - Coordinate files
+### Recipe configuration - Coordinate files
 
 The following values are always mandatory: 
-- **Layout database** (OASIS or GDSII) → `file path`
-- **Layers** → a list of `stringified int or float`: in the format [“13.0”] or [“13.0”, “13.31”].  
-(a list of at least one number - can be int or float - interest layers above visible layers) 
-- **Magnification** → an `integer` 
-- **Step** (process: litho (`PH`) or etch (`ET`) and `PH_HR`/`ET_HR` for high resolution)  
+- **layout** database (OASIS or GDSII) → `file path`
+- **layers** → a `list of string`: in the format ["13.0"] or ["13.0", "13.31"].  
+At least one _layer.datatype_ member is required. The first _layer.datatype_ is used as the target and will be measured in the layout. This layer will also populate the IDD layer mapping with standard RET datatypes (.4 .31 ...) for visible and reference layers.  
+- **magnification** → an `integer`  
+It overrides the magnification set in the AMP template.
+- **step** a `string` or `list of string`. `PH` (litho), `ET` (etch) or `PH_HR`/`ET_HR` for high resolution  
+If a list is provided, like `["PH", "ET"]`, several recipes will be generated with corresponding SEM condition, # of frames, and target layer.
+- **coord_file** → a `Path`  
+(depends on the type of recipe you make; coordinate file recipes opposed to opcfield matricing recipes)
+
 The mandatory values of a coordinate file parsing are visually represented by the following red boxes:  
 ![image showing importance of different parameters in json configuration](./pictures/Picture1.png "mandatory coordinate file json conf")
 
-What is optionnal / non-mandatory: 
+What is optional / non-mandatory (line can be removed or value left empty `""`): 
 - **recipe_name** → a `string` 
 (if none, recipe_name will be set to “recipe”) 
 - **output_dir** → a `Path` (can be relative depending on the folder from where you run the CLI app)  
-(if none, output_dir will be set under “/recipe_output” in the project’s architecture) 
-- **coord_file** → a `Path`  
-(depends on the type of recipe you make; coordinate file recipes opposed to opcfield recipes) 
-- **Mp_template** à 3 possibilities:  
-    1) an `empty string`/`""` (double quotation marks)  
-    2) a single mp_template → `string`  
-    3) a `pair of 1D/2D key-value` – refer to Fig.... below → `string: string` 
+(if none, output_dir will be set under “/recipe_output” in the project’s architecture)  
+- **mp_template** → 3 possibilities:  
+    1) empty (default: Width_Default template from Recipe Director)
+    2) a single MP template name → `string`  
+    3) two MP templates for Line and Space → `dictionary of string`  
+    _format:_ {"line": "MP_template_line", "space": "MP_template_space"}
 - **ap1_template** → a `string` 
-- **ap1_mag** → an `int` 
+- **ap1_mag** → an `int`  (it overrides the magnification set in the AP1 template.)
 - **ap1_offset** → a `list of float` (um) 
 Relative value in um from the pattern coordinates to the addressing pattern. 
-- **ep_template** → a `string` 
-- **eps_template** → a `string` 
-(if none, “EPS_Default“ would be default value)  
+- **ep_template** → a `string`  
+By default, a 16 frame template will be used for `PH`|`PH_HR` steps or 32 frames for `ET`|`ET_HR` steps. Use this option only to override this behaviour.
+- **eps_template** → a `string` (default value: “EPS_Default”)  
+
 For a coordinate file parsing (non-opcfield) the mandatory values are showed in blue squares:  
 ![image showing importance of different parameters in json configuration](./pictures/Picture2.png "non mandatory coordinate file json conf")
 
-### User configuration file - OPCField
+### Recipe configuration - OPCField
 
-For opcfield, `coord_file` field must be left empty but some opcfield parameters are still required in your json configuration file.
+For OPCField matricing, `coord_file` field must be left empty and additional opcfield parameters are required in your JSON configuration file.
 
-OPCField (depends on the type of recipe you make – opposed to file-based recipes) 
+For OPCField recipes (opposed to file-based recipes), 6 numerical values are mandatory in order to recreate the structure of the matrix.
 
-For OPCField recipes, all last 6 values are mandatory. No parser is required but the global mandatory values are still mandatory. All these values should be float or int if not empty like below. 
+- **origin_x/y**: coordinates of the center of the pattern on the bottom left corner → `list of float` (um)
+- **step_x/y**: distance of a period, distance of a pattern to another → `list of float` (um)
+- **n_cols/rows**: number of rows and columns of patterns in the opcfield → `list of int`
 
-- **origin_x/y**: coordinates of the pattern on the bottom left corner (SEM referential?) → `list of float`
-- **step_x/y**: distance of a period, distance of a pattern to another (in um) → `list of int` 
-- **n_cols/n_rows**: number of rows and columns of patterns in the opcfield → `list of int`
-
-In the case of an opcfield, here are the mandatory values (red boxes):  
+In the case of an OPCField, here are the mandatory values (red boxes):  
 ![image showing importance of different parameters in json configuration](./pictures/Picture3.png "opcfield json conf")
+
 
 ## Commands 
 
 > **_NOTE:_**
-You can have help for your CLI usage with -h / --help attribute.  
-Example (same thing for every command) ```spqr -h```
+You can have help for your CLI usage with `-h/--help` attribute.  
+Example (same thing for every command) `spqr -h`, `spqr build -h`
 
 ### Init
-Creates either a generic configuration file for spqr, a coordinate file example or both.  
+Creates either a configuration file template for spqr, a generic coordinate file, or both.  
 This command can be launched without argument, one of them two or both.
-
+```console
+$ spqr init
+spqr_init/
+├── default_config.json
+├── default_coord_file.txt
+└── recipe_output/
+```
 > **_NOTE:_**
-Both commands will either generate a default file if a directory path is inputted as argument or create a file with given name if a file path is inputted as argument
+Both commands will either generate a default file if a directory path is inputted as argument, or create a file with given name if a file path is inputted as argument
 
-We note 2 subcommands :
+It takes 2 optional arguments:
 
 - `-c`, `--config_file`  
-Taking a file or directory path.  
-Creates a configuration file in JSON.  
-Example: ```spqr upload -r /path/to/your/recipe.csv``` or ```spqr upload -r /directory/to/store/my/file/```
+Takes a file or directory path.  
+Creates a configuration file (JSON format) at the destination.  
+Example: `spqr init -c ./working_dir/config.json` or `spqr init -c ./working_dir/`
 - `-x`, `--coordinate_file`  
-Taking a file or directory path.  
-Path (file or directory) to write a generic coordinate file (genepy format).  
-Example: ```spqr upload -r /path/to/your/recipe.csv``` or ```spqr upload -r /directory/to/store/my/file/```
+Takes a file or directory path  
+Creates a generic coordinate file (genepy format) at the destination.  
+Example: `spqr init -x ./working_dir/config.json` or `spqr init -x ./working_dir/`
 
 > **_NOTE:_**
-By default, file are located in the directory you are running the command
+By default, files are located in the current directory where you are running the command
 
 ### Build
 
-Creates either a generic configuration file for spqr, a coordinate file example or both.  
-This command should be launched, at least, with `-c` / `--user_config` argument.
+This is the main command to generate a recipe based on the configuration file.  
+This command should be launched, at least, with `-c` / `--config` argument.
 
-We note 5 subcommands :
+It takes 5 options:
 
-1) You are forced to use the `-c` / `--user_config` attribute since it should point to the file path where your recipe parameters are stored. The app manages if one or more recipes are stored in the file. It works without `-r` / `--user_recipe` only if one recipe is in the configuration file.  
-Example: ```spqr build -c /path/to/your/conf_file.json```  
+1) You are forced to use the `-c` / `--config` attribute since it should point to the file path where your recipe parameters are stored. The app manages if one or more recipes are stored in the file. It works without `-r` / `--recipe` only if one recipe is in the configuration file.  
+Example: `spqr build -c /path/to/conf_file.json`  
 
-2) As soon as you have 2 recipes parameters stored in your `-c` file, you will need to define the `-r` / `--user_recipe` argument (to know which recipe config to launch). That is why this attribute is optional.  
+2) As soon as you have 2 recipes parameters stored in your `-c` file, you will need to define the `-r` / `--recipe` argument (to know which recipe config to launch). That is why this attribute is optional.  
 The name provided here should match the key to the dictionary referenced in your configuration file. Corresponding to your recipe with all its parameters in the curly brackets (pairs of key-value).  
-Example: ```spqr build -c /path/to/your/conf_file.json -r P18_FGAT```
+Example: `spqr build -c /path/to/conf_file.json -r P18_FGAT`
 
-3) The `-l` / `--line_selection` attribute allows user to create a recipe based on one or more intervals.  
+3) The `-l` / `--line_select` attribute allows user to create a recipe based on one or more intervals.  
 For example, if you want to select only the measurement points 50 to 60 (both included) you will need to write `-l 50-60`. If you want to add 70 to 80 you must write `-l 50-60 70-80`.  
-Minimal example: ```spqr build -c /path/to/your/conf_file.json -l 50-60```  
+Minimal example: `spqr build -c /path/to/conf_file.json -l 50-60`  
 
-4) The `-m` / `--measurement_file` attribute allows user to export the measurements as a csv file in the same directory as the exported recipe.  
-Minimal example: ```spqr build -c /path/to/your/conf_file.json -m```
+4) The `-m` / `--measure` attribute allows user to export the measurements from  the layout as a CSV file in the same directory as the exported recipe.  
+Minimal example: `spqr build -c /path/to/conf_file.json -m`
 
 5) The `-u` / `--upload_rcpd` attribute allows user to upload the recipe created and the layout to RCPD.  
-Minimal example: ```spqr build -c /path/to/your/conf_file.json -u```  
+Minimal example: `spqr build -c /path/to/conf_file.json -u`  
 
 To sum up, you will at least use: 
 ```bash
-spqr build -c path/to/your/config/file.json
+spqr build -c path/to/config/file.json
 ```
 
 All the other attributes (`-r`, `-l`, `-m` and `-u`) are optional and can be combined to the others in no particular order.  
@@ -464,7 +349,7 @@ spqr build -c ./file.json -r my_recipe -l 50-60 70-80 -m -u
 
 > **_NOTE:_**
 The `-r` argument should match recipe name flagged in your json configuration file.  
-Using example above, `my_recipe` should be a flag of recipe configuration in `./file.json` 
+Using the example above, `my_recipe` should be a name of recipe at the root level of `./file.json` 
 
 ### Edit
 
@@ -482,34 +367,34 @@ Gets info of previously generated recipe / recipe you want to make.
 Takes a string name of the recipe to edit (from config file).    
 Selets the recipe within the configuration file.  
 
-Example: ```spqr edit -r /path/to/your/recipe.csv -c ../path/to/your/config_file.json -n config_recipe_name```
+Example: `spqr edit -r /path/to/recipe.csv -c ../path/to/config_file.json -n config_recipe_name`
 
 > **_NOTE:_**
 Each change on the recipe will have an impact on the naming of the edited recipe outputed (based on all the recipes in the folder). Adding one to the recipe version to differentiate them. If the given recipe name is `recipe_name.csv` outputed name will be `recipe_name_1.csv`.
 
 ### Upload
 
-The upload commands ease the sending process to RCPDirector machine (remote) for layouts or recipes.
-This command should be launched by one of the two arguments (`-r` or `-l`).
+The upload commands ease the sending process to RecipeDirector machine (remote) for layouts or recipes.
+This command should be launched with one or two arguments (`-r` or `-l`).
 
 > **_NOTE:_**
 Beware what you upload as well as the size of files and their quantity.
 
-We note 2 subcommands :  
+It takes 2 options:  
 - `-r`, `--recipe`  
-Taking path to recipe.  
-Uploads the given recipe to RCPDirector.  
-Example: ```spqr upload -r /path/to/your/recipe.csv```
+Takes the path to a recipe.  
+Uploads the given recipe to RecipeDirector.  
+Example: `spqr upload -r /path/to/your/recipe.csv`
 - `-l`, `--layout`  
-Taking path to layout.
-Uploads the given layout to RCPDirector.  
-Example: ```spqr upload -l /path/to/your/layout.gds```
+Takes the path to a layout.
+Uploads the given layout to RecipeDirector with adequate file permissions.  
+Example: `spqr upload -l /path/to/your/layout.gds`
 
 ### Test
 Originally intended for development purposes, the test command can help detect bugs in the recipe generation.
 
 > **_NOTE:_**
-The test command generates files from defined configuration files.
+The test command generates files from pre-defined configuration files.
 
 We note 2 subcommands :  
 - `-r` / `--recipe`  

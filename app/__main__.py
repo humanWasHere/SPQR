@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import shutil
+import sys
 from pathlib import Path
 
 from .interfaces.logger import logger_init  # import first
@@ -199,9 +200,12 @@ def manage_app_launch(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         logging.error('Interrupted by user')
     except Exception as e:
-        logger.removeHandler(logger.console_handler)  # to avoid double printing with the raise
-        logging.exception(f'{e.__class__.__name__}')
-        raise
+        logger.exception(e, exc_info=False)
+        # Log the traceback in the file handler only
+        # logger.removeHandler(logger.console_handler)
+        logger.console_handler.setLevel(logging.CRITICAL)
+        logger.exception(f'{e.__class__.__name__}:\n{e}')
+        return 1
     return 0
 
 
@@ -254,4 +258,4 @@ def create_recipe(data_parser: FileParser, json_conf: dict, upload=False, line_s
 
 
 if __name__ == "__main__":
-    manage_app_launch()
+    sys.exit(manage_app_launch())

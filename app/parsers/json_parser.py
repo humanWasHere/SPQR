@@ -12,9 +12,10 @@ def import_json(json_file: str | Path) -> dict[str, dict]:
     try:
         return json.loads(Path(json_file).read_text())
     except FileNotFoundError:
-        raise ValueError(f"The file {json_file} was not found.")
+        raise ValueError(f"The file {json_file} was not found.") from None
     except json.JSONDecodeError as e:
-        raise ValueError(f"The file {json_file} contains invalid JSON:\n\t{e}.")
+        raise ValueError(f"The file {json_file} contains invalid JSON:\n\t{e}.") from None
+    # from None: avoid double traceback
 
 
 class JSONParser(FileParser):

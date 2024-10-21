@@ -1,0 +1,123 @@
+# HSS recipe structure
+
+In order to have a better understanding of the structure of a recipe, we propose a tree structure to visualize more. These names correspond to flags or column names in which you can add different values.
+
+The first 3 are constants which you should not modify (they only have one sublevel): `<FileID>`, `<Version>`, and `<Revision>`.
+
+Here is the tree structure announced:
+
+```xml
+<CoordinateSystem>
+    Type
+    ACD_Type
+<GPCoordinateSystem>
+    Type
+<Unit>
+    Coordinate
+    MP_Box
+<GP_Data>
+    GP_ID
+    Type
+    GP_X
+    GP_Y
+    GP_Template
+    GP_Mag
+    GP_Rot
+    GP_Acceptance
+<EPS_Data>
+    EPS_ID, Type1, Move_X, Move_Y, Mode, EPS_Name, Ref_EPS_ID, EPS_Template, AP1_Template, AP2_Template, EP_Template, Type2, AP1_X, AP1_Y, AP1_Mag, AP1_Rot, Type3, AP1_AF_X, AP1_AF_Y, AP1_AF_Mag, Type4, AP1_AST_X, AP1_AST_Y, AP1_AST_Mag, Type5, AP2_X, AP2_Y, AP2_Mag, AP2_Rot, Type6, AP2_AF_X, AP2_AF_Y, AP2_AF_Mag, Type7, AP2_AST_X, AP2_AST_Y, AP2_AST_Mag, EP_Mag_X, EP_Mag_Y, EP_Rot, Type8, EP_AF_X, EP_AF_Y, EP_AF_Mag, Type9, EP_AST_X, EP_AST_Y, EP_AST_Mag, Type10, EP_ABCC_X, EP_ABCC_Y, Type11, MP1_X, MP1_Y, MP1_Template, MP1_PNo, MP1_DNo1, MP1_DNo2, MP1_Name, MP1_TargetCD, MP1_PosOffset, MP1_SA_In, MP1_SA_Out, MP1_MeaLeng, MP1_Direction, Type12, MP2_X, MP2_Y, MP2_Template, MP2_PNo, MP2_DNo1, MP2_DNo2, MP2_Name, MP2_TargetCD, MP2_PosOffset, MP2_SA_In, MP2_SA_Out, MP2_MeaLeng, MP2_Direction, Type13, MP3_X, MP3_Y, MP3_Template, MP3_PNo, MP3_DNo1, MP3_DNo2, MP3_Name, MP3_TargetCD, MP3_PosOffset, MP3_SA_In, MP3_SA_Out, MP3_MeaLeng, MP3_Direction, Type14, MP4_X, MP4_Y, MP4_Template, MP4_PNo, MP4_DNo1, MP4_DNo2, MP4_Name, MP4_TargetCD, MP4_PosOffset, MP4_SA_In, MP4_SA_Out, MP4_MeaLeng, MP4_Direction
+<GPA_List>
+    GPA_No
+    Chip_X
+    Chip_Y
+    GP_ID
+<GP_Offset>
+    Offset_X
+    Offset_Y
+<EPA_List>
+    EPA_No
+    Chip_X
+    Chip_Y
+    EPS_ID
+    Move_Mode
+<IDD_Cond>
+    DesignData
+    CellName
+    DCRot
+    DCOffsetX
+    DCOffsetY
+    Tone
+<IDD_Layer_Data>
+    LayerNo
+    DataType
+    Type
+    Level
+    DUMMY
+    Tone
+    ColorNo
+    FillNo
+    LayerName 
+<ImageEnv>
+    Type
+    Size
+    CompressSW
+    Quality
+    MeasCur
+    CrossCur
+    AreaCur
+    DDS
+    MeasVal
+    LinePro
+    umMark
+<Recipe>
+    ClassName
+    SEMCondNo
+    WaferProperty
+    SlotNum
+    SlotNo1SW
+    SlotNo2SW
+    SlotNo3SW
+    SlotNo4SW
+    SlotNo5SW
+    SlotNo6SW
+    SlotNo7SW
+    SlotNo8SW
+    SlotNo9SW
+    SlotNo10SW
+    SlotNo11SW
+    SlotNo12SW
+    SlotNo13SW
+    SlotNo14SW
+    SlotNo15SW
+    SlotNo16SW
+    SlotNo17SW
+    SlotNo18SW
+    SlotNo19SW
+    SlotNo20SW
+    SlotNo21SW
+    SlotNo22SW
+    SlotNo23SW
+    SlotNo24SW
+    SlotNo25SW
+    SlotNo26SW
+    AutoCalibrationSW 
+<MeasEnv_Exec>
+    WA_ExecMode
+    MA_ExecMode
+    ME_ExecMode
+    WA_ManualAssist
+    MA_ManualAssist
+    ME_ManualAssist
+    WA_ImageSave
+    MA_ImageSave
+    ME_ImageSave
+<MeasEnv_MeasRes>
+    DiskSave
+    SendToHost
+    PrintOut
+    NetTransfer
+    Confirm
+    Method
+    LimitCheck
+    hiFrame
+```

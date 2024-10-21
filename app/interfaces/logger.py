@@ -20,7 +20,7 @@ else:
 
 
 def logger_init(log_file: str | Path = DEFAULT_LOG_PATH, log_level: int = LOG_LEVEL,
-                max_bytes: int = 1024*1024, backup_count: int = 5) -> None:
+                max_bytes: int = 1024*1024, backup_count: int = 5) -> logging.Logger:
     """
     Initializes and configures application logger.
 
@@ -45,4 +45,4 @@ def logger_init(log_file: str | Path = DEFAULT_LOG_PATH, log_level: int = LOG_LE
     return logger
 
 
-logger_init()
+# logger_init()

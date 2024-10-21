@@ -35,3 +35,6 @@ source_suffix = {
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+myst_enable_extensions = [
+    "colon_fence",
+]
