@@ -278,8 +278,7 @@ For OPCField recipes (opposed to file-based recipes), 6 numerical values are man
 In the case of an OPCField, here are the mandatory values (red boxes):  
 ![image showing importance of different parameters in json configuration](./pictures/Picture3.png "opcfield json conf")
 
-
-## Commands 
+## Commands
 
 > **_NOTE:_**
 You can have help for your CLI usage with `-h/--help` attribute.  

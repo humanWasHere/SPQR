@@ -1,6 +1,12 @@
+# dev env and outputs
 .temp/
 tmp/
 recipe_output/
+measure_reworked.tcl
+data_analysis.py
+init_outputs/
+# may be temp
+web/
 
 # Build
 dist/
@@ -42,13 +48,9 @@ venv/
 *.png
 !docs/user_documentation/pictures/*.png
 
-# may be temp
-web/
-
 # logging
 log/
 *.log*
 
-# dev env
-measure_reworked.tcl
-data_analysis.py
+# documentation
+*.pdf
